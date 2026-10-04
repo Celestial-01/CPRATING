@@ -1,9 +1,59 @@
 @import 'tailwindcss';
+@import '@fontsource/ibm-plex-sans-thai/400.css';
+@import '@fontsource/ibm-plex-sans-thai/500.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'IBM Plex Sans Thai', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer base {
+    body {
+        font-family: var(--font-sans);
+    }
+
+    html {
+        font-synthesis: none;
+    }
+}
+
+.auth-scene {
+    background: radial-gradient(ellipse 54% 72% at 50% 54%, #ffffff 0%, #f9fdff 27%, #e1f3ff 62%, #c9eaff 100%);
+}
+
+.auth-icon {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    stroke: #9dc6e7;
+    stroke-width: 2.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.auth-google {
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.auth-google:hover {
+    background-color: #eeeeee;
+    border-color: #9f9f9f;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+}
+
+.auth-google:focus-visible {
+    outline: 2px solid #9f9f9f;
+    outline-offset: 2px;
+}
+
+.auth-privacy {
+    border-color: #bfddfa;
+    background: #edf7ff;
+    color: #527ba8;
+}
+
+.auth-privacy a {
+    color: #075be6;
 }
