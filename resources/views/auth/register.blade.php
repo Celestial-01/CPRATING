@@ -1,6 +1,7 @@
 @extends('layouts.auth')
 
 @section('title', 'สมัครสมาชิก')
+@section('showBrand', 'true')
 @section('content')
     <nav
         class="mb-9 grid grid-cols-2 rounded-[15px] bg-[#e9f5ff] p-1 text-[17px] font-normal"

@@ -15,3 +15,16 @@ test('login and registration pages are available', function () {
         ->assertOk()
         ->assertViewIs('auth.register');
 });
+
+test('authentication flow pages are available', function () {
+    collect([
+        'auth.verify-email',
+        'auth.set-password',
+        'auth.set-username',
+        'auth.forgot-password',
+        'auth.password-reset-sent',
+        'auth.reset-password',
+    ])->each(function (string $routeName) {
+        $this->get(route($routeName))->assertOk();
+    });
+});

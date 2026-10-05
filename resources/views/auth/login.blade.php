@@ -1,6 +1,7 @@
 @extends('layouts.auth')
 
 @section('title', 'เข้าสู่ระบบ')
+@section('showBrand', 'true')
 @section('content')
     <nav
         class="mb-9 grid grid-cols-2 rounded-[15px] bg-[#e9f5ff] p-1 text-[17px] font-normal"
@@ -100,7 +101,7 @@
                 จดจำ
             </label>
             <a
-                href="#"
+                href="{{ route('auth.forgot-password') }}"
                 class="text-sm font-medium text-[#377eff] hover:underline"
             >
                 ลืมรหัสผ่าน?

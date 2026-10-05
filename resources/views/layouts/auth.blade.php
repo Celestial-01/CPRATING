@@ -46,20 +46,22 @@
         <section
             class="w-full max-w-[440px]"
         >
-            <div
-                class="mb-6 flex justify-center sm:mb-10"
-            >
-                <a
-                    href="{{ url('/') }}"
-                    class="grid size-[100px] place-items-center rounded-full bg-[#d8d8d8] text-base font-normal text-slate-700"
-                    aria-label="กลับหน้าหลัก"
+            @hasSection('showBrand')
+                <div
+                    class="mb-6 flex justify-center sm:mb-10"
                 >
-                    logo
-                </a>
-            </div>
+                    <a
+                        href="{{ url('/') }}"
+                        class="grid size-[100px] place-items-center rounded-full bg-[#d8d8d8] text-base font-normal text-slate-700"
+                        aria-label="กลับหน้าหลัก"
+                    >
+                        logo
+                    </a>
+                </div>
+            @endif
 
             <section
-                class="rounded-[19px] border border-[#777] bg-white px-5 py-6 shadow-[0_10px_13px_rgba(0,0,0,0.28)] sm:px-8 sm:py-8"
+                class="rounded-[19px] border border-[#777] bg-white px-6 py-6 shadow-[0_10px_13px_rgba(0,0,0,0.28)] sm:px-8 sm:py-8"
             >
                 @yield('content')
             </section>
