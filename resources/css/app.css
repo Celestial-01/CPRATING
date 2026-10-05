@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import '@fontsource/ibm-plex-sans-thai/400.css';
 @import '@fontsource/ibm-plex-sans-thai/500.css';
+@import '@fontsource/ibm-plex-sans-thai/600.css';
+@import '@fontsource/ibm-plex-sans-thai/700.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -56,4 +58,20 @@
 
 .auth-privacy a {
     color: #075be6;
+}
+
+.auth-status-icon {
+    display: grid;
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 18px;
+    place-items: center;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #b7e5ff 0%, #e8f7ff 100%);
+    color: #1684df;
+}
+
+.auth-message {
+    border-color: #bcbcbc;
+    color: #929292;
 }
