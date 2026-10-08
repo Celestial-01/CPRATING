@@ -75,7 +75,7 @@
 
     <a
         href="#"
-        class="auth-google flex h-[45px] items-center justify-center gap-3 rounded-[15px] border border-[#bcbcbc] bg-white text-sm text-[#111] transition"
+                class="flex h-[45px] items-center justify-center gap-3 rounded-[15px] border border-[#bcbcbc] bg-white text-sm text-[#111] transition-colors duration-150 hover:border-[#9f9f9f] hover:bg-[#eeeeee] hover:shadow-[0_1px_2px_rgba(15,23,42,0.08)] focus-visible:outline-2 focus-visible:outline-[#9f9f9f] focus-visible:outline-offset-2"
     >
         <img
             src="{{ asset('images/google-g.svg') }}"
@@ -86,7 +86,7 @@
     </a>
 
     <aside
-        class="auth-privacy mt-5 flex items-start gap-3 rounded-[15px] border px-3 py-2.5 text-[11px] leading-5"
+                class="mt-5 flex items-start gap-3 rounded-[15px] border border-[#bfddfa] bg-[#edf7ff] px-3 py-2.5 text-[11px] leading-5 text-[#527ba8] [&_a]:text-[#075be6]"
     >
         <span
             class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[#c5e8ff] text-[#1684df]"

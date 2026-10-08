@@ -18,27 +18,27 @@
         >
             <i
                 data-lucide="book-open"
-                class="auth-icon left-[13%] top-[18%]"
+                class="absolute left-[13%] top-[18%] h-12 w-12 stroke-[#9dc6e7] [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2.7]"
                 aria-hidden="true"
             ></i>
             <i
                 data-lucide="smartphone"
-                class="auth-icon right-[13%] top-[14%]"
+                class="absolute right-[13%] top-[14%] h-12 w-12 stroke-[#9dc6e7] [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2.7]"
                 aria-hidden="true"
             ></i>
             <i
                 data-lucide="laptop"
-                class="auth-icon bottom-[18%] left-[13%]"
+                class="absolute bottom-[18%] left-[13%] h-12 w-12 stroke-[#9dc6e7] [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2.7]"
                 aria-hidden="true"
             ></i>
             <i
                 data-lucide="building-2"
-                class="auth-icon bottom-[17%] right-[13%]"
+                class="absolute bottom-[17%] right-[13%] h-12 w-12 stroke-[#9dc6e7] [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2.7]"
                 aria-hidden="true"
             ></i>
             <i
                 data-lucide="graduation-cap"
-                class="auth-icon right-[25%] top-[36%]"
+                class="absolute right-[25%] top-[36%] h-12 w-12 stroke-[#9dc6e7] [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2.7]"
                 aria-hidden="true"
             ></i>
         </div>
