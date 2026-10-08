@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/login');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/courses/{code}', [CourseController::class, 'show'])->name('courses.show');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('auth.login');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('auth.register');
