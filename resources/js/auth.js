@@ -2,7 +2,7 @@ import {
     AtSign,
     BookOpen,
     Building2,
-    createIcons,
+    Check,
     Eye,
     EyeOff,
     GraduationCap,
@@ -12,11 +12,14 @@ import {
     Smartphone,
     Sparkle,
 } from 'lucide';
+import { renderIcons } from './icon-renderer';
+import { onDomReady } from './dom-ready';
 
 const iconSet = {
     AtSign,
     BookOpen,
     Building2,
+    Check,
     Eye,
     EyeOff,
     GraduationCap,
@@ -25,10 +28,6 @@ const iconSet = {
     Mail,
     Smartphone,
     Sparkle,
-};
-
-const renderIcons = () => {
-    createIcons({ icons: iconSet });
 };
 
 const getPasswordInput = (toggle) => {
@@ -46,7 +45,7 @@ const updatePasswordToggle = (toggle, input) => {
         isPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'
     );
     toggle.innerHTML = `<i data-lucide="${isPassword ? 'eye-off' : 'eye'}" class="size-5"></i>`;
-    renderIcons();
+    renderIcons(iconSet);
 };
 
 const initializePasswordToggles = () => {
@@ -55,19 +54,16 @@ const initializePasswordToggles = () => {
             const input = getPasswordInput(toggle);
 
             if (input) {
-                updatePasswordToggle(toggle, input);
-            }
+                updatePasswordToggle(toggle, input);}
         });
     });
 };
 
 const initializeAuth = () => {
-    renderIcons();
+    if (!document.querySelector('.auth-scene')) return;
+
+    renderIcons(iconSet);
     initializePasswordToggles();
 };
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeAuth, { once: true });
-} else {
-    initializeAuth();
-}
+onDomReady(initializeAuth);
