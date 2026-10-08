@@ -2,7 +2,7 @@
 
 @section('title', 'ยืนยันอีเมล')
 @section('content')
-    <div class="auth-status-icon">
+    <div class="mx-auto mb-[18px] grid size-[58px] place-items-center rounded-full bg-gradient-to-br from-[#b7e5ff] to-[#e8f7ff] text-[#1684df]">
         <i
             data-lucide="key-round"
             class="size-7"
@@ -23,7 +23,7 @@
     </header>
 
     <aside
-        class="auth-message mt-5 rounded-[15px] border px-4 py-3 text-sm leading-6"
+        class="mt-5 rounded-[15px] border border-[#bcbcbc] px-4 py-3 text-sm leading-6 text-[#929292]"
     >
         กรุณาตรวจสอบอีเมลของคุณและคลิกลิงก์เพื่อดำเนินการรีเซ็ตรหัสผ่าน
         <br>

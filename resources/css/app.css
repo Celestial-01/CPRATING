@@ -6,6 +6,8 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
 
 @theme {
     --font-sans: 'IBM Plex Sans Thai', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
@@ -21,57 +23,8 @@
     }
 }
 
-.auth-scene {
-    background: radial-gradient(ellipse 54% 72% at 50% 54%, #ffffff 0%, #f9fdff 27%, #e1f3ff 62%, #c9eaff 100%);
-}
-
-.auth-icon {
-    position: absolute;
-    width: 48px;
-    height: 48px;
-    stroke: #9dc6e7;
-    stroke-width: 2.7;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.auth-google {
-    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-}
-
-.auth-google:hover {
-    background-color: #eeeeee;
-    border-color: #9f9f9f;
-    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
-}
-
-.auth-google:focus-visible {
-    outline: 2px solid #9f9f9f;
-    outline-offset: 2px;
-}
-
-.auth-privacy {
-    border-color: #bfddfa;
-    background: #edf7ff;
-    color: #527ba8;
-}
-
-.auth-privacy a {
-    color: #075be6;
-}
-
-.auth-status-icon {
-    display: grid;
-    width: 58px;
-    height: 58px;
-    margin: 0 auto 18px;
-    place-items: center;
-    border-radius: 9999px;
-    background: linear-gradient(135deg, #b7e5ff 0%, #e8f7ff 100%);
-    color: #1684df;
-}
-
-.auth-message {
-    border-color: #bcbcbc;
-    color: #929292;
+@layer components {
+    .auth-scene {
+        background: radial-gradient(ellipse 54% 72% at 50% 54%, #ffffff 0%, #f9fdff 27%, #e1f3ff 62%, #c9eaff 100%);
+    }
 }
