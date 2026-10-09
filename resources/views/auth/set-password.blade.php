@@ -12,7 +12,7 @@
     </header>
 
     <form
-        action="#"
+        action="{{ route('auth.set-password.store') }}"
         method="POST"
         class="mt-6 space-y-5"
         aria-label="แบบฟอร์มตั้งรหัสผ่าน"

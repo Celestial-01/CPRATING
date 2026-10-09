@@ -33,12 +33,17 @@
     </header>
 
     <form
-        action="#"
+        action="{{ route('auth.login.store') }}"
         method="POST"
         class="space-y-5"
         aria-label="แบบฟอร์มเข้าสู่ระบบ"
     >
         @csrf
+        @if ($errors->any())
+            <div class="rounded-[12px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600" role="alert">
+                {{ $errors->first() }}
+            </div>
+        @endif
         <div>
             <label
                 for="email"
@@ -52,7 +57,7 @@
                 type="email"
                 autocomplete="email"
                 placeholder="กรอกอีเมล"
-                class="h-[45px] w-full rounded-[11px] border border-[#bcbcbc] bg-white px-3 text-sm outline-none transition placeholder:text-[#a8a8a8] focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+                class="h-[45px] w-full rounded-[11px] border border-[#bcbcbc] bg-white px-3 text-sm outline-none transition placeholder:text-[#a8a8a8] focus:border-sky-500 focus:ring-4 focus:ring-sky-100 @error('email') border-red-400 @enderror"
             >
         </div>
         <div>
@@ -130,7 +135,7 @@
     </div>
 
     <a
-        href="#"
+        href="{{ route('auth.google.redirect') }}"
                 class="flex h-[45px] items-center justify-center gap-3 rounded-[15px] border border-[#bcbcbc] bg-white text-sm text-[#111] transition-colors duration-150 hover:border-[#9f9f9f] hover:bg-[#eeeeee] hover:shadow-[0_1px_2px_rgba(15,23,42,0.08)] focus-visible:outline-2 focus-visible:outline-[#9f9f9f] focus-visible:outline-offset-2"
     >
         <img
