@@ -67,5 +67,7 @@
             </section>
         </section>
     </main>
+
+    <x-auth.legal-modals />
 </body>
 </html>

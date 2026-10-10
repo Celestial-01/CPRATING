@@ -160,14 +160,16 @@
         <p>
             ข้อมูลของคุณปลอดภัยและได้รับการปกป้องตาม
             <a
-                href="#"
+                href="#privacy"
+                data-legal-modal-trigger="privacy"
                 class="underline"
             >
                 นโยบายความเป็นส่วนตัว
             </a>
             และ
             <a
-                href="#"
+                href="#terms"
+                data-legal-modal-trigger="terms"
                 class="underline"
             >
                 ข้อกำหนดการใช้งาน
