@@ -16,12 +16,7 @@ class TopicController extends Controller
 
         return view('topics.index', compact('topics'));
     }
-
-    public function create(): View
-    {
-        return view('topics.create');
-    }
-
+    
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -35,17 +30,6 @@ class TopicController extends Controller
             ->with('success', 'Topic created successfully.');
     }
 
-    public function show(Topic $topic): View
-    {
-        $topic->load('courses');
-
-        return view('topics.show', compact('topic'));
-    }
-
-    public function edit(Topic $topic): View
-    {
-        return view('topics.edit', compact('topic'));
-    }
 
     public function update(Request $request, Topic $topic): RedirectResponse
     {

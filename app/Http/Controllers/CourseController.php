@@ -116,7 +116,7 @@ class CourseController extends Controller
             'nextCourses',
         ]);
 
-        return view('courses.show', compact('course'));
+        return view('course.show', compact('course'));
     }
 
     public function edit(Course $course): View

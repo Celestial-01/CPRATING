@@ -50,13 +50,7 @@ class TeacherController extends Controller
             ->with('success', 'เพิ่มอาจารย์เรียบร้อยแล้ว');
     }
 
-    
-    public function show(Teacher $teacher): View
-    {
-        $teacher->load('courses');
 
-        return view('teachers.show', compact('teacher'));
-    }
 
   
     public function update(Request $request, Teacher $teacher): RedirectResponse

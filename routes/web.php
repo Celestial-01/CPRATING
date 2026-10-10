@@ -9,19 +9,20 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TopicController;
 use Illuminate\Support\Facades\Route;
 
-// Home
-Route::get('/home', [HomeController::class, 'index'])->name('home');
+
+ // Home
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/home', [HomeController::class, 'index'])
+    ->name('home.index');
 
 // Course detail (user side)
 Route::get('/courses/{code}', [CourseController::class, 'show'])
     ->name('courses.show');
 
 // Admin Dashboard
-Route::get('/', [AdminController::class, 'showDashboard'])
-    ->name('admin.dashboard');
-
 Route::get('/admin', [AdminController::class, 'showDashboard'])
-    ->name('admin.home');
+    ->name('admin.dashboard');
 
 // Admin Courses
 Route::prefix('admin/courses')->group(function () {
