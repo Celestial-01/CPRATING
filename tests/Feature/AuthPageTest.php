@@ -74,6 +74,31 @@ test('a registration request sends a verification email without authenticating t
     });
 });
 
+test('a user can resend the registration verification email', function () {
+    Mail::fake();
+
+    $this->withSession(['registration_email' => 'ada@example.com'])
+        ->post(route('auth.verify-email.resend'))
+        ->assertRedirect(route('auth.verify-email', ['email' => 'ada@example.com']))
+        ->assertSessionHas('verification_resent', true);
+
+    Mail::assertSent(RegistrationVerificationMail::class);
+});
+
+test('registration verification resend is rate limited with a friendly response', function () {
+    Mail::fake();
+    $session = ['registration_email' => 'ada@example.com'];
+
+    collect(range(1, 3))->each(function () use ($session): void {
+        $this->withSession($session)->post(route('auth.verify-email.resend'));
+    });
+
+    $this->withSession($session)
+        ->post(route('auth.verify-email.resend'))
+        ->assertRedirect(route('auth.verify-email', ['email' => 'ada@example.com']))
+        ->assertSessionHas('verification_resend_error');
+});
+
 test('a user completes registration after verifying the email', function () {
     $registration = RegistrationToken::create([
         'email' => 'ada@example.com',

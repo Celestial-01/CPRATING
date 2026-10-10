@@ -10,23 +10,30 @@ Route::get('/courses/{code}', [CourseController::class, 'show'])->name('courses.
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('auth.login');
-    Route::post('/login', [AuthController::class, 'login'])->name('auth.login.store');
+    Route::post('/login', [AuthController::class, 'login'])
+        ->middleware('throttle:auth-login')
+        ->name('auth.login.store');
     Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle'])->name('auth.google.redirect');
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('auth.register');
-    Route::post('/register', [AuthController::class, 'register'])->name('auth.register.store');
+    Route::post('/register', [AuthController::class, 'register'])
+        ->middleware('throttle:auth-register')
+        ->name('auth.register.store');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('auth.logout');
 Route::get('/verify-email', [AuthController::class, 'showVerifyEmail'])->name('auth.verify-email');
+Route::post('/verify-email/resend', [AuthController::class, 'resendRegistrationVerification'])
+    ->middleware(['guest', 'throttle:registration-verification'])
+    ->name('auth.verify-email.resend');
 Route::get('/register/verify/{registration}/{token}', [AuthController::class, 'verifyRegistration'])
     ->middleware('signed')
     ->name('auth.registration.verify');
 Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('auth.forgot-password');
 Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink'])
-    ->middleware('guest')
+    ->middleware(['guest', 'throttle:password-reset'])
     ->name('auth.forgot-password.store');
 Route::get('/password-reset/sent', [AuthController::class, 'showPasswordResetSent'])->name('auth.password-reset-sent');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');

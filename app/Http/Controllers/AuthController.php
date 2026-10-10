@@ -113,9 +113,39 @@ class AuthController extends Controller
             ]);
         }
 
+        $registrationToken = $this->sendRegistrationVerification($validated['email']);
+
+        return redirect()
+            ->route('auth.verify-email', ['email' => $registrationToken->email])
+            ->with('registration_email', $registrationToken->email);
+    }
+
+    public function resendRegistrationVerification(Request $request): RedirectResponse
+    {
+        $email = $request->session()->get('registration_email', $request->input('email'));
+
+        $validated = validator(
+            ['email' => $email],
+            ['email' => ['required', 'email']],
+        )->validate();
+
+        if (User::where('email', $validated['email'])->whereNotNull('password')->exists()) {
+            return redirect()->route('auth.login');
+        }
+
+        $registrationToken = $this->sendRegistrationVerification($validated['email']);
+
+        return redirect()
+            ->route('auth.verify-email', ['email' => $registrationToken->email])
+            ->with('registration_email', $registrationToken->email)
+            ->with('verification_resent', true);
+    }
+
+    private function sendRegistrationVerification(string $email): RegistrationToken
+    {
         $plainToken = Str::random(64);
         $registrationToken = RegistrationToken::updateOrCreate(
-            ['email' => $validated['email']],
+            ['email' => $email],
             [
                 'token_hash' => Hash::make($plainToken),
                 'expires_at' => now()->addMinutes(15),
@@ -134,9 +164,7 @@ class AuthController extends Controller
 
         Mail::to($registrationToken->email)->send(new RegistrationVerificationMail($verificationUrl));
 
-        return redirect()
-            ->route('auth.verify-email', ['email' => $registrationToken->email])
-            ->with('registration_email', $registrationToken->email);
+        return $registrationToken;
     }
 
     public function verifyRegistration(Request $request, RegistrationToken $registration, string $token): RedirectResponse
