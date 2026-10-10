@@ -19,11 +19,10 @@ test('the home page is available', function () {
     $response
         ->assertOk()
         ->assertViewIs('home')
-        ->assertSee('เนื้อหาอัปเดตล่าสุด')
-        ->assertSee('วิชายอดนิยม')
-        ->assertSee('data-course-carousel', false)
-        ->assertSee('data-carousel-next', false)
-        ->assertSee('Footer');
+        ->assertSee('เริ่มสำรวจรายวิชา')
+        ->assertSee('ดูรายละเอียดก่อนตัดสินใจ')
+        ->assertSee('วิชาแนะนำเพิ่มเติม')
+        ->assertSee('CPRATING');
 });
 
 test('the home page exposes a loading skeleton state', function () {

@@ -3,191 +3,276 @@
 @section('title', 'หน้าหลัก')
 
 @section('content')
-    <x-navbar />
+    <x-navbar :home-hero="true" />
 
     @if ($showSkeleton)
         <x-skeleton.home />
     @else
-        <main class="mx-auto w-full max-w-[1120px] px-3 pb-0 sm:px-6">
+        <main class="bg-[#f8fafc]">
             <section
-                class="relative mt-6 overflow-hidden rounded-[24px] bg-white px-8 py-8 shadow-[0_10px_24px_rgba(15,23,42,0.12)] sm:mt-7 sm:px-12 sm:py-7 lg:px-14 lg:py-8"
-                data-course-carousel
-                tabindex="0"
-                aria-roledescription="carousel"
-                aria-label="คอร์สแนะนำ"
+                class="home-hero relative flex min-h-[100svh] items-center overflow-hidden bg-[#f4f5f7]"
+                aria-labelledby="home-title"
             >
-                <div class="relative min-h-[360px] sm:min-h-[280px]">
-                    @foreach ($featuredCourses as $index => $featuredCourse)
-                        <article
-                            @class([
-                                'grid items-center gap-7 sm:min-h-[300px] sm:grid-cols-[190px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10',
-                                'hidden' => $index !== 0,
-                            ])
-                            data-carousel-slide
-                            aria-roledescription="slide"
-                            aria-label="สไลด์ {{ $index + 1 }} จาก {{ count($featuredCourses) }}"
-                            @if ($index !== 0)
-                                aria-hidden="true"
-                            @endif
-                        >
-                            <div class="relative mx-auto aspect-[0.82] w-full max-w-[220px] overflow-hidden rounded-[18px] sm:mx-0 sm:aspect-auto sm:max-w-none sm:self-stretch">
-                                <img
-                                    src="{{ $featuredCourse['image'] }}"
-                                    alt="ภาพประกอบวิชา {{ $featuredCourse['title'] }}"
-                                    class="absolute inset-0 size-full object-cover"
-                                >
-                            </div>
-
-                            <div class="min-w-0 text-center sm:text-left">
-                                <div class="flex flex-wrap justify-center gap-2 sm:justify-start">
-                                    <span class="rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium text-[#1684e5]">
-                                        {{ $featuredCourse['code'] }}
-                                    </span>
-                                    <span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] text-slate-500">
-                                        {{ $featuredCourse['category'] }}
-                                    </span>
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[11px] text-slate-500">
-                                        <i
-                                            data-lucide="book-open"
-                                            class="size-3.5"
-                                            aria-hidden="true"
-                                        ></i>
-                                        {{ $featuredCourse['credits'] }}
-                                    </span>
-                                </div>
-
-                                <h1 class="mt-3 text-2xl font-semibold leading-tight text-slate-900 sm:text-3xl">
-                                    {{ $featuredCourse['title'] }}
-                                </h1>
-                                <p class="mt-1 text-xs uppercase tracking-[0.14em] text-slate-500">
-                                    {{ $featuredCourse['englishTitle'] }}
-                                </p>
-                                <p class="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-500 sm:mx-0">
-                                    {{ $featuredCourse['description'] }}
-                                </p>
-
-                                <div class="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-slate-700 sm:justify-start">
-                                    <span class="inline-flex items-center gap-1">
-                                        <i
-                                            data-lucide="star"
-                                            class="size-4 fill-yellow-400 text-yellow-400"
-                                            aria-hidden="true"
-                                        ></i>
-                                        {{ $featuredCourse['rating'] }}
-                                    </span>
-                                    <span class="inline-flex items-center gap-1">
-                                        <i
-                                            data-lucide="eye"
-                                            class="size-4"
-                                            aria-hidden="true"
-                                        ></i>
-                                        {{ $featuredCourse['learners'] }} วิว
-                                    </span>
-                                    <span class="inline-flex items-center gap-1">
-                                        <i
-                                            data-lucide="book-open"
-                                            class="size-4"
-                                            aria-hidden="true"
-                                        ></i>
-                                        {{ $featuredCourse['lessons'] }} วิชา
-                                    </span>
-                                </div>
-
-                                <a
-                                    href="{{ route('courses.show', $featuredCourse['code']) }}"
-                                    class="mt-4 inline-flex rounded-[14px] bg-slate-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
-                                >
-                                    อ่านเพิ่มเติม
-                                </a>
-                            </div>
-                        </article>
-                    @endforeach
-                </div>
-
-                <button
-                    type="button"
-                    class="absolute left-2 top-1/2 z-10 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white text-slate-500 shadow-sm transition hover:border-sky-300 hover:text-[#1684e5] focus:outline-none focus:ring-4 focus:ring-sky-100 sm:left-4"
-                    aria-label="คอร์สก่อนหน้า"
-                    data-carousel-previous
+                <div class="home-hero-glow pointer-events-none absolute inset-0" aria-hidden="true"></div>
+                <span
+                    class="absolute left-5 top-7 z-20 text-sm font-semibold tracking-[0.08em] text-slate-900 sm:left-8 sm:top-9"
                 >
-                    <i
-                        data-lucide="chevron-left"
-                        class="size-5"
-                        aria-hidden="true"
-                    ></i>
-                </button>
-                <button
-                    type="button"
-                    class="absolute right-2 top-1/2 z-10 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white text-slate-500 shadow-sm transition hover:border-sky-300 hover:text-[#1684e5] focus:outline-none focus:ring-4 focus:ring-sky-100 sm:right-4"
-                    aria-label="คอร์สถัดไป"
-                    data-carousel-next
-                >
-                    <i
-                        data-lucide="chevron-right"
-                        class="size-5"
-                        aria-hidden="true"
-                    ></i>
-                </button>
+                    CP<span class="text-[#1684e5]">RATING</span>
+                </span>
 
                 <div
-                    class="mt-5 flex justify-center gap-1.5"
-                    aria-label="เลือกคอร์สแนะนำ"
+                    class="relative mx-auto flex min-h-[calc(100svh-5rem)] w-full max-w-[1240px] items-center justify-center
+                        px-5 py-24 sm:px-8 lg:min-h-[100svh] lg:py-28"
                 >
-                    @foreach ($featuredCourses as $index => $featuredCourse)
-                        <button
-                            type="button"
-                            class="h-2.5 w-2.5 rounded-full bg-slate-300 transition-all data-[active=true]:w-10 data-[active=true]:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-200"
-                            aria-label="เลือกสไลด์ที่ {{ $index + 1 }}"
-                            aria-current="{{ $index === 0 ? 'true' : 'false' }}"
-                            data-active="{{ $index === 0 ? 'true' : 'false' }}"
-                            data-carousel-dot
-                        ></button>
-                    @endforeach
+                    <div class="home-enter relative z-10 max-w-[690px] text-center">
+                        <h1
+                            id="home-title"
+                            class="text-[clamp(2.35rem,6vw,5.25rem)] font-semibold leading-[1.12] tracking-[-0.025em] text-slate-950"
+                        >
+                            ทุกวิชามีเรื่องราว<br>
+                            <span class="text-[#1684e5]">ก่อนคุณลงเรียน</span>
+                        </h1>
+                        <p
+                            class="mx-auto mt-5 max-w-[480px] text-[15px] leading-7 text-slate-600 sm:mt-7 sm:text-lg sm:leading-9"
+                        >
+                            สำรวจรายวิชา อ่านประสบการณ์จากเพื่อน และเห็นภาพการเรียนให้ชัดขึ้น
+                            ก่อนเลือกวิชาที่เหมาะกับคุณ
+                        </p>
+                    </div>
+
+                    <div
+                        class="home-hero-gallery pointer-events-none absolute inset-0"
+                        aria-label="ภาพรายวิชาแนะนำ"
+                    >
+                        <div class="home-hero-row home-hero-row-top">
+                            @foreach (range(1, 3) as $copy)
+                                @foreach ($featuredCourses as $featuredCourse)
+                                    <a
+                                        href="{{ route('courses.show', $featuredCourse['code']) }}"
+                                        class="home-hero-tile pointer-events-auto"
+                                        aria-label="ดูรายละเอียดวิชา {{ $featuredCourse['title'] }}"
+                                        @if ($copy > 1)
+                                            tabindex="-1"
+                                            aria-hidden="true"
+                                        @endif
+                                    >
+                                        <img src="{{ $featuredCourse['image'] }}" alt="" loading="lazy">
+                                    </a>
+                                @endforeach
+                            @endforeach
+                        </div>
+                        <div class="home-hero-row home-hero-row-bottom">
+                            @foreach (range(1, 3) as $copy)
+                                @foreach (array_reverse($featuredCourses) as $featuredCourse)
+                                    <a
+                                        href="{{ route('courses.show', $featuredCourse['code']) }}"
+                                        class="home-hero-tile pointer-events-auto"
+                                        aria-label="ดูรายละเอียดวิชา {{ $featuredCourse['title'] }}"
+                                        @if ($copy > 1)
+                                            tabindex="-1"
+                                            aria-hidden="true"
+                                        @endif
+                                    >
+                                        <img src="{{ $featuredCourse['image'] }}" alt="" loading="lazy">
+                                    </a>
+                                @endforeach
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section
-                class="mt-8 sm:mt-10"
+                id="featured-courses"
+                class="home-section scroll-mt-24"
+                aria-labelledby="featured-courses-title"
+            >
+                <div class="home-container">
+                    <header class="home-section-heading" data-home-reveal>
+                        <div>
+                            <h2
+                                id="featured-courses-title"
+                                class="home-section-title"
+                            >
+                                เริ่มสำรวจรายวิชา
+                            </h2>
+                        </div>
+                        <p class="home-section-description">
+                            ทำความรู้จักเนื้อหาและบรรยากาศการเรียนของแต่ละวิชา
+                        </p>
+                    </header>
+
+                    <div class="home-course-grid" data-home-reveal>
+                        @foreach ($featuredCourses as $featuredCourse)
+                            <a href="{{ route('courses.show', $featuredCourse['code']) }}" class="home-course-tile group">
+                                <div class="home-course-image">
+                                    <img src="{{ $featuredCourse['image'] }}" alt="" loading="lazy">
+                                    <span class="home-course-code">{{ $featuredCourse['code'] }}</span>
+                                </div>
+                                <div class="mt-4">
+                                    <p class="text-xs font-medium text-[#1684e5]">
+                                        {{ $featuredCourse['category'] }}
+                                    </p>
+                                    <h3
+                                        class="mt-1 text-base font-semibold leading-snug text-slate-900 transition-colors duration-300
+                                            group-hover:text-[#1684e5] sm:text-lg"
+                                    >
+                                        {{ $featuredCourse['title'] }}
+                                    </h3>
+                                    <p class="mt-1 text-sm text-slate-500">
+                                        {{ $featuredCourse['credits'] }}
+                                    </p>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+
+            <section
+                class="home-section border-y border-slate-200/80 bg-white"
                 aria-labelledby="latest-courses-title"
             >
-                <x-section-heading
-                    id="latest-courses-title"
-                    icon="flame"
-                    title="เนื้อหาอัปเดตล่าสุด"
-                />
+                <div class="home-container">
+                    <header class="home-section-heading" data-home-reveal>
+                        <div>
+                            <h2
+                                id="latest-courses-title"
+                                class="home-section-title"
+                            >
+                                ดูรายละเอียดก่อนตัดสินใจ
+                            </h2>
+                        </div>
+                        <p class="home-section-description">
+                            เลือกอ่านข้อมูลรายวิชา คะแนน และมุมมองจากผู้เรียนในแต่ละหน้า
+                        </p>
+                    </header>
 
-                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
-                    @foreach ($courses as $course)
-                        <x-course-card :course="$course" />
-                    @endforeach
-                    @foreach (array_slice($courses, 0, 2) as $course)
-                        <x-course-card :course="$course" />
-                    @endforeach
+                    <div
+                        class="grid gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-12"
+                        data-home-reveal
+                    >
+                        @if ($courses[0] ?? null)
+                            <a href="{{ route('courses.show', $courses[0]['code']) }}" class="group block">
+                                <div class="home-story-image aspect-[1.45]">
+                                    <img src="{{ $courses[0]['image'] }}" alt="" loading="lazy">
+                                </div>
+                                <p class="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-[#1684e5]">
+                                    {{ $courses[0]['code'] }} · รายวิชาแนะนำ
+                                </p>
+                                <h3
+                                    class="mt-2 max-w-2xl text-2xl font-semibold leading-snug tracking-tight text-slate-950
+                                        transition-colors duration-300 group-hover:text-[#1684e5] sm:text-3xl"
+                                >
+                                    {{ $courses[0]['title'] }}
+                                </h3>
+                                <p class="mt-3 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
+                                    ดูรายละเอียดรายวิชา คะแนนจากผู้เรียน และข้อมูลประกอบการตัดสินใจก่อนลงทะเบียน
+                                </p>
+                                <span class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+                                    อ่านรายละเอียด
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        class="size-4 transition-transform duration-500
+                                            group-hover:translate-x-1 group-hover:-translate-y-1"
+                                        aria-hidden="true"
+                                    ></i>
+                                </span>
+                            </a>
+                        @endif
+
+                        <div class="divide-y divide-slate-200">
+                            @foreach (array_slice($courses, 1) as $course)
+                                <a
+                                    href="{{ route('courses.show', $course['code']) }}"
+                                    class="group grid grid-cols-[104px_minmax(0,1fr)] gap-4 py-5 first:pt-0
+                                        sm:grid-cols-[132px_minmax(0,1fr)] sm:gap-5 lg:grid-cols-[112px_minmax(0,1fr)]
+                                        xl:grid-cols-[132px_minmax(0,1fr)]"
+                                >
+                                    <div class="home-story-image aspect-square">
+                                        <img src="{{ $course['image'] }}" alt="" loading="lazy">
+                                    </div>
+                                    <div class="min-w-0 self-center">
+                                        <p class="text-xs font-medium text-[#1684e5]">
+                                            {{ $course['code'] }}
+                                        </p>
+                                        <h3
+                                            class="mt-1 text-base font-semibold leading-snug text-slate-900
+                                                transition-colors duration-300 group-hover:text-[#1684e5]"
+                                        >
+                                            {{ $course['title'] }}
+                                        </h3>
+                                        <p class="mt-2 text-xs text-slate-500">
+                                            {{ $course['rating'] }} คะแนน · {{ $course['learners'] }} วิว
+                                        </p>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section
-                class="mt-12 sm:mt-14"
+                class="home-section"
                 aria-labelledby="popular-courses-title"
             >
-                <x-section-heading
-                    id="popular-courses-title"
-                    icon="star"
-                    title="วิชายอดนิยม"
-                />
+                <div class="home-container">
+                    <header class="home-section-heading" data-home-reveal>
+                        <div>
+                            <h2
+                                id="popular-courses-title"
+                                class="home-section-title"
+                            >
+                                วิชาแนะนำเพิ่มเติม
+                            </h2>
+                        </div>
+                        <p class="home-section-description">
+                            อีกสองวิชาที่น่าลองเปิดดูต่อจากรายการด้านบน
+                        </p>
+                    </header>
 
-                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
-                    @foreach ($courses as $course)
-                        <x-course-card :course="$course" />
-                    @endforeach
-                    @foreach (array_slice($courses, 0, 2) as $course)
-                        <x-course-card :course="$course" />
-                    @endforeach
+                    <div class="grid gap-5 md:grid-cols-2" data-home-reveal>
+                        @foreach (array_slice($featuredCourses, 0, 2) as $featuredCourse)
+                            <a
+                                href="{{ route('courses.show', $featuredCourse['code']) }}"
+                                class="home-popular-card group"
+                            >
+                                <div class="home-popular-image">
+                                    <img src="{{ $featuredCourse['image'] }}" alt="" loading="lazy">
+                                </div>
+                                <div class="flex min-w-0 flex-1 flex-col justify-between gap-6 p-5 sm:p-7">
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[#1684e5]">
+                                            {{ $featuredCourse['code'] }}
+                                        </p>
+                                        <h3
+                                            class="mt-3 text-xl font-semibold leading-snug tracking-tight text-slate-950
+                                                transition-colors duration-300 group-hover:text-[#1684e5] sm:text-2xl"
+                                        >
+                                            {{ $featuredCourse['title'] }}
+                                        </h3>
+                                        <p class="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">
+                                            {{ $featuredCourse['description'] }}
+                                        </p>
+                                    </div>
+                                    <span class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+                                        ดูรายวิชา
+                                        <i
+                                            data-lucide="arrow-up-right"
+                                            class="size-4 transition-transform duration-500
+                                                group-hover:translate-x-1 group-hover:-translate-y-1"
+                                            aria-hidden="true"
+                                        ></i>
+                                    </span>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
                 </div>
             </section>
         </main>
     @endif
 
-    <x-footer />
+    <x-footer :flush="true" />
 @endsection
-
