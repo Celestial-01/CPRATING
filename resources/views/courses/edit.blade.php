@@ -43,7 +43,27 @@
                     </div>
                     <p data-image-error class="mt-2 hidden text-sm text-red-600"></p>
                     <p class="mt-2 text-xs text-slate-400">รองรับไฟล์รูปภาพ ขนาดไม่เกิน 2 MB</p>
+                    
+                <form
+                    action="{{ route('courses.destroy', $course) }}"
+                    method="POST"
+                    onsubmit="return confirm('ต้องการลบรายวิชานี้ใช่หรือไม่?')"
+                    class="mt-4 flex justify-center">
+                    @csrf
+                    @method('DELETE')
+
+                    <button
+                        type="submit"
+                        title="ลบรายวิชา"
+                        class="inline-flex h-12 items-center justify-center rounded-full bg-red-50 px-8 text-base font-bold text-red-600 shadow-sm transition hover:bg-red-100"
+                    >
+                        ลบรายวิชา
+                    </button>
+                </form>
+
+
                 </div>
+            
 
                 {{-- ข้อมูลหลัก --}}
                 <div class="flex min-w-0 flex-col gap-5">

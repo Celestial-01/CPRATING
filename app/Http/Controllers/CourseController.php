@@ -212,7 +212,7 @@ class CourseController extends Controller
         $course->delete();
 
         return redirect()
-            ->route('courses.index')
+            ->route('admin.dashboard')
             ->with('success', 'ลบรายวิชา เรียบร้อยแล้ว');
     }
 

@@ -224,3 +224,4 @@ onDomReady(() => {
     document.querySelectorAll('[data-inline-relation]').forEach(initRelation);
     document.querySelectorAll('[data-image-box]').forEach(initImage);
 });
+
