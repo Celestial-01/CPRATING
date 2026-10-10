@@ -2,7 +2,10 @@
 
 <a
     href="{{ route('courses.show', $course['code']) }}"
-    class="group relative block min-w-0 aspect-[0.78] overflow-hidden rounded-[17px] bg-slate-900 shadow-sm focus:outline-none focus:ring-4 focus:ring-sky-200"
+    class="group relative block min-w-0 aspect-[0.78] overflow-hidden rounded-[20px] bg-slate-900
+        shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-[transform,box-shadow] duration-500
+        hover:-translate-y-2 hover:shadow-[0_24px_42px_rgba(15,23,42,0.18)]
+        focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 motion-reduce:transition-none"
 >
     <img
         src="{{ $course['image'] }}"
