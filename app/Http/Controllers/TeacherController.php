@@ -6,6 +6,7 @@ use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 
 class TeacherController extends Controller
 {
@@ -18,11 +19,15 @@ class TeacherController extends Controller
     }
 
    
-    public function create(): View
+   public function create(): View
     {
         return view('teachers.create');
     }
 
+    public function edit(Teacher $teacher): View
+    {
+        return view('teachers.create', ['teacher' => $teacher,]);
+    }
 
     public function store(Request $request): RedirectResponse
     {
@@ -51,12 +56,6 @@ class TeacherController extends Controller
         $teacher->load('courses');
 
         return view('teachers.show', compact('teacher'));
-    }
-
-
-    public function edit(Teacher $teacher): View
-    {
-        return view('teachers.edit', compact('teacher'));
     }
 
   

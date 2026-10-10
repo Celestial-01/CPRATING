@@ -18,6 +18,19 @@ class Course extends Model
         'image',
         'is_active',
     ];
+    
+    public const MAJORS = [
+        'CS'   => 'Computer Science',
+        'ITII' => 'Information Technology and Innovation Intelligence',
+        'AI'   => 'Artificial Intelligence',
+        'CY'   => 'Cybersecurity',
+        'GIS'  => 'Geo-informatics',
+    ];
+
+    public const TYPES = [
+        'วิชาบังคับ',
+        'วิชาเลือกเฉพาะทาง',
+    ];
 
     public function teachers(): BelongsToMany
     {
