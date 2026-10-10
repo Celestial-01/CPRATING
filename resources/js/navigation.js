@@ -44,4 +44,23 @@ const initializeMobileMenu = () => {
     });
 };
 
-onDomReady(initializeMobileMenu);
+const initializeHomeNavbar = () => {
+    const navbar = document.querySelector('[data-home-navbar]');
+
+    if (!navbar) return;
+
+    const updateNavbarVisibility = () => {
+        const isVisible = window.scrollY > 48;
+
+        navbar.dataset.scrolled = String(isVisible);
+        navbar.inert = !isVisible;
+    };
+
+    updateNavbarVisibility();
+    window.addEventListener('scroll', updateNavbarVisibility, { passive: true });
+};
+
+onDomReady(() => {
+    initializeMobileMenu();
+    initializeHomeNavbar();
+});
