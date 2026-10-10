@@ -24,7 +24,72 @@
 }
 
 @layer components {
+    .legal-dialog {
+        margin: auto;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 200ms ease, transform 200ms ease;
+    }
+
+    .legal-dialog[data-open='true'] {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .legal-dialog::backdrop {
+        background: rgb(15 23 42 / 40%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .legal-dialog {
+            transition: none;
+        }
+    }
+
     .auth-scene {
         background: radial-gradient(ellipse 54% 72% at 50% 54%, #ffffff 0%, #f9fdff 27%, #e1f3ff 62%, #c9eaff 100%);
     }
+
+    .legal-modal-scroll {
+        scrollbar-color: #cbd5e1 transparent;
+        scrollbar-width: thin;
+    }
+
+    .legal-modal-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .legal-modal-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .legal-modal-scroll::-webkit-scrollbar-thumb {
+        border-radius: 9999px;
+        background-color: #cbd5e1;
+    }
+
+    .legal-modal-scroll::-webkit-scrollbar-thumb:hover {
+        background-color: #94a3b8;
+    }
+}
+
+.mobile-menu[data-open='true'] {
+    pointer-events: auto;
+    translate: 0;
+    opacity: 1;
+}
+
+.mobile-menu[data-open='true'] [data-mobile-menu-content] {
+    translate: 0;
+    opacity: 1;
+}
+
+.mobile-menu[data-open='true'] [data-mobile-menu-close-icon],
+[aria-expanded='true'] [data-mobile-menu-toggle-icon] {
+    rotate: 90deg;
+}
+
+.mobile-menu-overlay[data-open='true'] {
+    pointer-events: auto;
+    opacity: 1;
 }

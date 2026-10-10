@@ -17,8 +17,8 @@
         <p class="mt-2 text-sm text-slate-400">
             เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง
         </p>
-        <p class="mt-1 text-base font-medium text-slate-900">
-            patiphan.nam@kkumail.com
+        <p class="mt-1 break-all text-base font-medium text-slate-900">
+            {{ $email ?: 'อีเมลของคุณ' }}
         </p>
     </header>
 

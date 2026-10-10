@@ -14,8 +14,8 @@ import {
     Send,
     Star,
 } from 'lucide';
-import { renderIcons } from './icon-renderer';
 import { onDomReady } from './dom-ready';
+import { renderIcons } from './icon-renderer';
 
 const iconSet = {
     ArrowUpRight,
@@ -34,12 +34,6 @@ const iconSet = {
     Star,
 };
 
-const initializeCourseIcons = () => {
-    if (!document.querySelector('[aria-labelledby="course-title"]')) return;
-
-    renderIcons(iconSet);
-};
-
 const initializeCommentSort = () => {
     const sortControl = document.querySelector('[data-comment-sort]');
 
@@ -52,20 +46,25 @@ const initializeCommentSort = () => {
             const isActive = option === activeOption;
 
             option.setAttribute('aria-pressed', String(isActive));
-            option.setAttribute('data-active', String(isActive));
+            option.dataset.active = String(isActive);
         });
     };
 
     sortControl.addEventListener('click', (event) => {
         const option = event.target.closest('[data-comment-sort-option]');
 
-        if (option && sortControl.contains(option)) {
-            setActiveOption(option);
-        }
+        if (!option || !sortControl.contains(option)) return;
+
+        setActiveOption(option);
     });
 };
 
-onDomReady(() => {
-    initializeCourseIcons();
+const initializeCourse = () => {
+    if (document.querySelector('[aria-labelledby="course-title"]')) {
+        renderIcons(iconSet);
+    }
+
     initializeCommentSort();
-});
+};
+
+onDomReady(initializeCourse);

@@ -12,7 +12,7 @@
     </header>
 
     <form
-        action="#"
+        action="{{ route('auth.set-username.store') }}"
         method="POST"
         class="mt-5"
         aria-label="แบบฟอร์มตั้งชื่อผู้ใช้"
@@ -36,12 +36,12 @@
             </span>
             <input
                 id="username"
-                name="username"
+                name="name"
                 type="text"
                 autocomplete="username"
                 placeholder="กรอกชื่อผู้ใช้ของคุณ"
                 class="h-[43px] w-full rounded-[11px] border border-[#bcbcbc] px-3 pl-9 text-sm outline-none transition placeholder:text-[#a8a8a8] focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
-                value="{{ old('username', $suggestedUsername) }}"
+                value="{{ old('name', $suggestedUsername) }}"
             >
         </div>
         <p class="mt-2 text-xs text-slate-400">
