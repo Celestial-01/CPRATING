@@ -136,13 +136,10 @@
                     @foreach ($featuredCourses as $index => $featuredCourse)
                         <button
                             type="button"
-                            @class([
-                                'h-2.5 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-sky-200',
-                                'w-10 bg-slate-900' => $index === 0,
-                                'w-2.5 bg-slate-300' => $index !== 0,
-                            ])
+                            class="h-2.5 w-2.5 rounded-full bg-slate-300 transition-all data-[active=true]:w-10 data-[active=true]:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-200"
                             aria-label="เลือกสไลด์ที่ {{ $index + 1 }}"
                             aria-current="{{ $index === 0 ? 'true' : 'false' }}"
+                            data-active="{{ $index === 0 ? 'true' : 'false' }}"
                             data-carousel-dot
                         ></button>
                     @endforeach

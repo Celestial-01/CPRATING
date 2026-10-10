@@ -6,8 +6,8 @@ import {
     Flame,
     Star,
 } from 'lucide';
-import { renderIcons } from './icon-renderer';
 import { onDomReady } from './dom-ready';
+import { renderIcons } from './icon-renderer';
 
 const iconSet = {
     BookOpen,

@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide';
-import { renderIcons } from './icon-renderer';
 import { onDomReady } from './dom-ready';
+import { renderIcons } from './icon-renderer';
 
 const iconSet = { ChevronLeft, ChevronRight };
 
@@ -8,8 +8,6 @@ const initializeCourseCarousel = () => {
     const carousel = document.querySelector('[data-course-carousel]');
 
     if (!carousel) return;
-
-    renderIcons(iconSet);
 
     const slides = [...carousel.querySelectorAll('[data-carousel-slide]')];
     const dots = [...carousel.querySelectorAll('[data-carousel-dot]')];
@@ -19,6 +17,10 @@ const initializeCourseCarousel = () => {
     let autoplayTimer;
     let touchStartX = null;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    if (slides.length === 0) return;
+
+    renderIcons(iconSet);
 
     if (activeIndex < 0) {
         activeIndex = 0;
@@ -39,21 +41,19 @@ const initializeCourseCarousel = () => {
             const isActive = dotIndex === activeIndex;
 
             dot.setAttribute('aria-current', isActive ? 'true' : 'false');
-            dot.classList.toggle('w-10', isActive);
-            dot.classList.toggle('w-2.5', !isActive);
-            dot.classList.toggle('bg-slate-900', isActive);
-            dot.classList.toggle('bg-slate-300', !isActive);
+            dot.dataset.active = String(isActive);
         });
     };
 
     const stopAutoplay = () => {
         window.clearInterval(autoplayTimer);
+        autoplayTimer = undefined;
     };
 
     const startAutoplay = () => {
         stopAutoplay();
 
-        if (prefersReducedMotion.matches) return;
+        if (prefersReducedMotion.matches || document.hidden || slides.length < 2) return;
 
         autoplayTimer = window.setInterval(() => showSlide(activeIndex + 1), 6500);
     };
@@ -68,11 +68,17 @@ const initializeCourseCarousel = () => {
         startAutoplay();
     });
 
-    dots.forEach((dot, dotIndex) => {
-        dot.addEventListener('click', () => {
-            showSlide(dotIndex);
-            startAutoplay();
-        });
+    carousel.addEventListener('click', (event) => {
+        const dot = event.target.closest('[data-carousel-dot]');
+
+        if (!dot || !carousel.contains(dot)) return;
+
+        const dotIndex = dots.indexOf(dot);
+
+        if (dotIndex < 0) return;
+
+        showSlide(dotIndex);
+        startAutoplay();
     });
 
     carousel.addEventListener('keydown', (event) => {
@@ -110,6 +116,13 @@ const initializeCourseCarousel = () => {
     carousel.addEventListener('pointercancel', () => {
         touchStartX = null;
     });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopAutoplay();
+        else startAutoplay();
+    });
+
+    prefersReducedMotion.addEventListener('change', startAutoplay);
 
     showSlide(activeIndex);
     startAutoplay();

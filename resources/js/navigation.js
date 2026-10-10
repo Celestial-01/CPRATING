@@ -1,53 +1,46 @@
 import { ChevronRight, Menu, X } from 'lucide';
-import { renderIcons } from './icon-renderer';
 import { onDomReady } from './dom-ready';
+import { renderIcons } from './icon-renderer';
 
 const iconSet = { ChevronRight, Menu, X };
 
 const initializeMobileMenu = () => {
     const toggle = document.querySelector('[data-mobile-menu-toggle]');
     const menu = document.querySelector('[data-mobile-menu]');
-    const close = document.querySelector('[data-mobile-menu-close]');
+    const close = menu?.querySelector('[data-mobile-menu-close]');
     const overlay = document.querySelector('[data-mobile-menu-overlay]');
-    const links = [...document.querySelectorAll('[data-mobile-menu-link]')];
-    const content = [...document.querySelectorAll('[data-mobile-menu-content]')];
-    const toggleIcon = document.querySelector('[data-mobile-menu-toggle-icon]');
-    const closeIcon = document.querySelector('[data-mobile-menu-close-icon]');
 
     if (!toggle || !menu || !close || !overlay) return;
 
     renderIcons(iconSet);
 
-    const setMenuOpen = (isOpen) => {
-        menu.classList.toggle('pointer-events-none', !isOpen);
-        menu.classList.toggle('pointer-events-auto', isOpen);
-        menu.classList.toggle('translate-x-full', !isOpen);
-        menu.classList.toggle('translate-x-0', isOpen);
-        menu.classList.toggle('opacity-0', !isOpen);
-        menu.classList.toggle('opacity-100', isOpen);
-        content.forEach((item) => {
-            item.classList.toggle('translate-y-3', !isOpen);
-            item.classList.toggle('translate-y-0', isOpen);
-            item.classList.toggle('opacity-0', !isOpen);
-            item.classList.toggle('opacity-100', isOpen);
-        });
-        toggleIcon?.classList.toggle('rotate-90', isOpen);
-        closeIcon?.classList.toggle('rotate-90', !isOpen);
-        overlay.classList.toggle('pointer-events-none', !isOpen);
-        overlay.classList.toggle('pointer-events-auto', isOpen);
-        overlay.classList.toggle('opacity-0', !isOpen);
-        overlay.classList.toggle('opacity-100', isOpen);
+    const setMenuOpen = (isOpen, restoreFocus = true) => {
+        if ((menu.dataset.open === 'true') === isOpen) return;
+
+        menu.dataset.open = String(isOpen);
+        overlay.dataset.open = String(isOpen);
+        menu.inert = !isOpen;
         menu.setAttribute('aria-hidden', String(!isOpen));
         toggle.setAttribute('aria-expanded', String(isOpen));
         document.body.classList.toggle('overflow-hidden', isOpen);
+
+        if (isOpen) close.focus();
+        else if (restoreFocus) toggle.focus();
     };
 
     toggle.addEventListener('click', () => setMenuOpen(true));
     close.addEventListener('click', () => setMenuOpen(false));
     overlay.addEventListener('click', () => setMenuOpen(false));
-    links.forEach((link) => link.addEventListener('click', () => setMenuOpen(false)));
+    menu.addEventListener('click', (event) => {
+        if (!event.target.closest('[data-mobile-menu-link]')) return;
+
+        setMenuOpen(false, false);
+    });
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') setMenuOpen(false);
+        if (event.key === 'Escape' && menu.dataset.open === 'true') setMenuOpen(false);
+    });
+    window.matchMedia('(min-width: 48rem)').addEventListener('change', (event) => {
+        if (event.matches) setMenuOpen(false, false);
     });
 };
 

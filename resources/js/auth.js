@@ -3,6 +3,7 @@ import {
     BookOpen,
     Building2,
     Check,
+    Clock3,
     Eye,
     EyeOff,
     GraduationCap,
@@ -11,15 +12,18 @@ import {
     Mail,
     Smartphone,
     Sparkle,
+    X,
 } from 'lucide';
-import { renderIcons } from './icon-renderer';
 import { onDomReady } from './dom-ready';
+import { renderIcons } from './icon-renderer';
+import { initializeLegalModal } from './legal-modal';
 
 const iconSet = {
     AtSign,
     BookOpen,
     Building2,
     Check,
+    Clock3,
     Eye,
     EyeOff,
     GraduationCap,
@@ -28,6 +32,7 @@ const iconSet = {
     Mail,
     Smartphone,
     Sparkle,
+    X,
 };
 
 const getPasswordInput = (toggle) => {
@@ -40,10 +45,7 @@ const updatePasswordToggle = (toggle, input) => {
     const isPassword = input.type === 'password';
 
     input.type = isPassword ? 'text' : 'password';
-    toggle.setAttribute(
-        'aria-label',
-        isPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'
-    );
+    toggle.setAttribute('aria-label', isPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
     toggle.innerHTML = `<i data-lucide="${isPassword ? 'eye-off' : 'eye'}" class="size-5"></i>`;
     renderIcons(iconSet);
 };
@@ -53,8 +55,9 @@ const initializePasswordToggles = () => {
         toggle.addEventListener('click', () => {
             const input = getPasswordInput(toggle);
 
-            if (input) {
-                updatePasswordToggle(toggle, input);}
+            if (!input) return;
+
+            updatePasswordToggle(toggle, input);
         });
     });
 };
@@ -64,6 +67,7 @@ const initializeAuth = () => {
 
     renderIcons(iconSet);
     initializePasswordToggles();
+    initializeLegalModal();
 };
 
 onDomReady(initializeAuth);

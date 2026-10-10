@@ -12,7 +12,7 @@
     </header>
 
     <form
-        action="#"
+        action="{{ route('auth.forgot-password.store') }}"
         method="POST"
         class="mt-6"
         aria-label="แบบฟอร์มขอรีเซ็ตรหัสผ่าน"
@@ -30,6 +30,8 @@
             type="email"
             autocomplete="email"
             placeholder="กรอกอีเมล"
+            value="{{ old('email') }}"
+            required
             class="h-[45px] w-full rounded-[11px] border border-[#bcbcbc] px-3 text-sm outline-none transition placeholder:text-[#a8a8a8] focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
         >
         <button

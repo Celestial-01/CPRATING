@@ -12,12 +12,14 @@
     </header>
 
     <form
-        action="#"
+        action="{{ route('auth.reset-password.store') }}"
         method="POST"
         class="mt-6 space-y-5"
         aria-label="แบบฟอร์มรีเซ็ตรหัสผ่าน"
     >
         @csrf
+        <input type="hidden" name="token" value="{{ $token }}">
+        <input type="hidden" name="email" value="{{ $email }}">
         <div>
             <label
                 for="reset-password"
