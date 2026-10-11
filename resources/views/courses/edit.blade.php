@@ -4,19 +4,55 @@
 
 @section('content')
     @php
-        $teacherTags = $course->teachers
+        $teacherItems = $course->teachers
             ->map(fn ($t) => ['id' => $t->id, 'label' => trim($t->prefix . ' ' . $t->teacher_name)])
             ->values()->all();
 
-        $topicTags = $course->topics
+        $topicItems = $course->topics
             ->map(fn ($t) => ['id' => $t->id, 'label' => $t->name])
             ->values()->all();
 
+        $prerequisiteItems = $course->previousCourses
+            ->map(fn ($c) => ['id' => $c->id, 'label' => $c->course_code, 'sublabel' => $c->course_name_en])
+            ->values()->all();
+
+       
+        $relations = [
+            [
+                'field' => 'teacher_ids',
+                'title' => 'อาจารย์ผู้สอน',
+                'empty' => 'ไม่ระบุชื่ออาจารย์ผู้สอน',
+                'items' => $teacherItems,
+                'url' => route('teachers.search'),
+                'addLabel' => '+ เพิ่มอาจารย์',
+                'placeholder' => 'พิมพ์ชื่ออาจารย์เพื่อค้นหา',
+                'labelKeys' => 'prefix,teacher_name',
+            ],
+            [
+                'field' => 'topic_ids',
+                'title' => 'หัวข้อที่เกี่ยวข้อง',
+                'empty' => 'ยังไม่มีหัวข้อในรายวิชานี้',
+                'items' => $topicItems,
+                'url' => route('topics.search'),
+                'addLabel' => '+ เพิ่มหัวข้อ',
+                'placeholder' => 'พิมพ์ชื่อหัวข้อเพื่อค้นหา',
+                'labelKeys' => 'name',
+            ],
+            [
+                'field' => 'prerequisite_ids',
+                'title' => 'วิชาบังคับก่อน (Previous Course)',
+                'empty' => 'ไม่มีวิชาบังคับก่อน',
+                'items' => $prerequisiteItems,
+                'url' => route('courses.search'),
+                'placeholder' => 'ค้นหารหัสวิชา หรือชื่อวิชาภาษาอังกฤษ...',
+                'labelKeys' => 'course_code',
+                'subKeys' => 'course_name_en',
+                'alwaysOpen' => true,
+                'wide' => true,
+            ],
+        ];
+
         $typeOptions = array_combine(\App\Models\Course::TYPES, \App\Models\Course::TYPES);
-        $chip = 'inline-flex items-center rounded-full bg-[#e9f5ff] px-3 py-1 text-sm font-medium text-[#1684e5]';
-        $editBtn = 'rounded-full bg-sky-50 px-4 py-1.5 text-sm font-medium text-[#1684e5] transition hover:bg-[#d4ebff]';
-        $saveBtn = 'h-9 rounded-full bg-[#1684e5] px-5 text-sm font-medium text-white transition hover:bg-[#0e73cc]';
-        $cancelBtn = 'h-9 rounded-full border border-slate-200 px-5 text-sm text-slate-600 transition hover:bg-slate-50';
     @endphp
 
     <main class="mx-auto w-full max-w-[1120px] px-6 pb-10" data-csrf="{{ csrf_token() }}">
@@ -25,45 +61,52 @@
             ← กลับไปหน้ารายวิชา
         </a>
 
-        {{-- ส่วนหัวรายวิชา --}}
+    
         <section class="mt-4 rounded-[24px] border border-slate-200 bg-white p-4 md:p-7" aria-labelledby="course-title">
             <div class="grid gap-7 md:grid-cols-[minmax(0,0.44fr)_minmax(0,1fr)]">
-                {{-- รูปปก --}}
+               
                 <div>
-                    <div data-image-box data-url="{{ route('courses.image', $course) }}"
-                         class="relative aspect-[300/313] overflow-hidden rounded-[16px] bg-gradient-to-br from-slate-600 to-slate-800">
-                        <img data-course-image
-                             src="{{ $course->image ? asset('storage/' . $course->image) : '' }}"
-                             alt="ภาพประกอบวิชา {{ $course->course_name_th }}"
-                             class="absolute inset-0 size-full object-cover {{ $course->image ? '' : 'hidden' }}">
-                        <label class="absolute bottom-3 right-3 cursor-pointer rounded-full bg-white/95 px-4 py-2 text-xs font-medium text-[#1684e5] shadow transition hover:bg-white">
-                            <span data-image-label>เปลี่ยนรูปปก</span>
-                            <input type="file" accept="image/*" data-image-input class="sr-only">
-                        </label>
-                    </div>
-                    <p data-image-error class="mt-2 hidden text-sm text-red-600"></p>
-                    <p class="mt-2 text-xs text-slate-400">รองรับไฟล์รูปภาพ ขนาดไม่เกิน 2 MB</p>
-                    
-                <form
-                    action="{{ route('courses.destroy', $course) }}"
-                    method="POST"
-                    onsubmit="return confirm('ต้องการลบรายวิชานี้ใช่หรือไม่?')"
-                    class="mt-4 flex justify-center">
-                    @csrf
-                    @method('DELETE')
-
-                    <button
-                        type="submit"
-                        title="ลบรายวิชา"
-                        class="inline-flex h-12 items-center justify-center rounded-full bg-red-50 px-8 text-base font-bold text-red-600 shadow-sm transition hover:bg-red-100"
+                    <div
+                        data-image-box
+                        data-url="{{ route('courses.image', $course) }}"
+                        data-has-image="{{ $course->image ? 'true' : 'false' }}"
+                        data-uploading="false"
+                        data-has-error="false"
+                        class="group/cover"
                     >
-                        ลบรายวิชา
-                    </button>
-                </form>
+                        <div class="relative aspect-[300/313] overflow-hidden rounded-[16px] bg-gradient-to-br from-slate-600 to-slate-800">
+                            <img data-course-image
+                                 src="{{ $course->image ? asset('storage/' . $course->image) : '' }}"
+                                 alt="ภาพประกอบวิชา {{ $course->course_name_th }}"
+                                 class="absolute inset-0 hidden size-full object-cover group-data-[has-image=true]/cover:block">
+                            <label class="absolute bottom-3 right-3 cursor-pointer rounded-full bg-white/95 px-4 py-2 text-xs font-medium text-[#1684e5] shadow transition hover:bg-white">
+                                <span class="group-data-[uploading=true]/cover:hidden">เปลี่ยนรูปปก</span>
+                                <span class="hidden group-data-[uploading=true]/cover:inline">กำลังอัปโหลด...</span>
+                                <input type="file" accept="image/*" data-image-input class="sr-only">
+                            </label>
+                        </div>
+                        <p data-image-error class="mt-2 hidden text-sm text-red-600 group-data-[has-error=true]/cover:block"></p>
+                    </div>
 
+                    <p class="mt-2 text-xs text-slate-400">รองรับไฟล์รูปภาพ ขนาดไม่เกิน 2 MB</p>
 
+                    <form
+                        action="{{ route('courses.destroy', $course) }}"
+                        method="POST"
+                        onsubmit="return confirm('ต้องการลบรายวิชานี้ใช่หรือไม่?')"
+                        class="mt-4 flex justify-center">
+                        @csrf
+                        @method('DELETE')
+
+                        <button
+                            type="submit"
+                            title="ลบรายวิชา"
+                            class="inline-flex h-12 items-center justify-center rounded-full bg-red-50 px-8 text-base font-bold text-red-600 shadow-sm transition hover:bg-red-100"
+                        >
+                            ลบรายวิชา
+                        </button>
+                    </form>
                 </div>
-            
 
                 {{-- ข้อมูลหลัก --}}
                 <div class="flex min-w-0 flex-col gap-5">
@@ -93,144 +136,190 @@
             </div>
         </section>
 
-        {{-- ค่าเฉลี่ย + โอกาสได้เกรด (รอข้อมูลจากฝั่ง user) --}}
+        
         <x-admin.course-stats />
 
+        
         <div class="mt-6 grid gap-6 md:grid-cols-2">
-            {{-- อาจารย์ --}}
-            <section data-inline-relation data-field="teacher_ids"
-                     data-url="{{ route('courses.inline-update', $course) }}"
-                     data-empty-text="ไม่ระบุชื่ออาจารย์ผู้สอน"
-                     class="rounded-[22px] border border-slate-200 bg-white p-6">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-slate-900">อาจารย์ผู้สอน</h2>
-                    <button type="button" data-edit class="{{ $editBtn }}">แก้ไข</button>
-                </div>
-
-                <div data-view class="mt-4">
-                    <div data-chips class="flex flex-wrap gap-2">
-                        @forelse ($teacherTags as $item)
-                            <span class="{{ $chip }}">{{ $item['label'] }}</span>
-                        @empty
-                            <p class="text-sm text-slate-400">ไม่ระบุชื่ออาจารย์ผู้สอน</p>
-                        @endforelse
+            @foreach ($relations as $r)
+                <section
+                    data-inline-relation
+                    data-field="{{ $r['field'] }}"
+                    data-url="{{ route('courses.inline-update', $course) }}"
+                    data-editing="false"
+                    data-has-error="false"
+                    data-saving="false"
+                    data-empty="{{ count($r['items']) ? 'false' : 'true' }}"
+                    @class([
+                        'group/relation rounded-[22px] border border-slate-200 bg-white p-6',
+                        'md:col-span-2' => $r['wide'] ?? false,
+                    ])
+                >
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-slate-900">{{ $r['title'] }}</h2>
+                        <button
+                            type="button"
+                            data-edit
+                            class="rounded-full bg-sky-50 px-4 py-1.5 text-sm font-medium text-[#1684e5] transition hover:bg-[#d4ebff] group-data-[editing=true]/relation:hidden"
+                        >
+                            แก้ไข
+                        </button>
                     </div>
-                </div>
 
-                <div data-editor class="mt-4 hidden">
-                    <x-admin.tag-picker name="teacher_ids" :url="route('teachers.search')"
-                        add-label="+ เพิ่มอาจารย์" placeholder="พิมพ์ชื่ออาจารย์เพื่อค้นหา"
-                        :selected="$teacherTags" />
-                    <p data-error class="mt-2 hidden text-sm text-red-600"></p>
-                    <div class="mt-4 flex gap-2">
-                        <button type="button" data-save class="{{ $saveBtn }}">บันทึก</button>
-                        <button type="button" data-cancel class="{{ $cancelBtn }}">ยกเลิก</button>
+                    <div data-view class="mt-4 group-data-[editing=true]/relation:hidden">
+                        <div data-chips class="flex flex-wrap gap-2">
+                            @foreach ($r['items'] as $item)
+                                <span data-chip class="inline-flex items-center gap-1.5 rounded-full bg-[#e9f5ff] px-3 py-1 text-sm font-medium text-[#1684e5]">
+                                    <span data-slot="label">{{ $item['label'] }}</span>
+                                    <span data-slot="sublabel" class="font-normal empty:hidden">{{ $item['sublabel'] ?? '' }}</span>
+                                </span>
+                            @endforeach
+
+                            <p class="hidden text-sm text-slate-400 group-data-[empty=true]/relation:block">{{ $r['empty'] }}</p>
+                        </div>
                     </div>
-                </div>
-            </section>
 
-            {{-- หัวข้อ --}}
-            <section data-inline-relation data-field="topic_ids"
-                     data-url="{{ route('courses.inline-update', $course) }}"
-                     data-empty-text="ยังไม่มีหัวข้อในรายวิชานี้"
-                     class="rounded-[22px] border border-slate-200 bg-white p-6">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-slate-900">หัวข้อที่เกี่ยวข้อง</h2>
-                    <button type="button" data-edit class="{{ $editBtn }}">แก้ไข</button>
-                </div>
+                    <div data-editor class="mt-4 hidden group-data-[editing=true]/relation:block">
+                        <x-admin.tag-picker
+                            :name="$r['field']"
+                            :url="$r['url']"
+                            :add-label="$r['addLabel'] ?? '+ เพิ่ม'"
+                            :placeholder="$r['placeholder']"
+                            :label-keys="$r['labelKeys']"
+                            :sub-keys="$r['subKeys'] ?? ''"
+                            :always-open="$r['alwaysOpen'] ?? false"
+                            :selected="$r['items']"
+                        />
 
-                <div data-view class="mt-4">
-                    <div data-chips class="flex flex-wrap gap-2">
-                        @forelse ($topicTags as $item)
-                            <span class="{{ $chip }}">{{ $item['label'] }}</span>
-                        @empty
-                            <p class="text-sm text-slate-400">ยังไม่มีหัวข้อในรายวิชานี้</p>
-                        @endforelse
+                        <p data-error class="mt-2 hidden text-sm text-red-600 group-data-[has-error=true]/relation:block"></p>
+
+                        <div class="mt-4 flex gap-2">
+                            <button
+                                type="button"
+                                data-save
+                                class="h-9 rounded-full bg-[#1684e5] px-5 text-sm font-medium text-white transition hover:bg-[#0e73cc] disabled:opacity-60"
+                            >
+                                <span class="group-data-[saving=true]/relation:hidden">บันทึก</span>
+                                <span class="hidden group-data-[saving=true]/relation:inline">กำลังบันทึก...</span>
+                            </button>
+                            <button
+                                type="button"
+                                data-cancel
+                                class="h-9 rounded-full border border-slate-200 px-5 text-sm text-slate-600 transition hover:bg-slate-50"
+                            >
+                                ยกเลิก
+                            </button>
+                        </div>
                     </div>
-                </div>
 
-                <div data-editor class="mt-4 hidden">
-                    <x-admin.tag-picker name="topic_ids" :url="route('topics.search')"
-                        add-label="+ เพิ่มหัวข้อ" placeholder="พิมพ์ชื่อหัวข้อเพื่อค้นหา"
-                        :selected="$topicTags" />
-                    <p data-error class="mt-2 hidden text-sm text-red-600"></p>
-                    <div class="mt-4 flex gap-2">
-                        <button type="button" data-save class="{{ $saveBtn }}">บันทึก</button>
-                        <button type="button" data-cancel class="{{ $cancelBtn }}">ยกเลิก</button>
-                    </div>
-                </div>
-            </section>
+                    
+                    <template data-chip-template>
+                        <span data-chip class="inline-flex items-center gap-1.5 rounded-full bg-[#e9f5ff] px-3 py-1 text-sm font-medium text-[#1684e5]">
+                            <span data-slot="label"></span>
+                            <span data-slot="sublabel" class="font-normal empty:hidden"></span>
+                        </span>
+                    </template>
+                </section>
+            @endforeach
         </div>
 
-        {{-- วิชาบังคับก่อน --}}
-        <section data-inline-relation data-field="prerequisite_ids"
-                 data-url="{{ route('courses.inline-update', $course) }}"
-                 data-empty-text="ไม่มีวิชาบังคับก่อน"
-                 class="mt-6 rounded-[22px] border border-slate-200 bg-white p-6">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-slate-900">วิชาบังคับก่อน (Previous Course)</h2>
-                <button type="button" data-edit class="{{ $editBtn }}">แก้ไข</button>
-            </div>
+       
+         <section
+            class="mt-8 rounded-[22px] border border-slate-200 bg-white p-6 sm:p-8"
+            aria-labelledby="prerequisites-title"
+        >
+            <p class="text-[11px] font-semibold tracking-[0.14em] text-slate-500">
+                PREREQUISITES
+            </p>
 
-            <div data-view class="mt-4">
-                <div data-chips class="flex flex-wrap gap-2">
-                    @forelse ($course->previousCourses as $pre)
-                        <span class="{{ $chip }}">{{ $pre->course_code }} {{ $pre->course_name_en }}</span>
-                    @empty
-                        <p class="text-sm text-slate-400">ไม่มีวิชาบังคับก่อน</p>
-                    @endforelse
-                </div>
-            </div>
+            <h2 id="prerequisites-title"
+                class="mt-2 flex items-center gap-3 text-xl font-bold text-slate-950">
+                <span class="h-7 w-1 rounded-full bg-[#2f80ed]"></span>
+                เงื่อนไขก่อนลงทะเบียน
+            </h2>
 
-            <div data-editor class="mt-4 hidden">
-                <div id="prerequisite-picker" data-url="{{ route('courses.search') }}" class="relative">
-                    <div id="selected-prerequisites" class="mb-3 flex flex-wrap gap-2">
-                        @foreach ($course->previousCourses as $pre)
-                            <span data-prerequisite-tag data-id="{{ $pre->id }}"
-                                  class="inline-flex items-center gap-3 rounded-xl bg-[#e9f5ff] px-3 py-2">
-                                <span class="flex flex-col gap-0.5">
-                                    <span class="text-sm font-semibold text-[#1684e5]">{{ $pre->course_code }}</span>
-                                    <span class="text-xs text-[#5792bd]">{{ $pre->course_name_en }}</span>
+            <p class="mt-1 text-xs text-slate-500">
+                วิชาที่ควรผ่านมาก่อน และวิชาที่เปิดให้ลงต่อได้
+            </p>
+
+            <div class="mt-6 grid gap-7 md:grid-cols-2">
+                {{-- วิชาบังคับก่อน --}}
+                <div>
+                    <h3 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+                        <i data-lucide="lock" class="size-4 text-slate-500" aria-hidden="true"></i>
+                        ต้องเรียนผ่านมาก่อน
+                    </h3>
+
+                    <div class="mt-4 space-y-3">
+                        @forelse ($course->previousCourses as $previous)
+                            <a
+                                href="{{ route('courses.edit', $previous) }}"
+                                class="flex items-center justify-between gap-3 rounded-[16px] border border-slate-200 bg-slate-50 px-3 py-3 transition hover:border-blue-400 hover:bg-white"
+                            >
+                                <div class="min-w-0">
+                                    <strong class="block text-sm text-slate-900">
+                                        {{ $previous->course_code }}
+                                    </strong>
+                                    <span class="text-xs text-slate-500">
+                                        {{ $previous->course_name_en }}
+                                    </span>
+                                </div>
+
+                                <span class="shrink-0 rounded-full bg-black px-3 py-1 text-[10px] font-semibold text-white">
+                                    บังคับ
                                 </span>
-                                <input type="hidden" name="prerequisite_ids[]" value="{{ $pre->id }}">
-                                <button type="button" data-remove-prerequisite aria-label="นำวิชาบังคับก่อนออก"
-                                        class="text-xl leading-none text-[#1684e5] hover:text-red-500">×</button>
-                            </span>
-                        @endforeach
+                            </a>
+                        @empty
+                            <div class="flex min-h-20 items-center gap-3 rounded-[16px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-slate-400">
+                                <i data-lucide="circle-check" class="size-5 shrink-0 text-emerald-400" aria-hidden="true"></i>
+                                <p class="text-xs leading-5">
+                                    ไม่มีวิชาที่ต้องผ่านก่อนลงทะเบียน
+                                </p>
+                            </div>
+                        @endforelse
                     </div>
-
-                    <input id="prerequisite-search" type="text" autocomplete="off"
-                           placeholder="ค้นหารหัสวิชา หรือชื่อวิชาภาษาอังกฤษ..."
-                           class="h-[45px] w-full rounded-[11px] border border-[#bcbcbc] bg-white px-3 text-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100">
-                    <div id="prerequisite-results"
-                         class="absolute z-20 mt-1 hidden max-h-64 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg"></div>
                 </div>
 
-                <p data-error class="mt-2 hidden text-sm text-red-600"></p>
-                <div class="mt-4 flex gap-2">
-                    <button type="button" data-save class="{{ $saveBtn }}">บันทึก</button>
-                    <button type="button" data-cancel class="{{ $cancelBtn }}">ยกเลิก</button>
+                {{-- วิชาที่เรียนต่อได้ --}}
+                <div>
+                    <h3 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+                        <i data-lucide="book-open" class="size-4 text-slate-500" aria-hidden="true"></i>
+                        ปลดล็อกวิชาต่อไป
+                    </h3>
+
+                    <div class="mt-4 space-y-3">
+                        @forelse ($course->nextCourses as $next)
+                            <a
+                                href="{{ route('courses.edit', $next) }}"
+                                class="group flex items-center justify-between gap-3 rounded-[16px] border border-slate-200 px-3 py-3 transition hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-sm"
+                            >
+                                <div class="min-w-0">
+                                    <strong class="block text-sm text-slate-900 transition-colors group-hover:text-blue-500">
+                                        {{ $next->course_code }}
+                                    </strong>
+                                    <span class="text-xs text-slate-500">
+                                        {{ $next->course_name_en }}
+                                    </span>
+                                </div>
+
+                                <i data-lucide="arrow-up-right"
+                                    class="size-4 shrink-0 text-slate-500 transition group-hover:text-blue-500"
+                                    aria-hidden="true"></i>
+                            </a>
+                        @empty
+                            <div class="flex min-h-20 items-center gap-3 rounded-[16px] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-slate-400">
+                                <i data-lucide="book-open" class="size-5 shrink-0" aria-hidden="true"></i>
+                                <p class="text-xs leading-5">
+                                    ยังไม่มีวิชาที่เปิดต่อจากรายวิชานี้
+                                </p>
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </section>
 
-        {{-- Next Course (อ่านอย่างเดียว คำนวณอัตโนมัติ) --}}
-        <section class="mt-6 rounded-[22px] border border-slate-200 bg-white p-6">
-            <h2 class="text-lg font-semibold text-slate-900">วิชาที่ต้องเรียนต่อ (Next Course)</h2>
-            <p class="mt-1 text-xs text-slate-400">ระบบสร้างให้อัตโนมัติจากวิชาอื่นที่เลือกวิชานี้เป็นวิชาบังคับก่อน</p>
-            <div class="mt-4 flex flex-wrap gap-2">
-                @forelse ($course->nextCourses as $next)
-                    <a href="{{ route('courses.edit', $next) }}"
-                       class="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700 transition hover:bg-slate-200">
-                        {{ $next->course_code }} {{ $next->course_name_en }}
-                    </a>
-                @empty
-                    <p class="text-sm text-slate-400">ยังไม่มีวิชาที่ต่อเนื่อง</p>
-                @endforelse
-            </div>
-        </section>
 
-        {{-- คอมเมนต์ (รอข้อมูลจากฝั่ง user) --}}
         <x-admin.course-comments />
     </main>
 @endsection

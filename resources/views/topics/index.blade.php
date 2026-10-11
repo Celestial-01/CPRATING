@@ -46,18 +46,20 @@
                 <div
                     class="inline-flex min-h-[45px] items-center gap-2 rounded-full bg-gradient-to-r from-[#1A80D8] to-[#5AB2FF] px-4 text-white shadow-sm"
                 >
+                    {{-- data-editing: JS สลับ true/false, ส่วน label/input สลับการแสดงผลด้วย group-data --}}
                     <form
                         action="{{ route('topics.update', $topic) }}"
                         method="POST"
                         data-topic-edit
-                        class="flex min-w-0 items-center"
+                        data-editing="false"
+                        class="group/topic flex min-w-0 items-center"
                     >
                         @csrf
                         @method('PUT')
                         <span
                             data-topic-label
                             title="ดับเบิลคลิกเพื่อแก้ไข"
-                            class="cursor-text select-none text-[20px] font-normal"
+                            class="cursor-text select-none text-[20px] font-normal group-data-[editing=true]/topic:hidden"
                         >{{ $topic->name }}</span>
 
                         <input
@@ -66,7 +68,7 @@
                             value="{{ $topic->name }}"
                             data-topic-input
                             aria-label="แก้ไขชื่อหัวข้อ"
-                            class="hidden w-full min-w-0 rounded-md bg-white/95 px-2 py-1 text-base text-sky-800 outline-none"
+                            class="hidden w-full min-w-0 rounded-md bg-white/95 px-2 py-1 text-base text-sky-800 outline-none group-data-[editing=true]/topic:block"
                             required
                             maxlength="255"
                         >
@@ -79,7 +81,7 @@
                     >
                         @csrf
                         @method('DELETE')
-                        
+
                         <button
                             type="submit"
                             aria-label="ลบ {{ $topic->name }}"
@@ -102,6 +104,5 @@
             ดับเบิลคลิกชื่อหัวข้อเพื่อแก้ไข กด Enter หรือคลิกออกเพื่อบันทึก
         </p>
     </x-admin.page>
-
-   
+  
 @endsection

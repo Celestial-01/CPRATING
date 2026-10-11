@@ -42,4 +42,5 @@
             </x-admin.field>
         </x-admin.form-card>
     </x-admin.page>
+   
 @endsection

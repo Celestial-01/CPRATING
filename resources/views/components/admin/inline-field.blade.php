@@ -1,8 +1,8 @@
 @props([
     'course',
     'field',
-    'type' => 'text',          {{-- text | number | textarea | select --}}
-    'options' => [],           {{-- ใช้กับ select: [value => label] --}}
+    'type' => 'text',
+    'options' => [],
     'label' => null,
     'suffix' => null,
     'placeholder' => 'ยังไม่มีข้อมูล',
@@ -20,13 +20,16 @@
     data-inline
     data-field="{{ $field }}"
     data-url="{{ route('courses.inline-update', $course) }}"
-    {{ $attributes }}
+    data-editing="false"
+    data-has-error="false"
+    data-saving="false"
+    {{ $attributes->class(['group/inline']) }}
 >
     @if ($label)
         <p class="mb-1 text-xs text-slate-400">{{ $label }}</p>
     @endif
 
-    <div data-view class="flex items-start gap-2">
+    <div data-view class="flex items-start gap-2 group-data-[editing=true]/inline:hidden">
         <span data-display data-placeholder="{{ $placeholder }}" class="min-w-0 whitespace-pre-line break-words {{ $displayClass }}">{{ filled($shown) ? $shown : $placeholder }}</span>
         @if ($suffix)
             <span class="text-sm text-slate-500">{{ $suffix }}</span>
@@ -37,7 +40,7 @@
         </button>
     </div>
 
-    <div data-editor class="hidden">
+    <div data-editor class="hidden group-data-[editing=true]/inline:block">
         @if ($type === 'textarea')
             <textarea data-input rows="5" class="{{ $control }} py-3">{{ $value }}</textarea>
         @elseif ($type === 'select')
@@ -50,10 +53,13 @@
             <input data-input type="{{ $type }}" value="{{ $value }}" @if ($type === 'number') min="0" @endif class="{{ $control }} h-[45px]">
         @endif
 
-        <p data-error class="mt-2 hidden text-sm text-red-600"></p>
+        <p data-error class="mt-2 hidden text-sm text-red-600 group-data-[has-error=true]/inline:block"></p>
 
         <div class="mt-2 flex gap-2">
-            <button type="button" data-save class="h-9 rounded-full bg-[#1684e5] px-5 text-sm font-medium text-white transition hover:bg-[#0e73cc]">บันทึก</button>
+            <button type="button" data-save class="h-9 rounded-full bg-[#1684e5] px-5 text-sm font-medium text-white transition hover:bg-[#0e73cc] disabled:opacity-60">
+                <span class="group-data-[saving=true]/inline:hidden">บันทึก</span>
+                <span class="hidden group-data-[saving=true]/inline:inline">กำลังบันทึก...</span>
+            </button>
             <button type="button" data-cancel class="h-9 rounded-full border border-slate-200 px-5 text-sm text-slate-600 transition hover:bg-slate-50">ยกเลิก</button>
         </div>
     </div>

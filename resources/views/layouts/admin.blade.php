@@ -7,8 +7,18 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-white font-sans text-slate-900 antialiased">
-    <x-admin.navbar />
+     <div class="flex min-h-screen flex-col">
 
-    @yield('content')
+        <x-admin.navbar />
+
+        <main class="flex-1">
+            @yield('content')
+        </main>
+
+       
+        <x-admin.footer />
+
+    </div>
 </body>
+
 

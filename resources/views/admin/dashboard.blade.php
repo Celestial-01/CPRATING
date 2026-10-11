@@ -5,7 +5,7 @@
 @section('content')
    
 
-    <main class="mx-auto w-full max-w-[1120px] px-6 pb-0">
+    <main class="mx-auto w-full max-w-[1120px] px-6 pb-10">
 
         @if (session('success'))
             <div class="mt-6 rounded-[15px] border border-[#bfddfa] bg-[#edf7ff] px-4 py-3 text-sm text-[#527ba8]">
@@ -49,6 +49,10 @@
                     @endforeach
                 </div>
             @endif
+           
         </section>
+        
     </main>
+    
 @endsection
+

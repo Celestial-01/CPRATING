@@ -1,13 +1,16 @@
 import { onDomReady } from './dom-ready';
 
+// JS ไม่ถือคลาส Tailwind: เปลี่ยนแค่ data-* state และ clone <template> จาก blade
+
 const csrf = () => document.querySelector('[data-csrf]')?.dataset.csrf ?? '';
 
 const toast = (message, isError = false) => {
-    const el = document.createElement('div');
+    const template = document.querySelector('template[data-toast-template]');
+    if (!template) return;
+
+    const el = template.content.firstElementChild.cloneNode(true);
+    el.dataset.type = isError ? 'error' : 'success';
     el.textContent = message;
-    el.className =
-        'fixed bottom-6 right-6 z-[100] rounded-xl px-4 py-3 text-sm text-white shadow-lg ' +
-        (isError ? 'bg-red-600' : 'bg-[#1684e5]');
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 2500);
 };
@@ -21,6 +24,11 @@ const send = async (url, options) => {
             ...(options.headers ?? {}),
         },
     });
+
+    if (response.status === 419) {
+        throw new Error('เซสชันหมดอายุ กรุณารีโหลดหน้าแล้วลองใหม่');
+    }
+
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
@@ -38,32 +46,44 @@ const patch = (url, body) =>
         body: JSON.stringify(body),
     });
 
+const showError = (root, errorEl, message) => {
+    errorEl.textContent = message;
+    root.dataset.hasError = 'true';
+};
+
+const clearError = (root) => {
+    root.dataset.hasError = 'false';
+};
+
+const setSaving = (root, button, isSaving) => {
+    root.dataset.saving = String(isSaving);
+    button.disabled = isSaving;
+};
+
 // ---------- ฟิลด์ธรรมดา ----------
 const initField = (root) => {
-    const view = root.querySelector('[data-view]');
-    const editor = root.querySelector('[data-editor]');
     const input = root.querySelector('[data-input]');
     const display = root.querySelector('[data-display]');
     const error = root.querySelector('[data-error]');
     const saveButton = root.querySelector('[data-save]');
     let original = input.value;
 
-    const setOpen = (isOpen) => {
-        view.classList.toggle('hidden', isOpen);
-        editor.classList.toggle('hidden', !isOpen);
+    const setEditing = (isEditing) => {
+        root.dataset.editing = String(isEditing);
     };
 
     const open = () => {
         original = input.value;
-        setOpen(true);
+        clearError(root);
+        setEditing(true);
         input.focus();
         if (input.tagName === 'INPUT') input.select();
     };
 
     const cancel = () => {
         input.value = original;
-        error.classList.add('hidden');
-        setOpen(false);
+        clearError(root);
+        setEditing(false);
     };
 
     const save = async () => {
@@ -71,9 +91,8 @@ const initField = (root) => {
 
         if (value === original) return cancel();
 
-        saveButton.disabled = true;
-        saveButton.textContent = 'กำลังบันทึก...';
-        error.classList.add('hidden');
+        setSaving(root, saveButton, true);
+        clearError(root);
 
         try {
             const data = await patch(root.dataset.url, { [root.dataset.field]: value });
@@ -83,16 +102,22 @@ const initField = (root) => {
                 shown !== null && shown !== undefined && shown !== ''
                     ? shown
                     : display.dataset.placeholder;
+
+            // ข้อความที่คัดลอกไปแสดงที่อื่น (data-mirror) อัปเดตตามทันที
+            document
+                .querySelectorAll(`[data-mirror="${root.dataset.field}"]`)
+                .forEach((mirror) => {
+                    mirror.textContent = display.textContent;
+                });
+
             input.value = value;
             original = value;
-            setOpen(false);
+            setEditing(false);
             toast('บันทึกแล้ว');
         } catch (e) {
-            error.textContent = e.message;
-            error.classList.remove('hidden');
+            showError(root, error, e.message);
         } finally {
-            saveButton.disabled = false;
-            saveButton.textContent = 'บันทึก';
+            setSaving(root, saveButton, false);
         }
     };
 
@@ -105,6 +130,7 @@ const initField = (root) => {
             event.preventDefault();
             cancel();
         }
+
         const isTextarea = input.tagName === 'TEXTAREA';
         if (event.key === 'Enter' && (!isTextarea || event.ctrlKey || event.metaKey)) {
             event.preventDefault();
@@ -114,75 +140,68 @@ const initField = (root) => {
 };
 
 // ---------- ความสัมพันธ์ (อาจารย์ / หัวข้อ / วิชาบังคับก่อน) ----------
-const tagLabel = (tag) => {
-    const el = tag.querySelector('span');
-    const parts = [...el.children];
-
-    return parts.length
-        ? parts.map((part) => part.textContent.trim()).join(' ')
-        : el.textContent.trim();
-};
-
 const initRelation = (root) => {
-    const view = root.querySelector('[data-view]');
     const editor = root.querySelector('[data-editor]');
     const chips = root.querySelector('[data-chips]');
     const error = root.querySelector('[data-error]');
     const saveButton = root.querySelector('[data-save]');
-    const editButton = root.querySelector('[data-edit]');
+    const chipTemplate = root.querySelector('template[data-chip-template]');
+    const picker = editor.querySelector('[data-tag-picker]');
+    const tagsBox = picker.querySelector('[data-tags]');
 
-    const setOpen = (isOpen) => {
-        view.classList.toggle('hidden', isOpen);
-        editor.classList.toggle('hidden', !isOpen);
-        editButton.classList.toggle('hidden', isOpen);
-    };
+    let snapshot = [];
+
+    const currentTags = () => [...tagsBox.querySelectorAll('[data-tag]')];
 
     const renderChips = () => {
-        chips.replaceChildren();
-        const tags = editor.querySelectorAll('[data-tag], [data-prerequisite-tag]');
+        chips.querySelectorAll('[data-chip]').forEach((chip) => chip.remove());
 
-        if (tags.length === 0) {
-            const empty = document.createElement('p');
-            empty.className = 'text-sm text-slate-400';
-            empty.textContent = root.dataset.emptyText;
-            chips.appendChild(empty);
-            return;
-        }
+        const tags = currentTags();
 
         tags.forEach((tag) => {
-            const chip = document.createElement('span');
-            chip.className =
-                'inline-flex items-center rounded-full bg-[#e9f5ff] px-3 py-1 text-sm font-medium text-[#1684e5]';
-            chip.textContent = tagLabel(tag);
+            const chip = chipTemplate.content.firstElementChild.cloneNode(true);
+            chip.querySelector('[data-slot="label"]').textContent = tag.dataset.label ?? '';
+            chip.querySelector('[data-slot="sublabel"]').textContent = tag.dataset.sublabel ?? '';
             chips.appendChild(chip);
         });
+
+        root.dataset.empty = String(tags.length === 0);
     };
 
-    editButton.addEventListener('click', () => setOpen(true));
+    const open = () => {
+        snapshot = [...tagsBox.children].map((node) => node.cloneNode(true));
+        clearError(root);
+        root.dataset.editing = 'true';
+    };
 
-    // ยกเลิก = โหลดหน้าใหม่ เพื่อคืนค่าแท็กที่เลือกไว้เดิมให้ครบ
-    root.querySelector('[data-cancel]').addEventListener('click', () => location.reload());
+    // ยกเลิก = คืนแท็กตามที่เป็นตอนกดแก้ไข (ไม่ต้องรีโหลดหน้า)
+    const cancel = () => {
+        tagsBox.replaceChildren(...snapshot.map((node) => node.cloneNode(true)));
+        picker.dispatchEvent(new Event('picker:sync'));
+        clearError(root);
+        root.dataset.editing = 'false';
+    };
+
+    root.querySelector('[data-edit]').addEventListener('click', open);
+    root.querySelector('[data-cancel]').addEventListener('click', cancel);
 
     saveButton.addEventListener('click', async () => {
-        const ids = [...editor.querySelectorAll('input[type="hidden"]')]
-            .filter((input) => input.name.endsWith('[]'))
-            .map((input) => Number(input.value));
+        const ids = currentTags().map((tag) =>
+            Number(tag.querySelector('input[type="hidden"]').value),
+        );
 
-        saveButton.disabled = true;
-        saveButton.textContent = 'กำลังบันทึก...';
-        error.classList.add('hidden');
+        setSaving(root, saveButton, true);
+        clearError(root);
 
         try {
             await patch(root.dataset.url, { [root.dataset.field]: ids });
             renderChips();
-            setOpen(false);
+            root.dataset.editing = 'false';
             toast('บันทึกแล้ว');
         } catch (e) {
-            error.textContent = e.message;
-            error.classList.remove('hidden');
+            showError(root, error, e.message);
         } finally {
-            saveButton.disabled = false;
-            saveButton.textContent = 'บันทึก';
+            setSaving(root, saveButton, false);
         }
     });
 };
@@ -191,8 +210,7 @@ const initRelation = (root) => {
 const initImage = (box) => {
     const input = box.querySelector('[data-image-input]');
     const image = box.querySelector('[data-course-image]');
-    const label = box.querySelector('[data-image-label]');
-    const error = document.querySelector('[data-image-error]');
+    const error = box.querySelector('[data-image-error]');
 
     input.addEventListener('change', async () => {
         const file = input.files[0];
@@ -201,19 +219,18 @@ const initImage = (box) => {
         const formData = new FormData();
         formData.append('image', file);
 
-        label.textContent = 'กำลังอัปโหลด...';
-        error.classList.add('hidden');
+        box.dataset.uploading = 'true';
+        clearError(box);
 
         try {
             const data = await send(box.dataset.url, { method: 'POST', body: formData });
             image.src = data.url;
-            image.classList.remove('hidden');
+            box.dataset.hasImage = 'true';
             toast('เปลี่ยนรูปปกแล้ว');
         } catch (e) {
-            error.textContent = e.message;
-            error.classList.remove('hidden');
+            showError(box, error, e.message);
         } finally {
-            label.textContent = 'เปลี่ยนรูปปก';
+            box.dataset.uploading = 'false';
             input.value = '';
         }
     });
@@ -224,4 +241,3 @@ onDomReady(() => {
     document.querySelectorAll('[data-inline-relation]').forEach(initRelation);
     document.querySelectorAll('[data-image-box]').forEach(initImage);
 });
-
