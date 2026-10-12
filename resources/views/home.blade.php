@@ -1,278 +1,240 @@
 @extends('layouts.app')
 
-@section('title', 'หน้าหลัก')
+@section('title', 'รีวิวรายวิชาก่อนลงทะเบียน')
 
 @section('content')
-    <x-navbar :home-hero="true" />
+    <x-navbar active="home" :home-hero="true" />
 
     @if ($showSkeleton)
         <x-skeleton.home />
     @else
-        <main class="bg-[#f8fafc]">
-            <section
-                class="home-hero relative flex min-h-[100svh] items-center overflow-hidden bg-[#f4f5f7]"
-                aria-labelledby="home-title"
-            >
-                <div class="home-hero-glow pointer-events-none absolute inset-0" aria-hidden="true"></div>
-                <span
-                    class="absolute left-5 top-7 z-20 text-sm font-semibold tracking-[0.08em] text-slate-900 sm:left-8 sm:top-9"
-                >
-                    CP<span class="text-[#1684e5]">RATING</span>
-                </span>
+        <main class="home-page source-page">
+            <header class="hero" id="top" data-home-hero aria-labelledby="home-title">
+                <div class="fx" aria-hidden="true">
+                    <i class="rg rg--small"></i>
+                    <i class="rg rg--large b"></i>
+                    <i data-lucide="archive" class="dc dc--archive ic" aria-hidden="true"></i>
+                    <i data-lucide="book-open" class="dc dc--book ic" aria-hidden="true"></i>
+                    <i data-lucide="monitor" class="dc dc--monitor ic" aria-hidden="true"></i>
+                    <i data-lucide="graduation-cap" class="dc dc--graduation ic" aria-hidden="true"></i>
+                </div>
 
-                <div
-                    class="relative mx-auto flex min-h-[calc(100svh-5rem)] w-full max-w-[1240px] items-center justify-center
-                        px-5 py-24 sm:px-8 lg:min-h-[100svh] lg:py-28"
-                >
-                    <div class="home-enter relative z-10 max-w-[690px] text-center">
-                        <h1
-                            id="home-title"
-                            class="text-[clamp(2.35rem,6vw,5.25rem)] font-semibold leading-[1.12] tracking-[-0.025em] text-slate-950"
-                        >
-                            ทุกวิชามีเรื่องราว<br>
-                            <span class="text-[#1684e5]">ก่อนคุณลงเรียน</span>
-                        </h1>
-                        <p
-                            class="mx-auto mt-5 max-w-[480px] text-[15px] leading-7 text-slate-600 sm:mt-7 sm:text-lg sm:leading-9"
-                        >
-                            สำรวจรายวิชา อ่านประสบการณ์จากเพื่อน และเห็นภาพการเรียนให้ชัดขึ้น
-                            ก่อนเลือกวิชาที่เหมาะกับคุณ
-                        </p>
+                <div id="flo" aria-hidden="true">
+                    @foreach ($heroCards as $heroCard)
+                        <x-home.hero-float-card
+                            :course="$heroCard['course']"
+                            :css-class="$heroCard['cssClass']"
+                        />
+                    @endforeach
+                </div>
+
+                <div class="wrap">
+                    <h1 id="home-title">
+                        <span class="hero-title-line">ทุกวิชามีเรื่องราว</span><br>
+                        <span class="hero-title-line k">ก่อนคุณลงเรียน</span>
+                    </h1>
+                    <p>รวมคะแนนและรีวิวรายวิชาจากผู้เรียนจริง เพื่อให้คุณเลือกวิชาได้ชัดเจนขึ้น</p>
+                </div>
+            </header>
+
+            <section>
+                <div class="wrap">
+                    <p id="st" data-home-statement aria-label="{{ $homeCopy['statement'] ?? '' }}"></p>
+                </div>
+            </section>
+
+            <section id="courses" class="home-courses-section">
+                <div class="wrap">
+                    <div class="head">
+                        <h2>วิชายอดนิยม<br><span class="k">ที่นักศึกษาสนใจ</span></h2>
+                        <a class="btn g" href="{{ route('courses.index') }}">ค้นหาวิชาทั้งหมด <i data-lucide="arrow-up-right" class="ic size-4" aria-hidden="true"></i></a>
                     </div>
+                </div>
 
-                    <div
-                        class="home-hero-gallery pointer-events-none absolute inset-0"
-                        aria-label="ภาพรายวิชาแนะนำ"
-                    >
-                        <div class="home-hero-row home-hero-row-top">
-                            @foreach (range(1, 3) as $copy)
-                                @foreach ($featuredCourses as $featuredCourse)
-                                    <a
-                                        href="{{ route('courses.show', $featuredCourse['code']) }}"
-                                        class="home-hero-tile pointer-events-auto"
-                                        aria-label="ดูรายละเอียดวิชา {{ $featuredCourse['title'] }}"
-                                        @if ($copy > 1)
-                                            tabindex="-1"
-                                            aria-hidden="true"
-                                        @endif
-                                    >
-                                        <img src="{{ $featuredCourse['image'] }}" alt="" loading="lazy">
-                                    </a>
-                                @endforeach
-                            @endforeach
-                        </div>
-                        <div class="home-hero-row home-hero-row-bottom">
-                            @foreach (range(1, 3) as $copy)
-                                @foreach (array_reverse($featuredCourses) as $featuredCourse)
-                                    <a
-                                        href="{{ route('courses.show', $featuredCourse['code']) }}"
-                                        class="home-hero-tile pointer-events-auto"
-                                        aria-label="ดูรายละเอียดวิชา {{ $featuredCourse['title'] }}"
-                                        @if ($copy > 1)
-                                            tabindex="-1"
-                                            aria-hidden="true"
-                                        @endif
-                                    >
-                                        <img src="{{ $featuredCourse['image'] }}" alt="" loading="lazy">
-                                    </a>
-                                @endforeach
-                            @endforeach
-                        </div>
+                <div class="rail" id="rail" data-home-course-rail>
+                    @foreach ($popularCourses as $course)
+                        <x-course.card :course="$course" />
+                    @endforeach
+                </div>
+
+                <div class="wrap ctl">
+                    <div class="arrows">
+                        <button type="button" data-home-rail-prev aria-label="รายวิชาก่อนหน้า"><i data-lucide="arrow-left" class="ic size-5" aria-hidden="true"></i></button>
+                        <button type="button" data-home-rail-next aria-label="รายวิชาถัดไป"><i data-lucide="arrow-right" class="ic size-5" aria-hidden="true"></i></button>
                     </div>
                 </div>
             </section>
 
-            <section
-                id="featured-courses"
-                class="home-section scroll-mt-24"
-                aria-labelledby="featured-courses-title"
-            >
-                <div class="home-container">
-                    <header class="home-section-heading" data-home-reveal>
-                        <div>
-                            <h2
-                                id="featured-courses-title"
-                                class="home-section-title"
-                            >
-                                เริ่มสำรวจรายวิชา
-                            </h2>
-                        </div>
-                        <p class="home-section-description">
-                            ทำความรู้จักเนื้อหาและบรรยากาศการเรียนของแต่ละวิชา
+            <section id="features" class="band">
+                <div class="wrap"><h2>ไฮไลต์<br><span class="k">ของ CPRATING</span></h2></div>
+                <div class="hl" id="hl" data-home-highlight-rail role="region" aria-label="ไฮไลต์ของ CPRATING" tabindex="0">
+                    <article class="hc rating-highlight-card" data-home-highlight>
+                        <p class="tx">
+                            คะแนน <span class="k">rating คิดจากความน่าสนใจของรายวิชา</span>
+                            ส่วนปริมาณงานและความยากแสดงเป็นระดับ น้อย–มาก ไม่ปนกับดาว
                         </p>
-                    </header>
 
-                    <div class="home-course-grid" data-home-reveal>
-                        @foreach ($featuredCourses as $featuredCourse)
-                            <a href="{{ route('courses.show', $featuredCourse['code']) }}" class="home-course-tile group">
-                                <div class="home-course-image">
-                                    <img src="{{ $featuredCourse['image'] }}" alt="" loading="lazy">
-                                    <span class="home-course-code">{{ $featuredCourse['code'] }}</span>
+                        <div class="panel rating-highlight-panel">
+                            <div class="rating-highlight-score">
+                                <div class="rating-highlight-score-copy">
+                                    <span class="rating-highlight-score-label">ความน่าสนใจของ<br>รายวิชา</span>
+                                    <b data-count="4.6" data-count-start="0.0">0.0</b>
+                                    <span class="rating-highlight-stars" aria-label="5 ดาว">★★★★★</span>
+                                    <small>จาก 1,400 รีวิว</small>
                                 </div>
-                                <div class="mt-4">
-                                    <p class="text-xs font-medium text-[#1684e5]">
-                                        {{ $featuredCourse['category'] }}
-                                    </p>
-                                    <h3
-                                        class="mt-1 text-base font-semibold leading-snug text-slate-900 transition-colors duration-300
-                                            group-hover:text-[#1684e5] sm:text-lg"
+                            </div>
+
+                            <div class="rating-highlight-metrics">
+                                <div class="rating-highlight-metric">
+                                    <div class="rating-highlight-metric-heading">
+                                        <span>ปริมาณงาน</span>
+                                        <strong>ค่อนข้างมาก</strong>
+                                    </div>
+                                    <div
+                                        class="rating-highlight-progress"
+                                        role="progressbar"
+                                        aria-label="ระดับปริมาณงาน"
+                                        aria-valuemin="0"
+                                        aria-valuemax="100"
+                                        aria-valuenow="0"
                                     >
-                                        {{ $featuredCourse['title'] }}
-                                    </h3>
-                                    <p class="mt-1 text-sm text-slate-500">
-                                        {{ $featuredCourse['credits'] }}
-                                    </p>
-                                </div>
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-            </section>
-
-            <section
-                class="home-section border-y border-slate-200/80 bg-white"
-                aria-labelledby="latest-courses-title"
-            >
-                <div class="home-container">
-                    <header class="home-section-heading" data-home-reveal>
-                        <div>
-                            <h2
-                                id="latest-courses-title"
-                                class="home-section-title"
-                            >
-                                ดูรายละเอียดก่อนตัดสินใจ
-                            </h2>
-                        </div>
-                        <p class="home-section-description">
-                            เลือกอ่านข้อมูลรายวิชา คะแนน และมุมมองจากผู้เรียนในแต่ละหน้า
-                        </p>
-                    </header>
-
-                    <div
-                        class="grid gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-12"
-                        data-home-reveal
-                    >
-                        @if ($courses[0] ?? null)
-                            <a href="{{ route('courses.show', $courses[0]['code']) }}" class="group block">
-                                <div class="home-story-image aspect-[1.45]">
-                                    <img src="{{ $courses[0]['image'] }}" alt="" loading="lazy">
-                                </div>
-                                <p class="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-[#1684e5]">
-                                    {{ $courses[0]['code'] }} · รายวิชาแนะนำ
-                                </p>
-                                <h3
-                                    class="mt-2 max-w-2xl text-2xl font-semibold leading-snug tracking-tight text-slate-950
-                                        transition-colors duration-300 group-hover:text-[#1684e5] sm:text-3xl"
-                                >
-                                    {{ $courses[0]['title'] }}
-                                </h3>
-                                <p class="mt-3 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-                                    ดูรายละเอียดรายวิชา คะแนนจากผู้เรียน และข้อมูลประกอบการตัดสินใจก่อนลงทะเบียน
-                                </p>
-                                <span class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
-                                    อ่านรายละเอียด
-                                    <i
-                                        data-lucide="arrow-up-right"
-                                        class="size-4 transition-transform duration-500
-                                            group-hover:translate-x-1 group-hover:-translate-y-1"
-                                        aria-hidden="true"
-                                    ></i>
-                                </span>
-                            </a>
-                        @endif
-
-                        <div class="divide-y divide-slate-200">
-                            @foreach (array_slice($courses, 1) as $course)
-                                <a
-                                    href="{{ route('courses.show', $course['code']) }}"
-                                    class="group grid grid-cols-[104px_minmax(0,1fr)] gap-4 py-5 first:pt-0
-                                        sm:grid-cols-[132px_minmax(0,1fr)] sm:gap-5 lg:grid-cols-[112px_minmax(0,1fr)]
-                                        xl:grid-cols-[132px_minmax(0,1fr)]"
-                                >
-                                    <div class="home-story-image aspect-square">
-                                        <img src="{{ $course['image'] }}" alt="" loading="lazy">
-                                    </div>
-                                    <div class="min-w-0 self-center">
-                                        <p class="text-xs font-medium text-[#1684e5]">
-                                            {{ $course['code'] }}
-                                        </p>
-                                        <h3
-                                            class="mt-1 text-base font-semibold leading-snug text-slate-900
-                                                transition-colors duration-300 group-hover:text-[#1684e5]"
-                                        >
-                                            {{ $course['title'] }}
-                                        </h3>
-                                        <p class="mt-2 text-xs text-slate-500">
-                                            {{ $course['rating'] }} คะแนน · {{ $course['learners'] }} วิว
-                                        </p>
-                                    </div>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section
-                class="home-section"
-                aria-labelledby="popular-courses-title"
-            >
-                <div class="home-container">
-                    <header class="home-section-heading" data-home-reveal>
-                        <div>
-                            <h2
-                                id="popular-courses-title"
-                                class="home-section-title"
-                            >
-                                วิชาแนะนำเพิ่มเติม
-                            </h2>
-                        </div>
-                        <p class="home-section-description">
-                            อีกสองวิชาที่น่าลองเปิดดูต่อจากรายการด้านบน
-                        </p>
-                    </header>
-
-                    <div class="grid gap-5 md:grid-cols-2" data-home-reveal>
-                        @foreach (array_slice($featuredCourses, 0, 2) as $featuredCourse)
-                            <a
-                                href="{{ route('courses.show', $featuredCourse['code']) }}"
-                                class="home-popular-card group"
-                            >
-                                <div class="home-popular-image">
-                                    <img src="{{ $featuredCourse['image'] }}" alt="" loading="lazy">
-                                </div>
-                                <div class="flex min-w-0 flex-1 flex-col justify-between gap-6 p-5 sm:p-7">
-                                    <div>
-                                        <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[#1684e5]">
-                                            {{ $featuredCourse['code'] }}
-                                        </p>
-                                        <h3
-                                            class="mt-3 text-xl font-semibold leading-snug tracking-tight text-slate-950
-                                                transition-colors duration-300 group-hover:text-[#1684e5] sm:text-2xl"
-                                        >
-                                            {{ $featuredCourse['title'] }}
-                                        </h3>
-                                        <p class="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">
-                                            {{ $featuredCourse['description'] }}
-                                        </p>
-                                    </div>
-                                    <span class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
-                                        ดูรายวิชา
                                         <i
-                                            data-lucide="arrow-up-right"
-                                            class="size-4 transition-transform duration-500
-                                                group-hover:translate-x-1 group-hover:-translate-y-1"
-                                            aria-hidden="true"
+                                            class="rating-highlight-progress-fill"
+                                            data-highlight-progress="80"
+                                            style="--progress-target: 80%;"
                                         ></i>
-                                    </span>
+                                    </div>
+                                    <div class="rating-highlight-progress-labels">
+                                        <span>น้อย</span>
+                                        <span>มาก</span>
+                                    </div>
                                 </div>
-                            </a>
-                        @endforeach
-                    </div>
+
+                                <div class="rating-highlight-metric">
+                                    <div class="rating-highlight-metric-heading">
+                                        <span>ความยาก</span>
+                                        <strong>ปานกลาง</strong>
+                                    </div>
+                                    <div
+                                        class="rating-highlight-progress"
+                                        role="progressbar"
+                                        aria-label="ระดับความยาก"
+                                        aria-valuemin="0"
+                                        aria-valuemax="100"
+                                        aria-valuenow="0"
+                                    >
+                                        <i
+                                            class="rating-highlight-progress-fill"
+                                            data-highlight-progress="60"
+                                            style="--progress-target: 60%;"
+                                        ></i>
+                                    </div>
+                                    <div class="rating-highlight-progress-labels">
+                                        <span>น้อย</span>
+                                        <span>มาก</span>
+                                    </div>
+                                </div>
+
+                                <small class="rating-highlight-note">
+                                    ระดับจากผู้เรียนที่กดรีวิว ไม่ปนรวมเป็นดาว
+                                </small>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="hc dk" data-home-highlight>
+                        <img src="{{ asset('images/photo-6.jpg') }}" alt="">
+                        <p class="tx">รีวิวจากผู้เรียนจริง <span class="hi">ยืนยันตัวตนด้วยอีเมลมหาวิทยาลัย</span> แต่ไม่เปิดเผยชื่อ จึงเขียนได้ตรงไปตรงมา</p>
+                        <div class="glass"><div class="who"><i>ส</i>ผู้เรียนปี 3 · รีวิววิชาความมั่นคงปลอดภัยไซเบอร์</div><p>แล็บสนุก ได้ลงมือทำจริง แต่ต้องวางเวลาให้ดี ช่วงกลางเทอมงานจะเยอะ</p><div class="tg"><span>แล็บสนุก</span><span>งานกลางเทอมเยอะ</span></div></div>
+                    </article>
+
+                    <article class="hc" data-home-highlight>
+                        <p class="tx">ภาระงานตามหน่วยกิต <span class="k">2-2-5</span> เห็นชั่วโมงบรรยาย ปฏิบัติ และศึกษาด้วยตนเองต่อสัปดาห์ ก่อนจัดตารางของคุณ</p>
+                        <div class="panel"><div class="hrs"><b>9</b><span>ชั่วโมงต่อสัปดาห์</span></div><div class="seg"><i></i><i></i><i></i></div><div class="segl"><span>บรรยาย 2</span><span>ปฏิบัติ 2</span><span>ศึกษาเอง 5</span></div></div>
+                    </article>
+
+                    <article class="hc curriculum-highlight-card" data-home-highlight>
+                        <p class="tx curriculum-highlight-title">
+                            <span>วิชาที่ต้องเรียน</span>ของแต่ละสาขา<br>
+                            ตั้งแต่ปี 1 ถึงปี 4
+                        </p>
+
+                        <div class="curriculum-highlight-panel">
+                            <div class="curriculum-highlight-heading">
+                                <div>
+                                    <small>สาขา</small>
+                                    <strong>{{ $curriculumPreview['major_name'] }}</strong>
+                                </div>
+                                <a href="{{ route('plans.index') }}">
+                                    ดูทุกสาขา
+                                    <i data-lucide="arrow-right" class="ic size-4" aria-hidden="true"></i>
+                                </a>
+                            </div>
+
+                            <div class="curriculum-highlight-years">
+                                @foreach ($curriculumPreview['years'] as $year)
+                                    <div class="curriculum-highlight-year">
+                                        <span class="curriculum-highlight-year-label">{{ $year['label'] }}</span>
+                                        <div class="curriculum-highlight-course-list">
+                                            @foreach ($year['courses'] as $course)
+                                                <span>{{ $course }}</span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </article>
                 </div>
+                <div class="wrap ctl2"><button class="cb" type="button" data-home-highlight-toggle aria-label="หยุดเล่นอัตโนมัติ"><i data-lucide="pause" class="ic size-4" aria-hidden="true"></i></button><button class="cb" type="button" data-home-highlight-prev aria-label="ไฮไลต์ก่อนหน้า"><i data-lucide="arrow-left" class="ic size-4" aria-hidden="true"></i></button><button class="cb" type="button" data-home-highlight-next aria-label="ไฮไลต์ถัดไป"><i data-lucide="arrow-right" class="ic size-4" aria-hidden="true"></i></button></div>
             </section>
+
+            <section id="steps"><div class="wrap"><h2 class="how-h">ใช้งานง่าย<br><span class="k">ใน 3 ขั้นตอน</span></h2><div class="how">
+                <figure><div class="tile"><div class="ui"><div class="sf"><i data-lucide="search" class="ic size-4" aria-hidden="true"></i><span>CP422301</span><i class="caret"></i></div><div class="rs"><span><b>CP422301</b> ความมั่นคงปลอดภัยไซเบอร์</span><b>★ 4.6</b></div><div class="rs"><span><b>CP422305</b> การเข้ารหัสลับเบื้องต้น</span><b>★ 4.3</b></div></div></div><figcaption><p><small>ขั้นที่ 1</small><b>ค้นหาวิชาได้ทันที</b> พิมพ์รหัสหรือชื่อวิชา แล้วกรองตามหมวดที่สนใจ ไม่ต้องไล่ดูทีละหน้า</p></figcaption></figure>
+                        <figure>
+                            <div class="tile">
+                                <div class="ui">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="flex min-w-0 items-center gap-2.5">
+                                            <span class="grid size-8 shrink-0 place-items-center rounded-full bg-[#f8c4a5] text-sm font-semibold text-[#6b3f32]" aria-hidden="true">ม</span>
+                                            <span class="truncate text-sm font-semibold text-slate-900">มินท์</span>
+                                        </div>
+                                        <span class="shrink-0 text-sm tracking-normal text-orange-400" aria-label="4 จาก 5 ดาว">★★★★<span class="text-slate-300">★</span></span>
+                                    </div>
+
+                                    <div class="mt-3 text-sm leading-6 text-slate-900">
+                                        อาจารย์อธิบายชัด สไลด์<br>
+                                        ครบ ข้อสอบตรงกับที่สอน
+                                    </div>
+
+                                    <div class="mt-4 grid grid-cols-2 gap-2">
+                                        <x-home.review-level label="ภาระงาน" :score="3" level="ปานกลาง" />
+                                        <x-home.review-level label="ความยาก" :score="2" level="ค่อนข้างน้อย" />
+                                    </div>
+                                </div>
+                            </div>
+                            <figcaption><p><small>ขั้นที่ 2</small><b>อ่านคะแนนและรีวิวจริง</b> เปรียบเทียบเนื้อหา ภาระงาน และความยากจากคนที่เคยเรียนมาแล้ว</p></figcaption>
+                        </figure>
+                <figure><div class="tile"><div class="ui"><div class="pmeta step-plan-meta"><b>เทอม 1 ปี 3</b><b>9 / 18 หน่วยกิต</b></div><div class="prow"><span>CP422301 ความมั่นคงปลอดภัยไซเบอร์</span><b>3</b></div><div class="prow"><span>CP354101 ปัญญาประดิษฐ์</span><b>3</b></div><div class="prow"><span>CP352005 เครือข่ายคอมพิวเตอร์</span><b>3</b></div></div></div><figcaption><p><small>ขั้นที่ 3</small><b>เลือกสาขา แล้วจัดแผนการเรียน</b> เลือกหลักสูตรของสาขาที่เรียน ดูหน่วยกิตรวม แล้วลงทะเบียนอย่างมั่นใจ</p></figcaption></figure>
+            </div></div></section>
+
+            <section id="reviews"><div class="wrap"><div class="rvh"><h2>เสียงจาก<br><span class="k">คนที่เคยเรียน</span></h2><p>อ่านรีวิวล่าสุดจากผู้เรียนจริง ทั้งข้อดี ข้อควรระวัง และเคล็ดลับก่อนลงทะเบียน</p></div><div class="rvg">
+                @foreach ($reviews as $review)
+                    <x-home.review-card :review="$review" />
+                @endforeach
+            </div><div class="rvm"><a class="btn g" href="{{ route('courses.index') }}">ดูรีวิวทั้งหมด <i data-lucide="arrow-up-right" class="ic size-4" aria-hidden="true"></i></a></div></div></section>
+
+            <section id="trust"><div class="wrap tw"><div><p class="eb">หลักการของเรา</p><h2>รีวิวที่<span class="k">เชื่อถือได้</span><br>มาจากผู้เรียนจริง</h2><p class="ld">CPRATING รวมคะแนนและรีวิวรายวิชา ให้คุณเปรียบเทียบเนื้อหา ภาระงาน และความยาก ก่อนตัดสินใจลงทะเบียน</p><a class="lk" href="{{ route('courses.index') }}">เริ่มสำรวจรายวิชา <i data-lucide="arrow-up-right" class="ic size-4" aria-hidden="true"></i></a></div><ul class="tl"><li><i class="iw"><i data-lucide="graduation-cap" class="ic size-6" aria-hidden="true"></i></i><div><b>ยืนยันด้วยอีเมลมหาวิทยาลัย</b><span>ทุกรีวิวมาจากบัญชีที่ยืนยันตัวตนแล้ว</span></div></li><li><i class="iw"><i data-lucide="star" class="ic size-6" aria-hidden="true"></i></i><div><b>คะแนนแยกตามหัวข้อ</b><span>ไม่สรุปเป็นดาวรวมค่าเดียว</span></div></li><li><i class="iw"><i data-lucide="eye-off" class="ic size-6" aria-hidden="true"></i></i><div><b>ไม่เปิดเผยชื่อผู้รีวิว</b><span>เขียนได้ตรงไปตรงมา ไม่ต้องกังวล</span></div></li></ul></div></section>
+
+            <section id="faq" class="home-faq-section"><div class="wrap ctr"><h2>คำถามที่<span class="k">พบบ่อย</span></h2><div class="faq faq-align-left"><details><summary>ใครเขียนรีวิวได้บ้าง</summary><div class="a"><p>นักศึกษาที่ยืนยันตัวตนด้วยอีเมลมหาวิทยาลัยเท่านั้น เพื่อให้มั่นใจว่ารีวิวมาจากผู้เรียนจริง</p></div></details><details><summary>ชื่อของผู้รีวิวจะถูกเปิดเผยไหม</summary><div class="a"><p>ไม่เปิดเผย รีวิวจะแสดงเพียงชั้นปี เพื่อให้เขียนได้ตรงไปตรงมาโดยไม่ต้องกังวล</p></div></details><details><summary>ทำไมไม่ให้ดาวรวมค่าเดียว</summary><div class="a"><p>เพราะวิชาที่เนื้อหาดีอาจมีงานหนัก หรือวิชาที่ง่ายอาจไม่ได้ความรู้มากนัก เราจึงแยกคะแนนเป็นเนื้อหา ภาระงาน ความยาก และผู้สอน ให้คุณเทียบได้ตรงกับสิ่งที่สนใจ</p></div></details><details><summary>ตัวเลขหน่วยกิต 2-2-5 หมายถึงอะไร</summary><div class="a"><p>คือชั่วโมงบรรยาย ปฏิบัติ และศึกษาด้วยตนเองต่อสัปดาห์ ตามลำดับ ช่วยให้ประเมินภาระงานรวมก่อนจัดตารางได้</p></div></details><details><summary>ใช้งานฟรีหรือไม่</summary><div class="a"><p>ค้นหาวิชาและอ่านรีวิวได้ฟรี ส่วนการบันทึกวิชา จัดแผนการเรียน และเขียนรีวิว ต้องเข้าสู่ระบบด้วยอีเมลมหาวิทยาลัย</p></div></details></div></div></section>
+
         </main>
     @endif
+
+    <script type="application/json" data-home-copy>@json($homeCopy)</script>
+    <div id="prog" aria-hidden="true"><i></i></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <button id="top-btn" type="button" aria-label="กลับขึ้นบน"><i data-lucide="arrow-up" class="ic size-5" aria-hidden="true"></i></button>
 
     <x-footer :flush="true" />
 @endsection
