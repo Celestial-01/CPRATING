@@ -1,8 +1,3 @@
-const legalTitles = {
-    privacy: 'นโยบายความเป็นส่วนตัว',
-    terms: 'ข้อกำหนดการใช้งาน',
-};
-
 export const initializeLegalModal = () => {
     const modal = document.querySelector('[data-legal-modal]');
 
@@ -30,7 +25,7 @@ export const initializeLegalModal = () => {
         if (!template) return;
 
         window.clearTimeout(closeTimer);
-        title.textContent = legalTitles[type];
+        title.textContent = template.dataset.legalTitle || '';
         content.replaceChildren(template.content.cloneNode(true));
         content.scrollTop = 0;
 

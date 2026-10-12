@@ -11,6 +11,15 @@
         </p>
     </header>
 
+    @if (session('reset_link_error'))
+        <div
+            class="mt-5 rounded-[12px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm leading-5 text-amber-700"
+            role="alert"
+        >
+            {{ session('reset_link_error') }}
+        </div>
+    @endif
+
     <form
         action="{{ route('auth.forgot-password.store') }}"
         method="POST"
@@ -46,7 +55,7 @@
         จำรหัสผ่านได้แล้ว?
         <a
             href="{{ route('auth.login') }}"
-            class="text-[#075be6] no-underline transition hover:underline focus-visible:underline focus-visible:outline-none"
+            class="auth-action-link focus-visible:outline-none"
         >
             เข้าสู่ระบบ
         </a>

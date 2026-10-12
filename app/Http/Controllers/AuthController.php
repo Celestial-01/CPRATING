@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\RegistrationVerificationMail;
+use App\Actions\Auth\RegistrationService;
 use App\Models\RegistrationToken;
 use App\Models\SocialAccount;
 use App\Models\User;
@@ -11,15 +11,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly RegistrationService $registrationService) {}
+
     public function showLogin(): View
     {
         return view('auth.login');
@@ -62,7 +62,8 @@ class AuthController extends Controller
     public function handleGoogleCallback(Request $request): RedirectResponse
     {
         $googleUser = Socialite::driver('google')->user();
-        $socialAccount = SocialAccount::where('provider', 'google')
+        $socialAccount = SocialAccount::query()
+            ->where('provider', 'google')
             ->where('provider_user_id', $googleUser->getId())
             ->first();
 
@@ -105,7 +106,7 @@ class AuthController extends Controller
             ],
         ]);
 
-        $existingUser = User::where('email', $validated['email'])->first();
+        $existingUser = User::query()->where('email', $validated['email'])->first();
 
         if ($existingUser?->password) {
             throw ValidationException::withMessages([
@@ -113,58 +114,33 @@ class AuthController extends Controller
             ]);
         }
 
-        $registrationToken = $this->sendRegistrationVerification($validated['email']);
+        $registrationToken = $this->registrationService->sendVerification($validated['email']);
+
+        $request->session()->put('pending_registration_id', $registrationToken->id);
+        $request->session()->put('registration_email', $registrationToken->email);
 
         return redirect()
-            ->route('auth.verify-email', ['email' => $registrationToken->email])
-            ->with('registration_email', $registrationToken->email);
+            ->route('auth.verify-email');
     }
 
     public function resendRegistrationVerification(Request $request): RedirectResponse
     {
-        $email = $request->session()->get('registration_email', $request->input('email'));
+        $pendingRegistration = $this->registrationService->pendingToken($request);
 
-        $validated = validator(
-            ['email' => $email],
-            ['email' => ['required', 'email']],
-        )->validate();
+        if (! $pendingRegistration) {
+            return redirect()->route('auth.register');
+        }
 
-        if (User::where('email', $validated['email'])->whereNotNull('password')->exists()) {
+        if (User::query()->where('email', $pendingRegistration->email)->whereNotNull('password')->exists()) {
             return redirect()->route('auth.login');
         }
 
-        $registrationToken = $this->sendRegistrationVerification($validated['email']);
+        $registrationToken = $this->registrationService->sendVerification($pendingRegistration->email);
+        $request->session()->put('pending_registration_id', $registrationToken->id);
 
         return redirect()
-            ->route('auth.verify-email', ['email' => $registrationToken->email])
-            ->with('registration_email', $registrationToken->email)
+            ->route('auth.verify-email')
             ->with('verification_resent', true);
-    }
-
-    private function sendRegistrationVerification(string $email): RegistrationToken
-    {
-        $plainToken = Str::random(64);
-        $registrationToken = RegistrationToken::updateOrCreate(
-            ['email' => $email],
-            [
-                'token_hash' => Hash::make($plainToken),
-                'expires_at' => now()->addMinutes(15),
-                'used_at' => null,
-            ],
-        );
-
-        $verificationUrl = URL::temporarySignedRoute(
-            'auth.registration.verify',
-            now()->addMinutes(15),
-            [
-                'registration' => $registrationToken->id,
-                'token' => $plainToken,
-            ],
-        );
-
-        Mail::to($registrationToken->email)->send(new RegistrationVerificationMail($verificationUrl));
-
-        return $registrationToken;
     }
 
     public function verifyRegistration(Request $request, RegistrationToken $registration, string $token): RedirectResponse
@@ -177,6 +153,7 @@ class AuthController extends Controller
             'ลิงก์สมัครสมาชิกหมดอายุหรือถูกใช้งานแล้ว',
         );
 
+        $request->session()->forget('pending_registration_id');
         $request->session()->put('registration_token_id', $registration->id);
         $request->session()->put('registration_email', $registration->email);
 
@@ -185,7 +162,7 @@ class AuthController extends Controller
 
     public function setPassword(Request $request): RedirectResponse
     {
-        $registration = $this->registrationToken($request);
+        $registration = $this->registrationService->activeToken($request);
 
         if (! $registration) {
             return redirect()->route('auth.register');
@@ -207,7 +184,7 @@ class AuthController extends Controller
 
     public function setUsername(Request $request): RedirectResponse
     {
-        $registration = $this->registrationToken($request);
+        $registration = $this->registrationService->activeToken($request);
 
         if (! $registration || ! $request->session()->has('registration_password')) {
             return redirect()->route('auth.set-password');
@@ -229,11 +206,7 @@ class AuthController extends Controller
         ])->save();
 
         $registration->update(['used_at' => now()]);
-        $request->session()->forget([
-            'registration_token_id',
-            'registration_email',
-            'registration_password',
-        ]);
+        $this->registrationService->forgetSession($request);
         Auth::login($user);
         $request->session()->regenerate();
 
@@ -250,23 +223,29 @@ class AuthController extends Controller
         return redirect()->route('auth.login');
     }
 
-    public function showVerifyEmail(Request $request): View
+    public function showVerifyEmail(Request $request): View|RedirectResponse
     {
+        $registration = $this->registrationService->pendingToken($request);
+
+        if (! $registration) {
+            return redirect()->route('auth.register');
+        }
+
         return view('auth.verify-email', [
-            'email' => $request->session()->get('registration_email', $request->query('email', '')),
+            'email' => $registration->email,
         ]);
     }
 
     public function showSetPassword(Request $request): View|RedirectResponse
     {
-        return $this->registrationToken($request)
+        return $this->registrationService->activeToken($request)
             ? view('auth.set-password')
             : redirect()->route('auth.register');
     }
 
     public function showSetUsername(Request $request): View|RedirectResponse
     {
-        $registration = $this->registrationToken($request);
+        $registration = $this->registrationService->activeToken($request);
 
         if (! $registration || ! $request->session()->has('registration_password')) {
             return redirect()->route('auth.set-password');
@@ -274,30 +253,7 @@ class AuthController extends Controller
 
         $suggestedUsername = Str::lower(Str::random(8));
 
-        return view('auth.set-username', compact('suggestedUsername'));
-    }
-
-    private function registrationToken(Request $request): ?RegistrationToken
-    {
-        $id = $request->session()->get('registration_token_id');
-
-        if (! $id) {
-            return null;
-        }
-
-        $registration = RegistrationToken::find($id);
-
-        if (! $registration || $registration->used_at || $registration->expires_at->isPast()) {
-            $request->session()->forget([
-                'registration_token_id',
-                'registration_email',
-                'registration_password',
-            ]);
-
-            return null;
-        }
-
-        return $registration;
+        return view('auth.set-username', ['suggestedUsername' => $suggestedUsername]);
     }
 
     public function showForgotPassword(): View
@@ -316,23 +272,39 @@ class AuthController extends Controller
 
         Password::sendResetLink(['email' => $validated['email']]);
 
+        $request->session()->put('password_reset_email', $validated['email']);
+
         return redirect()
-            ->route('auth.password-reset-sent')
-            ->with('password_reset_email', $validated['email']);
+            ->route('auth.password-reset-sent');
     }
 
-    public function showPasswordResetSent(Request $request): View
+    public function showPasswordResetSent(Request $request): View|RedirectResponse
     {
+        $email = $request->session()->get('password_reset_email');
+
+        if (! $email) {
+            return redirect()->route('auth.forgot-password');
+        }
+
         return view('auth.password-reset-sent', [
-            'email' => $request->session()->get('password_reset_email', $request->query('email', '')),
+            'email' => $email,
         ]);
     }
 
-    public function showResetPassword(string $token, Request $request): View
+    public function showResetPassword(string $token, Request $request): View|RedirectResponse
     {
+        $email = $request->query('email');
+        $user = is_string($email) ? User::query()->where('email', $email)->first() : null;
+
+        if (! $user || ! Password::broker()->tokenExists($user, $token)) {
+            return redirect()
+                ->route('auth.forgot-password')
+                ->with('reset_link_error', 'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุ กรุณาขอลิงก์ใหม่');
+        }
+
         return view('auth.reset-password', [
             'token' => $token,
-            'email' => $request->query('email', ''),
+            'email' => $email,
         ]);
     }
 
@@ -365,6 +337,8 @@ class AuthController extends Controller
                 ->withInput($request->only('email'))
                 ->withErrors(['email' => __($status)]);
         }
+
+        $request->session()->forget('password_reset_email');
 
         return redirect()->route('auth.login')->with('status', 'รีเซ็ตรหัสผ่านสำเร็จแล้ว');
     }

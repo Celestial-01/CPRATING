@@ -62,7 +62,7 @@
 
     <a
         href="{{ route('auth.register') }}"
-        class="mt-5 flex h-[45px] items-center justify-center rounded-[15px] border border-[#bcbcbc] text-sm text-slate-500 transition hover:bg-slate-50"
+        class="auth-secondary-link mt-5 flex h-[45px] items-center justify-center rounded-[15px] border border-[#bcbcbc] text-sm transition hover:bg-slate-50"
     >
         กลับสู่หน้าสมัครสมาชิก
     </a>
@@ -73,16 +73,11 @@
         class="mt-5 text-center"
     >
         @csrf
-        <input
-            type="hidden"
-            name="email"
-            value="{{ $email }}"
-        >
         <p class="text-sm leading-6 text-slate-400">
             ยังไม่พบอีเมลใช่ไหม?
             <button
                 type="submit"
-                class="cursor-pointer font-medium text-[#1684df] underline decoration-transparent underline-offset-4 transition hover:decoration-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 focus-visible:ring-offset-2"
+                class="auth-resend-link focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 focus-visible:ring-offset-2"
             >
                 ส่งลิงก์ยืนยันอีกครั้ง
             </button>

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class RegistrationToken extends Model
 {
-    public $timestamps = false;
+    public const UPDATED_AT = null;
 
     protected $fillable = [
         'email',
