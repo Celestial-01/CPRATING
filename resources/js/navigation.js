@@ -1,8 +1,8 @@
-import { ChevronRight, Menu, X } from 'lucide';
+import { ChevronDown, ChevronRight, House, LayoutDashboard, LogOut, Menu, UserRound, X } from 'lucide';
 import { onDomReady } from './dom-ready';
 import { renderIcons } from './icon-renderer';
 
-const iconSet = { ChevronRight, Menu, X };
+const iconSet = { ChevronDown, ChevronRight, House, LayoutDashboard, LogOut, Menu, UserRound, X };
 
 const initializeMobileMenu = () => {
     const toggle = document.querySelector('[data-mobile-menu-toggle]');
@@ -11,8 +11,6 @@ const initializeMobileMenu = () => {
     const overlay = document.querySelector('[data-mobile-menu-overlay]');
 
     if (!toggle || !menu || !close || !overlay) return;
-
-    renderIcons(iconSet);
 
     let previouslyFocusedElement = null;
 
@@ -65,6 +63,39 @@ const initializeMobileMenu = () => {
     }
 };
 
+const initializeUserMenu = () => {
+    const root = document.querySelector('[data-user-menu]');
+    const toggle = root?.querySelector('[data-user-menu-toggle]');
+    const panel = root?.querySelector('[data-user-menu-panel]');
+
+    if (!root || !toggle || !panel) return;
+
+    const setMenuOpen = (isOpen) => {
+        panel.classList.toggle('hidden', !isOpen);
+        panel.setAttribute('aria-hidden', String(!isOpen));
+        toggle.setAttribute('aria-expanded', String(isOpen));
+    };
+
+    toggle.addEventListener('click', () => {
+        setMenuOpen(toggle.getAttribute('aria-expanded') !== 'true');
+    });
+
+    root.addEventListener('click', (event) => {
+        if (event.target.closest('[role="menuitem"]')) setMenuOpen(false);
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!root.contains(event.target)) setMenuOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || toggle.getAttribute('aria-expanded') !== 'true') return;
+
+        setMenuOpen(false);
+        toggle.focus();
+    });
+};
+
 const initializeHomeNavbar = () => {
     const navbar = document.querySelector('[data-home-navbar]');
 
@@ -98,6 +129,8 @@ const initializeHomeNavbar = () => {
 };
 
 onDomReady(() => {
+    renderIcons(iconSet);
     initializeMobileMenu();
     initializeHomeNavbar();
+    initializeUserMenu();
 });

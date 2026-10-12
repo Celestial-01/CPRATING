@@ -2,6 +2,7 @@
 
 namespace App\View\Components;
 
+use App\Models\User;
 use Illuminate\View\Component;
 use Illuminate\View\View;
 
@@ -11,10 +12,15 @@ final class Navbar extends Component
 
     public string $navbarClasses;
 
+    public ?User $user;
+
     public function __construct(
         public string $active = 'home',
         public bool $homeHero = false,
     ) {
+        $this->user = auth()->user();
+        $this->user?->loadMissing('googleAccount');
+
         $this->links = collect([
             ['key' => 'home', 'label' => 'หน้าหลัก', 'route' => 'home'],
             ['key' => 'courses', 'label' => 'ค้นหาวิชา', 'route' => 'courses.index'],
