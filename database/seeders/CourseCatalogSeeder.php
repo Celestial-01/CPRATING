@@ -11,7 +11,7 @@ class CourseCatalogSeeder extends Seeder
 {
     public function run(): void
     {
-        $courseDefinitions = collect(config('course-catalog', []));
+        $courseDefinitions = collect(config('courses.catalog', []));
 
         $courseDefinitions->each(function (array $courseDefinition): void {
             $course = Course::query()->updateOrCreate(
