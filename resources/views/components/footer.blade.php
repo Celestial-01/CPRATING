@@ -1,35 +1,36 @@
-@props(['flush' => false])
+<footer class="bg-[#edf2f9] pt-9 pb-10 text-[13px] text-[#657083]">
+    <div class="mx-auto w-full max-w-[1160px] px-6">
+        <p class="max-w-[760px] border-b border-[#0c326421] pb-5 leading-[1.6]">
+            {{ $disclaimer }}
+        </p>
 
-<footer @class([
-    'border-t border-slate-200 bg-white px-6 py-12 text-slate-600 sm:py-14',
-    'mt-20 sm:mt-24' => ! $flush,
-])>
-    <div
-        class="mx-auto flex max-w-[1160px] flex-col gap-7 sm:flex-row sm:items-end sm:justify-between"
-    >
-        <div>
-            <a
-                href="{{ route('home') }}"
-                class="text-lg font-semibold tracking-tight text-slate-950"
-            >CP<span class="text-[#1684e5]">RATING</span></a>
-            <p class="mt-2 max-w-sm text-sm leading-6">
-                พื้นที่แบ่งปันข้อมูลรายวิชา เพื่อการตัดสินใจที่มั่นใจขึ้น
-            </p>
+        <div class="grid grid-cols-[1.4fr_repeat(3,1fr)] gap-8 py-7 max-[980px]:grid-cols-2">
+            <div>
+                <b class="{{ $columnHeadingClass }}">CPRATING</b>
+                รีวิวรายวิชาก่อนลงทะเบียน
+            </div>
+
+            <div>
+                <b class="{{ $columnHeadingClass }}">สำรวจ</b>
+                @foreach ($exploreLinks as $link)
+                    <a class="{{ $columnLinkClass }}" href="{{ $link['href'] }}">{{ $link['label'] }}</a>
+                @endforeach
+            </div>
+
+            <div>
+                <b class="{{ $columnHeadingClass }}">บัญชี</b>
+                <a class="{{ $columnLinkClass }}" href="{{ route('auth.login') }}">เข้าสู่ระบบ</a>
+                <a class="{{ $columnLinkClass }}" href="{{ route('auth.register') }}">สมัครสมาชิก</a>
+            </div>
+
+            <div>
+                <b class="{{ $columnHeadingClass }}">ช่วยเหลือ</b>
+                <a class="{{ $columnLinkClass }}" href="{{ route('home').'#steps' }}">เริ่มต้นใช้งาน</a>
+            </div>
         </div>
-        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-            <a
-                href="{{ route('home') }}"
-                class="transition-colors hover:text-[#1684e5]"
-            >หน้าหลัก</a>
-            <a
-                href="{{ route('auth.login') }}"
-                class="transition-colors hover:text-[#1684e5]"
-            >เข้าสู่ระบบ</a>
+
+        <div class="border-t border-[#0c326421] pt-4.5">
+            CPRATING &copy; {{ date('Y') }} สงวนลิขสิทธิ์
         </div>
-    </div>
-    <div
-        class="mx-auto mt-9 max-w-[1160px] border-t border-slate-100 pt-5 text-xs text-slate-400"
-    >
-        © {{ date('Y') }} CPRATING
     </div>
 </footer>
