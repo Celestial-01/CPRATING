@@ -7,6 +7,7 @@ use App\Support\CourseCatalog;
 use App\Support\CourseGradeDistribution;
 use App\Support\CourseOverviewStats;
 use App\Support\CourseRatingSummary;
+use App\Models\Comment;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -42,7 +43,10 @@ class CourseCatalogController extends Controller
         if ($course === null) {
             throw new NotFoundHttpException;
         }
-
+        $comments = Comment::with('user')
+            ->where('course_code', $course['code'])
+            ->latest()
+            ->get();
         $ratingSummary = CourseRatingSummary::forCourse($course['code']);
         $course['rating'] = $ratingSummary['rating'];
         $course['difficulty'] = $ratingSummary['difficulty'];
@@ -64,7 +68,7 @@ class CourseCatalogController extends Controller
                 ->all(),
             'courseOverviewStats' => CourseOverviewStats::forCourse($course),
             'gradeDistribution' => CourseGradeDistribution::forCourse($course),
-            'comments' => config('courses.detail.comments', []),
+            'comments' => $comments,
             'courseDetailCopy' => config('courses.detail.copy', []),
             'showSkeleton' => $request->boolean('loading'),
         ]);
