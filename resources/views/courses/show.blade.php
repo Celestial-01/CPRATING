@@ -26,7 +26,7 @@
                 รายละเอียดวิชา {{ $course['code'] }}
             </span>
         </nav>
-
+    
         @if ($showSkeleton)
             <x-skeleton.course-detail class="mt-6" />
         @else

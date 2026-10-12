@@ -13,6 +13,7 @@ use App\Http\Controllers\StudyPlanController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home.index');
 Route::get('/courses', [CourseCatalogController::class, 'index'])->name('courses.index');
 Route::get('/plans', [StudyPlanController::class, 'index'])->name('plans.index');
 Route::get('/history', [HistoryController::class, 'index'])->name('history.index');

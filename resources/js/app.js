@@ -4,4 +4,6 @@ import './course-detail';
 import './home';
 import './history';
 import './navigation';
+import './admin';
+import './course-inline-edit';
 import './plans';
