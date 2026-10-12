@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\URL;
+use Symfony\Component\Mime\Exception\RfcComplianceException;
 
 uses(RefreshDatabase::class);
 
@@ -207,6 +208,20 @@ test('a registration request sends a verification email without authenticating t
     });
 });
 
+test('a registration whose stored email cannot be sent to fails with a Thai validation error instead of a crash', function () {
+
+    Mail::shouldReceive('to')->once()->andThrow(
+        new RfcComplianceException('Email "c" does not comply with addr-spec of RFC 2822.'),
+    );
+
+    $this->from(route('auth.register'))
+        ->post(route('auth.register.store'), ['email' => 'ada@example.com'])
+        ->assertRedirect(route('auth.register'))
+        ->assertSessionHasErrors(['email' => 'ไม่สามารถส่งอีเมลยืนยันไปยังอีเมลนี้ได้ กรุณาตรวจสอบอีเมลแล้วลองใหม่อีกครั้ง']);
+
+    expect(RegistrationToken::query()->where('email', 'ada@example.com')->exists())->toBeFalse();
+});
+
 test('a user can resend the registration verification email', function () {
     Mail::fake();
 
@@ -294,7 +309,7 @@ test('a user completes registration after verifying the email', function () {
     $this->get(route('auth.verify-email'))->assertRedirectToRoute('auth.register');
 });
 
-test('a registration verification token cannot be reused', function () {
+test('an expired registration link returns to the verification page with a resend error', function () {
     $registration = RegistrationToken::create([
         'email' => 'ada@example.com',
         'token_hash' => Hash::make('test-token'),
@@ -306,7 +321,73 @@ test('a registration verification token cannot be reused', function () {
         ['registration' => $registration->id, 'token' => 'test-token'],
     );
 
-    $this->get($url)->assertStatus(410);
+    $this->get($url)
+        ->assertRedirectToRoute('auth.verify-email')
+        ->assertSessionHas('verification_link_error');
+
+    $this->get(route('auth.verify-email'))
+        ->assertOk()
+        ->assertSee('ลิงก์ยืนยันอีเมลหมดอายุแล้ว กรุณาส่งลิงก์ใหม่');
+});
+
+test('a used registration link sends the user to login with a status message', function () {
+    $registration = RegistrationToken::create([
+        'email' => 'ada@example.com',
+        'token_hash' => Hash::make('test-token'),
+        'expires_at' => now()->addMinutes(15),
+        'used_at' => now(),
+    ]);
+    $url = URL::temporarySignedRoute(
+        'auth.registration.verify',
+        now()->addMinutes(15),
+        ['registration' => $registration->id, 'token' => 'test-token'],
+    );
+
+    $this->get($url)
+        ->assertRedirectToRoute('auth.login')
+        ->assertSessionHas('status');
+
+    $this->get(route('auth.login'))
+        ->assertOk()
+        ->assertSee('อีเมลนี้ยืนยันแล้ว กรุณาเข้าสู่ระบบ');
+});
+
+test('a registration link with an invalid token returns to registration with an error', function () {
+    $registration = RegistrationToken::create([
+        'email' => 'ada@example.com',
+        'token_hash' => Hash::make('expected-token'),
+        'expires_at' => now()->addMinutes(15),
+    ]);
+    $url = URL::temporarySignedRoute(
+        'auth.registration.verify',
+        now()->addMinutes(15),
+        ['registration' => $registration->id, 'token' => 'wrong-token'],
+    );
+
+    $this->get($url)
+        ->assertRedirectToRoute('auth.register')
+        ->assertSessionHas('verification_link_error');
+
+    $this->get(route('auth.register'))
+        ->assertOk()
+        ->assertSee('ลิงก์ยืนยันอีเมลไม่ถูกต้อง กรุณาสมัครสมาชิกใหม่อีกครั้ง');
+});
+
+test('an expired signed registration link does not expose a raw 403 error', function () {
+    $registration = RegistrationToken::create([
+        'email' => 'ada@example.com',
+        'token_hash' => Hash::make('test-token'),
+        'expires_at' => now()->addMinutes(15),
+    ]);
+    $url = URL::temporarySignedRoute(
+        'auth.registration.verify',
+        now()->subMinute(),
+        ['registration' => $registration->id, 'token' => 'test-token'],
+    );
+
+    $this->get($url)
+        ->assertRedirectToRoute('auth.register')
+        ->assertSessionHas('verification_link_error');
 });
 
 test('a Google-only account can complete email registration with the same email', function () {

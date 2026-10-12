@@ -22,6 +22,21 @@
         </a>
     </nav>
 
+    @if (session('status'))
+        <div
+            class="mb-5 flex items-start gap-2.5 rounded-[12px] border border-sky-200 bg-sky-50 px-3 py-2.5 text-sm leading-5 text-sky-700"
+            role="status"
+            aria-live="polite"
+        >
+            <i
+                data-lucide="info"
+                class="mt-0.5 size-4 shrink-0"
+                aria-hidden="true"
+            ></i>
+            <span>{{ session('status') }}</span>
+        </div>
+    @endif
+
     <header
         class="mb-7 text-center"
     >
