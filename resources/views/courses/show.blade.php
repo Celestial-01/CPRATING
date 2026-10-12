@@ -3,11 +3,12 @@
 @section('title', $course['code'].' '.$course['title'])
 
 @section('content')
-    <x-navbar />
+    <div class="min-h-screen bg-[#f6f6f6]">
+        <x-navbar active="courses" />
 
-    <main class="mx-auto w-full max-w-[1120px] px-3 pb-20 sm:px-6">
+    <main class="relative z-0 mx-auto mt-2 w-full max-w-[1120px] px-3 pb-20 pt-0 sm:-mt-2 sm:px-6 sm:pt-4">
         <nav
-            class="mt-5 flex items-center gap-2 text-xs text-slate-500 sm:mt-7 sm:text-sm"
+            class="mt-0 flex items-center gap-2 text-xs text-slate-500 sm:mt-1 sm:text-sm"
             aria-label="เส้นทางการนำทาง"
         >
             <a
@@ -31,40 +32,22 @@
         @else
             <x-course.summary
                 :course="$course"
+                :has-rated="$hasRated"
                 class="mt-6"
             />
+
+            @auth
+                @unless ($hasRated)
+                    <x-course.rating-modal :course="$course" />
+                @endunless
+            @endauth
 
         <section
             class="mt-6 grid gap-5 md:grid-cols-2"
             aria-label="ข้อมูลการเรียน"
         >
             @foreach ($courseOverviewStats as $courseOverviewStat)
-                <article class="rounded-[21px] border border-slate-200 bg-white p-5 shadow-[0_2px_5px_rgba(15,23,42,0.02)] sm:p-6">
-                    <h2 class="flex items-center gap-2 text-sm font-bold text-slate-950">
-                        <span class="size-1.5 rounded-full {{ $courseOverviewStat['accentClass'] }}"></span>
-                        {{ $courseOverviewStat['title'] }}
-                    </h2>
-
-                    <div class="mt-6 flex items-center justify-between text-xs">
-                        <span class="text-slate-500">
-                            {{ $courseOverviewStat['summary'] }}
-                        </span>
-                        <strong class="text-slate-900">
-                            {{ $courseOverviewStat['percentage'] }}%
-                        </strong>
-                    </div>
-
-                    <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-200">
-                        <div
-                            class="h-full rounded-full {{ $courseOverviewStat['accentClass'] }}"
-                            style="width: {{ $courseOverviewStat['percentage'] }}%"
-                        ></div>
-                    </div>
-
-                    <p class="mt-2 text-[11px] text-slate-400">
-                        {{ $courseOverviewStat['description'] }}
-                    </p>
-                </article>
+                <x-course.overview-stat :stat="$courseOverviewStat" />
             @endforeach
         </section>
 
@@ -84,7 +67,7 @@
 
                     <div class="mt-2 flex items-baseline gap-2">
                         <strong class="text-5xl font-bold tracking-tight text-emerald-500">
-                            {{ $course['gradeAChance'] }}%
+                            {{ $course['grade_a_chance'] }}%
                         </strong>
                         <span class="text-xs text-slate-500">
                             ของผู้เรียนทั้งหมด
@@ -96,24 +79,18 @@
                     </p>
 
                     <p class="mt-4 border-t border-slate-100 pt-3 text-[11px] leading-4 text-slate-400">
-                        สุ่มกลุ่มตัวอย่างจากผู้เรียน {{ number_format($course['gradeSampleSize']) }} คน · ได้ค่าประมาณ
+                        สุ่มกลุ่มตัวอย่างจากผู้เรียน {{ number_format($course['grade_sample_size']) }} คน · ได้ค่าประมาณ
                     </p>
                 </div>
 
                 <div class="flex h-32 items-end justify-between gap-2 sm:gap-4">
-                    @foreach ($course['grades'] as $grade => $percentage)
-                        <div class="flex h-full flex-1 flex-col items-center justify-end gap-2">
-                            <span class="text-[10px] font-medium text-slate-500">
-                                {{ $percentage }}%
-                            </span>
-                            <div
-                                class="w-full max-w-16 rounded-t-[17px] {{ $grade === 'A' ? 'bg-emerald-500' : 'bg-emerald-100' }}"
-                                style="height: {{ max(18, $percentage * 1.8) }}%"
-                            ></div>
-                            <span class="text-[10px] text-slate-500">
-                                {{ $grade }}
-                            </span>
-                        </div>
+                    @foreach ($gradeDistribution as $gradeBar)
+                        <x-course.grade-bar
+                            :grade="$gradeBar['grade']"
+                            :percentage="$gradeBar['percentage']"
+                            :bar-height="$gradeBar['barHeight']"
+                            :highlighted="$gradeBar['highlighted']"
+                        />
                     @endforeach
                 </div>
             </div>
@@ -227,7 +204,7 @@
                     </h3>
 
                     <div class="mt-4 space-y-3">
-                        @forelse ($course['nextCourses'] as $item)
+                        @forelse ($course['next_courses'] as $item)
                             <div class="group flex cursor-pointer items-center justify-between rounded-[16px] border border-slate-200 px-3 py-3 transition-[border-color,box-shadow,transform] duration-500 ease-out hover:-translate-y-0.5 hover:border-blue-500 hover:bg-white hover:shadow-sm">
                                 <div>
                                     <strong class="block text-sm text-slate-900 transition-colors duration-200 group-hover:text-blue-500">
@@ -419,14 +396,17 @@
                 วิชาที่เกี่ยวข้อง
             </h2>
 
-            <div class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <div class="cg course-related-grid mt-5" data-related-courses>
                 @foreach ($relatedCourses as $relatedCourse)
-                    <x-course-card :course="array_merge($relatedCourse, ['isAvailable' => true])" />
+                    <x-course.card :course="$relatedCourse" />
                 @endforeach
             </div>
         </section>
         @endif
     </main>
 
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script type="application/json" data-course-detail-copy>@json($courseDetailCopy)</script>
     <x-footer />
+    </div>
 @endsection
