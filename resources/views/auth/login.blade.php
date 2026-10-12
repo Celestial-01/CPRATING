@@ -4,19 +4,19 @@
 @section('showBrand', 'true')
 @section('content')
     <nav
-        class="mb-9 grid grid-cols-2 rounded-[15px] bg-[#e9f5ff] p-1 text-[17px] font-normal"
+        class="auth-tabs mb-9 grid grid-cols-2 rounded-[15px] bg-[#e9f5ff] p-1 text-[17px] font-normal"
         aria-label="การยืนยันตัวตน"
     >
         <a
             href="{{ route('auth.login') }}"
-            class="rounded-[15px] bg-white px-4 py-2.5 text-center text-[#1684e5] shadow-[0_0_0_5px_rgba(255,255,255,.55)]"
+            class="auth-tabs__link rounded-[15px] bg-white px-4 py-2.5 text-center shadow-[0_0_0_5px_rgba(255,255,255,.55)]"
             aria-current="page"
         >
             เข้าสู่ระบบ
         </a>
         <a
             href="{{ route('auth.register') }}"
-            class="rounded-[15px] px-4 py-2.5 text-center text-[#3d4a56] transition hover:text-[#1684e5]"
+            class="auth-tabs__link rounded-[15px] px-4 py-2.5 text-center"
         >
             สมัครสมาชิก
         </a>
@@ -107,7 +107,7 @@
             </label>
             <a
                 href="{{ route('auth.forgot-password') }}"
-                class="text-sm font-medium text-[#377eff] hover:underline"
+                class="auth-action-link text-sm font-medium"
             >
                 ลืมรหัสผ่าน?
             </a>
@@ -147,7 +147,7 @@
     </a>
 
     <aside
-                class="mt-5 flex items-start gap-3 rounded-[15px] border border-[#bfddfa] bg-[#edf7ff] px-3 py-2.5 text-[11px] leading-5 text-[#527ba8] [&_a]:text-[#075be6]"
+                class="mt-5 flex items-start gap-3 rounded-[15px] border border-[#bfddfa] bg-[#edf7ff] px-3 py-2.5 text-[11px] leading-5 text-[#527ba8]"
     >
         <span
             class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[#c5e8ff] text-[#1684df]"
@@ -162,7 +162,7 @@
             <a
                 href="#privacy"
                 data-legal-modal-trigger="privacy"
-                class="underline"
+                class="auth-legal-link"
             >
                 นโยบายความเป็นส่วนตัว
             </a>
@@ -170,7 +170,7 @@
             <a
                 href="#terms"
                 data-legal-modal-trigger="terms"
-                class="underline"
+                class="auth-legal-link"
             >
                 ข้อกำหนดการใช้งาน
             </a>

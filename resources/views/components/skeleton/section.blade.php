@@ -1,7 +1,7 @@
 @props(['cards' => 6])
 
 <section
-    {{ $attributes->class('mt-8 sm:mt-10') }}
+    {{ $attributes->merge(['class' => 'mt-8 sm:mt-10']) }}
     aria-hidden="true"
 >
     <div class="mb-5 flex items-center justify-between gap-4">

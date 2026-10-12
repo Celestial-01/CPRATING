@@ -32,7 +32,7 @@
 
     <a
         href="{{ route('auth.login') }}"
-        class="mt-5 flex h-[45px] items-center justify-center rounded-[15px] border border-[#bcbcbc] text-sm text-slate-500 transition hover:bg-slate-50"
+        class="auth-secondary-link mt-5 flex h-[45px] items-center justify-center rounded-[15px] border border-[#bcbcbc] text-sm transition hover:bg-slate-50"
     >
         กลับสู่หน้าเข้าสู่ระบบ
     </a>

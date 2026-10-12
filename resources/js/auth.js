@@ -43,10 +43,13 @@ const getPasswordInput = (toggle) => {
 
 const updatePasswordToggle = (toggle, input) => {
     const isPassword = input.type === 'password';
+    const icon = document.createElement('i');
 
     input.type = isPassword ? 'text' : 'password';
     toggle.setAttribute('aria-label', isPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
-    toggle.innerHTML = `<i data-lucide="${isPassword ? 'eye-off' : 'eye'}" class="size-5"></i>`;
+    icon.dataset.lucide = isPassword ? 'eye-off' : 'eye';
+    icon.className = 'size-5';
+    toggle.replaceChildren(icon);
     renderIcons(iconSet);
 };
 

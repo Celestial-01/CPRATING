@@ -1,0 +1,35 @@
+<?php
+
+namespace App\View\Components\Admin;
+
+use Illuminate\View\Component;
+use Illuminate\View\View;
+
+final class Navbar extends Component
+{
+    public array $menus;
+
+    public function __construct()
+    {
+        $this->menus = collect([
+            ['label' => 'หน้าหลัก', 'route' => 'admin.dashboard'],
+            ['label' => 'เพิ่มรายวิชา', 'route' => 'admin.courses.create'],
+            ['label' => 'เพิ่มอาจารย์', 'route' => 'admin.teachers.index'],
+            ['label' => 'เพิ่มหัวข้อ', 'route' => 'admin.topics.index'],
+        ])->map(function (array $menu): array {
+            $active = request()->routeIs($menu['route']);
+
+            return $menu + [
+                'active' => $active,
+                'classes' => $active
+                    ? 'border-b-2 border-[#1684e5] pb-1 text-[#1684e5]'
+                    : 'text-slate-900 transition hover:text-[#1684e5]',
+            ];
+        })->all();
+    }
+
+    public function render(): View
+    {
+        return view('components.admin.navbar');
+    }
+}
