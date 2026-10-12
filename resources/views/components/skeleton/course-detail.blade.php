@@ -1,12 +1,5 @@
-@props(['class' => ''])
-
-@php
-    $pulse = 'animate-pulse bg-slate-200 motion-reduce:animate-none';
-    $softPulse = 'animate-pulse bg-slate-100 motion-reduce:animate-none';
-@endphp
-
 <div
-    {{ $attributes->class($class) }}
+    {{ $attributes }}
     aria-busy="true"
     aria-label="กำลังโหลดรายละเอียดรายวิชา"
 >
@@ -81,7 +74,10 @@
                 @for ($index = 0; $index < 8; $index++)
                     <div class="flex h-full flex-1 flex-col items-center justify-end gap-2">
                         <div class="h-3 w-7 rounded {{ $softPulse }}"></div>
-                        <div class="w-full max-w-16 rounded-t-[17px] {{ $index === 7 ? $pulse : $softPulse }}" style="height: {{ 35 + (($index * 13) % 45) }}%"></div>
+                        <div
+                            class="course-detail-skeleton-bar w-full max-w-16 rounded-t-[17px] {{ $index === 7 ? $pulse : $softPulse }}"
+                            data-bar-index="{{ $index }}"
+                        ></div>
                         <div class="h-3 w-5 rounded {{ $softPulse }}"></div>
                     </div>
                 @endfor

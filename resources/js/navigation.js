@@ -14,18 +14,32 @@ const initializeMobileMenu = () => {
 
     renderIcons(iconSet);
 
+    let previouslyFocusedElement = null;
+
     const setMenuOpen = (isOpen, restoreFocus = true) => {
         if ((menu.dataset.open === 'true') === isOpen) return;
+
+        if (isOpen) previouslyFocusedElement = document.activeElement;
 
         menu.dataset.open = String(isOpen);
         overlay.dataset.open = String(isOpen);
         menu.inert = !isOpen;
         menu.setAttribute('aria-hidden', String(!isOpen));
+        overlay.setAttribute('aria-hidden', String(!isOpen));
         toggle.setAttribute('aria-expanded', String(isOpen));
+        toggle.setAttribute('aria-label', isOpen ? 'ปิดเมนู' : 'เปิดเมนู');
         document.body.classList.toggle('overflow-hidden', isOpen);
 
-        if (isOpen) close.focus();
-        else if (restoreFocus) toggle.focus();
+        if (isOpen) {
+            close.focus();
+
+            return;
+        }
+
+        if (restoreFocus) {
+            (previouslyFocusedElement ?? toggle).focus();
+            previouslyFocusedElement = null;
+        }
     };
 
     toggle.addEventListener('click', () => setMenuOpen(true));
@@ -39,9 +53,51 @@ const initializeMobileMenu = () => {
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && menu.dataset.open === 'true') setMenuOpen(false);
     });
-    window.matchMedia('(min-width: 48rem)').addEventListener('change', (event) => {
+    const desktopQuery = window.matchMedia('(min-width: 861px)');
+    const closeOnDesktop = (event) => {
         if (event.matches) setMenuOpen(false, false);
-    });
+    };
+
+    if (desktopQuery.addEventListener) {
+        desktopQuery.addEventListener('change', closeOnDesktop);
+    } else {
+        desktopQuery.addListener(closeOnDesktop);
+    }
 };
 
-onDomReady(initializeMobileMenu);
+const initializeHomeNavbar = () => {
+    const navbar = document.querySelector('[data-home-navbar]');
+
+    if (!navbar) return;
+
+    let frame = 0;
+    let previousState = null;
+
+    const updateNavbarVisibility = () => {
+        const isVisible = window.scrollY > 48;
+
+        if (isVisible === previousState) return;
+
+        previousState = isVisible;
+        navbar.dataset.scrolled = String(isVisible);
+        navbar.inert = !isVisible;
+        navbar.setAttribute('aria-hidden', String(!isVisible));
+    };
+
+    const scheduleUpdate = () => {
+        if (frame) return;
+
+        frame = window.requestAnimationFrame(() => {
+            frame = 0;
+            updateNavbarVisibility();
+        });
+    };
+
+    updateNavbarVisibility();
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+};
+
+onDomReady(() => {
+    initializeMobileMenu();
+    initializeHomeNavbar();
+});

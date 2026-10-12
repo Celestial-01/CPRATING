@@ -80,7 +80,7 @@
         จำรหัสผ่านได้แล้ว?
         <a
             href="{{ route('auth.login') }}"
-            class="text-[#075be6] no-underline transition hover:underline focus-visible:underline focus-visible:outline-none"
+            class="auth-action-link focus-visible:outline-none"
         >
             เข้าสู่ระบบ
         </a>

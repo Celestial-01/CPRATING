@@ -60,7 +60,6 @@ const setSaving = (root, button, isSaving) => {
     button.disabled = isSaving;
 };
 
-// ---------- ฟิลด์ธรรมดา ----------
 const initField = (root) => {
     const input = root.querySelector('[data-input]');
     const display = root.querySelector('[data-display]');
@@ -103,7 +102,6 @@ const initField = (root) => {
                     ? shown
                     : display.dataset.placeholder;
 
-            // ข้อความที่คัดลอกไปแสดงที่อื่น (data-mirror) อัปเดตตามทันที
             document
                 .querySelectorAll(`[data-mirror="${root.dataset.field}"]`)
                 .forEach((mirror) => {
@@ -139,7 +137,6 @@ const initField = (root) => {
     });
 };
 
-// ---------- ความสัมพันธ์ (อาจารย์ / หัวข้อ / วิชาบังคับก่อน) ----------
 const initRelation = (root) => {
     const editor = root.querySelector('[data-editor]');
     const chips = root.querySelector('[data-chips]');
@@ -174,7 +171,6 @@ const initRelation = (root) => {
         root.dataset.editing = 'true';
     };
 
-    // ยกเลิก = คืนแท็กตามที่เป็นตอนกดแก้ไข (ไม่ต้องรีโหลดหน้า)
     const cancel = () => {
         tagsBox.replaceChildren(...snapshot.map((node) => node.cloneNode(true)));
         picker.dispatchEvent(new Event('picker:sync'));
@@ -206,7 +202,6 @@ const initRelation = (root) => {
     });
 };
 
-// ---------- รูปปก ----------
 const initImage = (box) => {
     const input = box.querySelector('[data-image-input]');
     const image = box.querySelector('[data-course-image]');

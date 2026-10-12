@@ -11,17 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('course_topic', function (Blueprint $table) {
-        $table->foreignId('course_id')
-        ->constrained('courses')
-        ->cascadeOnDelete();
+        Schema::create('course_topic', function (Blueprint $table) {
+            $table->foreignId('course_id')
+                ->constrained('courses')
+                ->cascadeOnDelete();
 
-        $table->foreignId('topic_id')
-        ->constrained('topics')
-        ->cascadeOnDelete();
+            $table->foreignId('topic_id')
+                ->constrained('topics')
+                ->cascadeOnDelete();
 
-    $table->primary(['course_id', 'topic_id']);
-});
+            $table->primary(['course_id', 'topic_id']);
+        });
     }
 
     /**

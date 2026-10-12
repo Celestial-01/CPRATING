@@ -1,8 +1,10 @@
-@props(['course'])
+@props(['course', 'hasRated' => false])
 
 <section
-    {{ $attributes->class('@container rounded-[24px] border border-[#ececec] bg-white p-3 md:px-7 md:pt-7 md:pb-7') }}
+    {{ $attributes->merge(['class' => '@container rounded-[24px] border border-[#ececec] bg-white p-3 md:px-7 md:pt-7 md:pb-7']) }}
     aria-labelledby="course-title"
+    data-course-detail="{{ $course['code'] }}"
+    data-rating-status="{{ session('rating_status') }}"
 >
     <div class="grid items-stretch gap-7 @min-[640px]:grid-cols-[minmax(0,0.44fr)_minmax(0,1fr)]">
         <div class="mx-auto w-full max-w-none @min-[640px]:mx-0">
@@ -16,7 +18,7 @@
 
             <dl class="mt-6 grid grid-cols-3 gap-2.5">
                 <x-course.stat
-                    :value="$course['rating']"
+                    :value="$course['rating'] === null ? '—' : number_format($course['rating'], 1)"
                     label="คะแนน"
                     tone="rating"
                 />
@@ -26,7 +28,7 @@
                     tone="views"
                 />
                 <x-course.stat
-                    :value="$course['views']"
+                    :value="number_format($course['rating_count'])"
                     label="รีวิว"
                 />
             </dl>
@@ -38,7 +40,7 @@
                     {{ $course['code'] }}
                 </span>
                 <span class="rounded-full bg-[#f5f5f5] px-3 py-1 text-[11px] leading-4 text-[#888888]">
-                    {{ $course['categoryCode'] ?? $course['category'] }}
+                    {{ $course['major_code'] }}
                 </span>
                 <span class="inline-flex items-center gap-1 rounded-full bg-[#f1f5f9] px-3 py-1 text-[11px] leading-4 text-[#718096]">
                     <i
@@ -57,7 +59,7 @@
                 {{ $course['title'] }}
             </h1>
             <p class="mt-1 text-[15px] font-bold leading-6 text-[#7c8ca4]">
-                {{ $course['englishTitle'] }}
+                {{ $course['english_title'] }}
             </p>
             <p class="mt-2 flex items-center gap-1.5 text-xs text-[#7c8ca4]">
                 <i
@@ -83,20 +85,31 @@
             </div>
 
             <div class="mt-auto grid grid-cols-1 gap-3.5 pt-5 @min-[640px]:grid-cols-[minmax(0,1fr)_minmax(0,0.4fr)_minmax(0,0.4fr)]">
+                @auth
+                    <button
+                        type="button"
+                        class="course-rating-trigger inline-flex h-12 items-center justify-center gap-2 rounded-[18px] bg-[#2b7fff] px-3 text-[15px] font-semibold text-white transition hover:bg-[#2573e8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-default disabled:hover:bg-[#2b7fff]"
+                        @unless ($hasRated) data-course-rating-open @endunless
+                        @if ($hasRated) data-rated="true" disabled @endif
+                    >
+                        <i data-lucide="star" class="size-4 shrink-0" aria-hidden="true"></i>
+                        {{ $hasRated ? 'ให้คะแนนแล้ว' : 'ให้คะแนนวิชานี้' }}
+                    </button>
+                @else
+                    <a
+                        href="{{ route('auth.login') }}"
+                        class="course-rating-login inline-flex h-12 items-center justify-center gap-2 rounded-[18px] bg-[#2b7fff] px-3 text-[15px] font-semibold text-white transition hover:bg-[#2573e8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
+                    >
+                        <i data-lucide="star" class="size-4 shrink-0" aria-hidden="true"></i>
+                        เข้าสู่ระบบเพื่อให้คะแนน
+                    </a>
+                @endauth
                 <button
                     type="button"
-                    class="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-[18px] bg-[#2b7fff] px-3 text-[15px] font-semibold text-white transition hover:bg-[#2573e8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
-                >
-                    <i
-                        data-lucide="star"
-                        class="size-4 shrink-0"
-                        aria-hidden="true"
-                    ></i>
-                    ให้คะแนนวิชานี้
-                </button>
-                <button
-                    type="button"
-                    class="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-[18px] border border-[#cccccc] px-2 text-sm text-[#636363] transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 @min-[640px]:flex-col @min-[640px]:gap-1 @min-[700px]:flex-row @min-[700px]:gap-2"
+                    data-course-save="{{ $course['code'] }}"
+                    aria-pressed="false"
+                    aria-label="บันทึกวิชา {{ $course['code'] }}"
+                    class="course-detail-save inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-[18px] border border-[#cccccc] px-2 text-sm text-[#636363] transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 @min-[640px]:flex-col @min-[640px]:gap-1 @min-[700px]:flex-row @min-[700px]:gap-2"
                 >
                     <i
                         data-lucide="bookmark"
