@@ -21,7 +21,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->primary(['course_id', 'prerequisite_course_id']);
-});
+        });
     }
 
     /**
