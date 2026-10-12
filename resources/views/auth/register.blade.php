@@ -22,6 +22,21 @@
         </a>
     </nav>
 
+    @if (session('verification_link_error'))
+        <div
+            class="mb-5 flex items-start gap-2.5 rounded-[12px] border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-5 text-red-700"
+            role="alert"
+            aria-live="assertive"
+        >
+            <i
+                data-lucide="circle-alert"
+                class="mt-0.5 size-4 shrink-0"
+                aria-hidden="true"
+            ></i>
+            <span>{{ session('verification_link_error') }}</span>
+        </div>
+    @endif
+
     <header
         class="mb-7 text-center"
     >
