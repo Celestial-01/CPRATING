@@ -307,7 +307,7 @@
             </form>
 
             @else <div class="mt-6 rounded-[14px] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                กรุณาเข้าสู่ระบบก่อนแสดงความคิดเห็น <a href="{{ route('login') }}" class="font-semibold text-blue-600 hover:underline">
+                กรุณาเข้าสู่ระบบก่อนแสดงความคิดเห็น <a href="{{ route('auth.login') }}" class="font-semibold text-blue-600 hover:underline">
                     เข้าสู่ระบบ </a> </div>
             @endauth
 
