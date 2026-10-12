@@ -60,6 +60,7 @@ class Course extends Model
         'major',
         'course_type',
         'image',
+        'is_active',
         'is_offered',
         'publication_status',
     ];
@@ -110,5 +111,28 @@ class Course extends Model
             'prerequisite_course_id',
             'course_id',
         );
+    }
+
+    /**
+     * Compatibility aliases for the admin controller and views from main.
+     */
+    public function previousCourses(): BelongsToMany
+    {
+        return $this->prerequisiteCourses();
+    }
+
+    public function nextCourses(): BelongsToMany
+    {
+        return $this->dependentCourses();
+    }
+
+    protected function getIsActiveAttribute(): bool
+    {
+        return (bool) ($this->attributes['is_offered'] ?? false);
+    }
+
+    protected function setIsActiveAttribute(mixed $value): void
+    {
+        $this->attributes['is_offered'] = (bool) $value;
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Mail\RegistrationVerificationMail;
 use App\Models\RegistrationToken;
+use App\Models\SocialAccount;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -91,6 +92,100 @@ test('login and registration pages are available', function () {
         ->assertViewIs('auth.register');
 });
 
+test('an authenticated navbar displays the user name, email, and Google avatar', function () {
+    $user = User::factory()->create([
+        'name' => 'Patiphan',
+        'email' => 'patiphan@example.com',
+    ]);
+
+    SocialAccount::create([
+        'user_id' => $user->id,
+        'provider' => 'google',
+        'provider_user_id' => 'google-user-id',
+        'avatar_url' => 'https://example.com/avatar.jpg',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('home'))
+        ->assertOk()
+        ->assertSee('data-user-menu', false)
+        ->assertSee('Patiphan')
+        ->assertSee('patiphan@example.com')
+        ->assertSee('https://example.com/avatar.jpg');
+});
+
+test('an admin can open the dashboard from the authenticated navbar', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->get(route('home'))
+        ->assertOk()
+        ->assertSee(route('admin.dashboard'), false);
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertViewIs('admin.dashboard');
+});
+
+test('a regular user cannot see or access the admin dashboard', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('home'))
+        ->assertOk()
+        ->assertDontSee(route('admin.dashboard'), false);
+
+    $this->actingAs($user)
+        ->get(route('admin.dashboard'))
+        ->assertForbidden();
+});
+
+test('the admin courses path opens the existing admin UI', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->get('/admin/courses/')
+        ->assertRedirectToRoute('admin.dashboard');
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertViewIs('admin.dashboard');
+});
+
+test('a regular user cannot open the admin courses path', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get('/admin/courses/')
+        ->assertForbidden();
+});
+
+test('admin pages from the partner baseline render with the current route structure', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertViewIs('admin.dashboard');
+
+    $this->actingAs($admin)
+        ->get(route('admin.courses.create'))
+        ->assertOk()
+        ->assertViewIs('admin.courses.create');
+
+    $this->actingAs($admin)
+        ->get(route('admin.teachers.index'))
+        ->assertOk()
+        ->assertViewIs('admin.teachers.index');
+
+    $this->actingAs($admin)
+        ->get(route('admin.topics.index'))
+        ->assertOk()
+        ->assertViewIs('admin.topics.index');
+});
+
 test('a registration request sends a verification email without authenticating the user', function () {
     Mail::fake();
 
@@ -105,7 +200,8 @@ test('a registration request sends a verification email without authenticating t
     Mail::assertSent(RegistrationVerificationMail::class, function (RegistrationVerificationMail $mail) {
         $html = $mail->render();
 
-        return str_contains($html, 'ยืนยันอีเมลของคุณ')
+        return $mail->hasTo('ada@example.com')
+            && str_contains($html, 'ยืนยันอีเมลของคุณ')
             && str_contains($html, 'ลิงก์นี้จะหมดอายุภายใน 15 นาที')
             && str_contains($html, 'ยืนยันอีเมล');
     });
@@ -121,8 +217,7 @@ test('a user can resend the registration verification email', function () {
         ->assertSessionHas('verification_resent', true);
 
     Mail::assertSent(RegistrationVerificationMail::class, 2);
-    Mail::assertNotSent(RegistrationVerificationMail::class, fn (RegistrationVerificationMail $mail) =>
-        $mail->hasTo('other@example.com'));
+    Mail::assertNotSent(RegistrationVerificationMail::class, fn (RegistrationVerificationMail $mail) => $mail->hasTo('other@example.com'));
 });
 
 test('registration verification resend is rate limited with a friendly response', function () {
@@ -253,6 +348,35 @@ test('a user can log in and log out', function () {
 
     $this->post(route('auth.logout'))->assertRedirectToRoute('auth.login');
     $this->assertGuest();
+});
+
+test('a regular user is sent home when login was triggered by an admin URL', function () {
+    $user = User::factory()->create(['password' => 'password123']);
+
+    $this->get(route('admin.dashboard'))
+        ->assertRedirect(route('auth.login'));
+
+    $this->post(route('auth.login.store'), [
+        'email' => $user->email,
+        'password' => 'password123',
+    ])->assertRedirectToRoute('home');
+
+    $this->assertAuthenticatedAs($user);
+    $this->assertFalse(session()->has('url.intended'));
+});
+
+test('an admin keeps the intended admin URL after login', function () {
+    $admin = User::factory()->admin()->create(['password' => 'password123']);
+
+    $this->get(route('admin.dashboard'))
+        ->assertRedirect(route('auth.login'));
+
+    $this->post(route('auth.login.store'), [
+        'email' => $admin->email,
+        'password' => 'password123',
+    ])->assertRedirectToRoute('admin.dashboard');
+
+    $this->assertAuthenticatedAs($admin);
 });
 
 test('invalid login credentials are rejected', function () {

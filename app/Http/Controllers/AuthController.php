@@ -49,9 +49,11 @@ class AuthController extends Controller
                 ->onlyInput('email');
         }
 
+        /** @var User $user */
+        $user = Auth::user();
         $request->session()->regenerate();
 
-        return redirect()->intended(route('home'));
+        return $this->redirectAfterAuthentication($request, $user);
     }
 
     public function redirectToGoogle(): RedirectResponse
@@ -88,10 +90,21 @@ class AuthController extends Controller
             ]);
         }
 
+        SocialAccount::updateOrCreate(
+            [
+                'provider' => 'google',
+                'provider_user_id' => $googleUser->getId(),
+            ],
+            [
+                'user_id' => $user->id,
+                'avatar_url' => $googleUser->getAvatar(),
+            ],
+        );
+
         Auth::login($user, remember: true);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('home'));
+        return $this->redirectAfterAuthentication($request, $user);
     }
 
     public function register(Request $request): RedirectResponse
@@ -341,5 +354,26 @@ class AuthController extends Controller
         $request->session()->forget('password_reset_email');
 
         return redirect()->route('auth.login')->with('status', 'รีเซ็ตรหัสผ่านสำเร็จแล้ว');
+    }
+
+    private function redirectAfterAuthentication(Request $request, User $user): RedirectResponse
+    {
+        if (! $user->isAdmin() && $this->isAdminIntendedUrl($request->session()->get('url.intended'))) {
+            $request->session()->forget('url.intended');
+        }
+
+        return redirect()->intended(route('home'));
+    }
+
+    private function isAdminIntendedUrl(mixed $url): bool
+    {
+        if (! is_string($url)) {
+            return false;
+        }
+
+        $path = parse_url($url, PHP_URL_PATH);
+
+        return is_string($path)
+            && ($path === '/admin' || str_starts_with($path, '/admin/'));
     }
 }
