@@ -103,3 +103,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
         ->name('comments.destroy');
 });
+
+//like comments
+Route::middleware('auth')->group(function () {
+    Route::post('/comments', [CommentController::class, 'store'])
+        ->name('comments.store');
+
+    Route::post('/comments/{comment}/like', [CommentController::class, 'toggleLike'])
+        ->name('comments.like');
+
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+        ->name('comments.destroy');
+});

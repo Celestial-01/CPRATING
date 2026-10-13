@@ -16,7 +16,7 @@ return new class extends Migration
                 ->constrained('users')
                 ->cascadeOnDelete();
 
-            // รหัสวิชาจาก CourseCatalog เช่น CP352210
+            // รหัสวิชาจาก CourseCatalog
             $table->string('course_code', 50)->index();
 
             // เนื้อหาคอมเมนต์

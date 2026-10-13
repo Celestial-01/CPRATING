@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 
 class CommentController extends Controller
 {
@@ -15,13 +16,27 @@ class CommentController extends Controller
     {
         $validated = $request->validate([
             'course_code' => ['required', 'string', 'max:50'],
-            'content' => ['required', 'string', 'max:2000'],
+            'content'     => ['required', 'string', 'max:2000'],
+            'parent_id'   => ['nullable', 'integer', 'exists:comments,id'],
         ]);
 
+        $parentId = null;
+        $replyToUserId = null;
+
+        if (!empty($validated['parent_id'])) {
+            $target = Comment::findOrFail($validated['parent_id']);
+
+            // ถ้ากดตอบกลับ "รีพลาย" ให้ไปอยู่ใต้คอมเมนต์หลักเสมอ (แสดงแค่ 1 ชั้นแบบ Instagram)
+            $parentId = $target->parent_id ?? $target->id;
+            $replyToUserId = $target->user_id;
+        }
+
         Comment::create([
-            'user_id' => $request->user()->id,
-            'course_code' => $validated['course_code'],
-            'content' => $validated['content'],
+            'user_id'          => $request->user()->id,
+            'course_code'      => $validated['course_code'],
+            'content'          => $validated['content'],
+            'parent_id'        => $parentId,
+            'reply_to_user_id' => $replyToUserId,
         ]);
 
         return back()->with('success', 'เพิ่มความคิดเห็นเรียบร้อยแล้ว');
@@ -32,13 +47,21 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment): RedirectResponse
     {
-        abort_unless(
-            (int) $comment->user_id === (int) auth()->id(),
-            403
-        );
+        abort_unless((int) $comment->user_id === (int) auth()->id(), 403);
 
+        $comment->replies()->delete();
         $comment->delete();
 
         return back()->with('success', 'ลบความคิดเห็นเรียบร้อยแล้ว');
+    }
+    //กดใจคอมเม้นต์
+    public function toggleLike(Request $request, Comment $comment): JsonResponse
+    {
+    $result = $comment->likes()->toggle($request->user()->id);
+
+    return response()->json([
+        'liked' => count($result['attached']) > 0,
+        'count' => $comment->likes()->count(),
+    ]);
     }
 }
