@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 
  // Home
-Route::get('/', [HomeController::class, 'index'])->name('home');
+//Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/home', [HomeController::class, 'index'])
     ->name('home.index');
@@ -21,7 +21,7 @@ Route::get('/courses/{code}', [CourseController::class, 'show'])
     ->name('courses.show');
 
 // Admin Dashboard
-Route::get('/admin', [AdminController::class, 'showDashboard'])
+Route::get('/', [AdminController::class, 'showDashboard'])
     ->name('admin.dashboard');
 
 // Admin Courses

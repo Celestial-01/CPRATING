@@ -33,11 +33,7 @@
             </x-admin.field>
 
             <x-admin.field label="ชื่อและนามสกุลอาจารย์" name="teacher_name" required>
-                <x-admin.input
-                    name="teacher_name"
-                    placeholder="กรอกชื่อและนามสกุลอาจารย์"
-                    :value="old('teacher_name', $teacher->teacher_name ?? '')"
-                    required
+                <x-admin.input name="teacher_name" placeholder="กรอกชื่อและนามสกุลอาจารย์" :value="old('teacher_name', $teacher->teacher_name ?? '')" required
                 />
             </x-admin.field>
         </x-admin.form-card>

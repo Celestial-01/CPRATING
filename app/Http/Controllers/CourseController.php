@@ -26,10 +26,7 @@ class CourseController extends Controller
     {
         $teachers = Teacher::all();
         $topics = Topic::all();
-
-       
         $courses = Course::orderBy('course_code')->get();
-
         $majors = Course::MAJORS;
         $types = Course::TYPES;
 
@@ -49,8 +46,8 @@ class CourseController extends Controller
             'course_name_th' => ['required', 'string', 'max:255'],
             'course_code' => ['required', 'string', 'max:8'],
             'description' => ['nullable', 'string'],
-            'major' => ['required', 'in:' . implode(',', array_keys(Course::MAJORS))],
-            'course_type' => ['required', 'in:' . implode(',', Course::TYPES)],
+            'major' => ['required', 'string'],
+            'course_type' => ['required','string'],
             'credits' => ['required', 'integer', 'min:0'],
             'image' => ['nullable', 'image', 'max:2048'],
 
@@ -73,9 +70,8 @@ class CourseController extends Controller
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('courses', 'public');
         }
-
         
-        $teacherIds = $validated['teacher_ids'] ?? [];
+        $teacherIds = $validated['teacher_ids'] ?? []; // [2, 5]
         $topicIds = $validated['topic_ids'] ?? [];
         $prerequisiteIds = $validated['prerequisite_ids'] ?? [];
 
@@ -85,12 +81,6 @@ class CourseController extends Controller
             $validated['prerequisite_ids']
         );
 
-        
-        if (in_array(0, $prerequisiteIds, true)) {
-            return back()
-                ->withInput()
-                ->withErrors(['prerequisite_ids' => 'กรุณาเลือกวิชาบังคับก่อนที่ถูกต้อง']);
-        }
 
         $course = Course::create([
             ...$validated,

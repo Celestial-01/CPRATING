@@ -15,11 +15,11 @@ class AdminController extends Controller
 
         $currentMajor = $request->query('major');
         if (! array_key_exists($currentMajor, $majors)) {
-            $currentMajor = array_key_first($majors);
+            $currentMajor = array_key_first($majors); //major default
         }
-        $currentTypes = array_values(array_intersect((array) $request->query('types', []), $types));
+        $currentTypes = array_values(array_intersect((array) $request->query('types', []), $types)); //pull type 
 
-        $keyword = trim((string) $request->query('q', ''));
+        $keyword = trim((string) $request->query('q', '')); //search
 
         $courses = Course::where('major', $currentMajor)
             ->when($currentTypes, fn ($query) => $query->whereIn('course_type', $currentTypes))
