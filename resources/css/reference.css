@@ -34,8 +34,10 @@ body:has(.source-page)::before {
         radial-gradient(32% 38% at 88% 52%, #c6e3ff, transparent 70%),
         radial-gradient(44% 30% at 52% 104%, #b4d9ff, transparent 70%);
 }
-a {
-    color: inherit;
+@layer base {
+    a {
+        color: inherit;
+    }
 }
 .source-page a,
 #nav a,
