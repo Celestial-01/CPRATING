@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight, House, LayoutDashboard, LogOut, Menu, UserRound, X } from 'lucide';
 import { onDomReady } from './dom-ready';
 import { renderIcons } from './icon-renderer';
+import { prefersReducedMotion } from './utils';
 
 const iconSet = { ChevronDown, ChevronRight, House, LayoutDashboard, LogOut, Menu, UserRound, X };
 
@@ -128,9 +129,28 @@ const initializeHomeNavbar = () => {
     window.addEventListener('scroll', scheduleUpdate, { passive: true });
 };
 
+const initializeHomeNavigation = () => {
+    const hero = document.querySelector('[data-home-hero]');
+    const homeLinks = document.querySelectorAll('[data-home-nav-link]');
+
+    if (!hero || !homeLinks.length) return;
+
+    homeLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+
+            hero.scrollIntoView({
+                behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+                block: 'start',
+            });
+        });
+    });
+};
+
 onDomReady(() => {
     renderIcons(iconSet);
     initializeMobileMenu();
     initializeHomeNavbar();
+    initializeHomeNavigation();
     initializeUserMenu();
 });

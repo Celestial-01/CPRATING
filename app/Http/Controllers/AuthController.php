@@ -238,7 +238,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('home');
+        return $this->redirectAfterAuthentication($request, $user);
     }
 
     public function logout(Request $request): RedirectResponse
@@ -248,7 +248,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('auth.login');
+        return redirect()->route('home');
     }
 
     public function showVerifyEmail(Request $request): View|RedirectResponse
@@ -373,6 +373,10 @@ class AuthController extends Controller
 
     private function redirectAfterAuthentication(Request $request, User $user): RedirectResponse
     {
+        if (! $user->isAdmin() && ! $user->hasCompletedProfile()) {
+            return redirect()->route('profile.complete');
+        }
+
         if (! $user->isAdmin() && $this->isAdminIntendedUrl($request->session()->get('url.intended'))) {
             $request->session()->forget('url.intended');
         }

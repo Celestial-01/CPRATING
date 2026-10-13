@@ -16,6 +16,7 @@
             href="{{ route('home') }}"
             class="site-navbar__brand flex shrink-0 items-center gap-2.5 text-sm font-bold leading-none text-[#0b1220]"
             aria-label="CPRATING หน้าหลัก"
+            data-home-nav-link
         >
             <span class="site-navbar__mark grid size-9 place-items-center rounded-full bg-[#0a7ae6] text-sm font-bold text-white sm:size-10">CP</span>
             <span class="site-navbar__wordmark inline">CP<span class="text-[#0a7ae6]">RATING</span></span>
@@ -27,6 +28,7 @@
                     <a
                         href="{{ route($link['route']) }}"
                         class="{{ $link['desktopClasses'] }}"
+                        @if ($link['key'] === 'home') data-home-nav-link @endif
                         @if ($link['isActive']) aria-current="page" @endif
                     >
                         {{ $link['label'] }}
@@ -53,7 +55,7 @@
                 >
                     <button
                         type="button"
-                        class="site-navbar__profile-trigger flex items-center gap-2 rounded-full bg-white px-2 py-1.5 text-left shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:shadow-[0_10px_24px_rgba(15,23,42,0.16)] focus:outline-none focus:ring-4 focus:ring-sky-100"
+                        class="site-navbar__profile-trigger flex cursor-pointer items-center gap-2 rounded-full bg-white px-2 py-1.5 text-left shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:shadow-[0_10px_24px_rgba(15,23,42,0.16)] focus:outline-none focus:ring-4 focus:ring-sky-100"
                         data-user-menu-toggle
                         aria-expanded="false"
                         aria-haspopup="menu"
@@ -71,7 +73,7 @@
                             @endif
                         </span>
                         <span class="max-w-[120px] truncate text-sm font-semibold text-slate-700">
-                            {{ $user->displayName() }}
+                            {{ $user->firstName() }}
                         </span>
                         <i data-lucide="chevron-down" class="size-4 shrink-0 text-slate-400" aria-hidden="true"></i>
                     </button>
@@ -115,6 +117,7 @@
                             <a
                                 href="{{ route('home') }}"
                                 class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-[#edf7ff] hover:text-[#0a7ae6]"
+                                data-home-nav-link
                                 role="menuitem"
                             >
                                 <i data-lucide="house" class="size-4" aria-hidden="true"></i>
@@ -164,7 +167,7 @@
 >
     <div class="mobile-menu__content opacity-0 transition-[transform,opacity] duration-500 ease-out" data-mobile-menu-content>
         <div class="mobile-menu__header flex items-center justify-between border-b border-slate-200 pb-4">
-            <a href="{{ route('home') }}" class="flex items-center gap-3" data-mobile-menu-link>
+            <a href="{{ route('home') }}" class="flex items-center gap-3" data-mobile-menu-link data-home-nav-link>
                 <span class="grid size-10 place-items-center rounded-full bg-[#0a7ae6] text-sm font-bold text-white">CP</span>
                 <span class="text-xs font-semibold leading-4 text-slate-700">CP<span class="text-[#0a7ae6]">RATING</span><br><span class="font-normal text-slate-500">Course Rating</span></span>
             </a>
@@ -184,6 +187,7 @@
                     href="{{ route($link['route']) }}"
                     class="{{ $link['mobileClasses'] }}"
                     data-mobile-menu-link
+                    @if ($link['key'] === 'home') data-home-nav-link @endif
                     @if ($link['isActive']) aria-current="page" @endif
                 >
                     <span>{{ $link['label'] }}</span>
@@ -209,7 +213,7 @@
                     @endif
                 </span>
                 <div class="min-w-0">
-                    <p class="truncate text-sm font-semibold text-slate-900">{{ $user->displayName() }}</p>
+                    <p class="truncate text-sm font-semibold text-slate-900">{{ $user->firstName() }}</p>
                     <p class="truncate text-xs text-slate-500">{{ $user->email }}</p>
                 </div>
             </div>
