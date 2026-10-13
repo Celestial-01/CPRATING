@@ -14,12 +14,17 @@
     >
         <a
             href="{{ route('home') }}"
-            class="site-navbar__brand flex shrink-0 items-center gap-2.5 text-sm font-bold leading-none text-[#0b1220]"
+            class="site-navbar__brand shrink-0"
             aria-label="CPRATING หน้าหลัก"
             data-home-nav-link
         >
-            <span class="site-navbar__mark grid size-9 place-items-center rounded-full bg-[#0a7ae6] text-sm font-bold text-white sm:size-10">CP</span>
-            <span class="site-navbar__wordmark inline">CP<span class="text-[#0a7ae6]">RATING</span></span>
+            <img
+                src="{{ asset('images/cprating-logo.svg') }}"
+                alt=""
+                class="block h-auto w-[154px] sm:w-[172px]"
+                width="307"
+                height="80"
+            >
         </a>
 
         <ul class="site-navbar__links hidden items-center gap-1 md:flex" aria-label="ลิงก์หลัก">
@@ -166,9 +171,14 @@
 >
     <div class="mobile-menu__content opacity-0 transition-[transform,opacity] duration-500 ease-out" data-mobile-menu-content>
         <div class="mobile-menu__header flex items-center justify-between border-b border-slate-200 pb-4">
-            <a href="{{ route('home') }}" class="flex items-center gap-3" data-mobile-menu-link data-home-nav-link>
-                <span class="grid size-10 place-items-center rounded-full bg-[#0a7ae6] text-sm font-bold text-white">CP</span>
-                <span class="text-xs font-semibold leading-4 text-slate-700">CP<span class="text-[#0a7ae6]">RATING</span><br><span class="font-normal text-slate-500">Course Rating</span></span>
+            <a href="{{ route('home') }}" class="inline-flex items-center" aria-label="CPRATING หน้าหลัก" data-mobile-menu-link data-home-nav-link>
+                <img
+                    src="{{ asset('images/cprating-logo.svg') }}"
+                    alt=""
+                    class="block h-auto w-[154px]"
+                    width="307"
+                    height="80"
+                >
             </a>
             <button
                 type="button"

@@ -2499,14 +2499,82 @@
 }
 
 .auth-tabs__link {
+    position: relative;
+    z-index: 1;
     color: #929292;
     transition: color 180ms ease;
+}
+
+.auth-tabs {
+    position: relative;
+}
+
+.auth-tabs::before {
+    position: absolute;
+    inset: 4px auto 4px 4px;
+    width: calc((100% - 8px) / 2);
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 0 0 5px rgb(255 255 255 / 55%);
+    content: "";
+    pointer-events: none;
+    transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.auth-tabs[data-active="register"]::before {
+    transform: translateX(100%);
+}
+
+.auth-tabs__link:focus-visible {
+    outline: 2px solid #1684e5;
+    outline-offset: 3px;
 }
 
 .auth-tabs__link:hover,
 .auth-tabs__link[aria-current="page"],
 .auth-tabs__link--active {
     color: #1684e5;
+}
+
+.auth-tabs[data-transitioning] .auth-tabs__link[aria-current="page"] {
+    color: #929292;
+}
+
+.auth-tabs[data-active="login"] .auth-tabs__link[data-auth-tab="login"],
+.auth-tabs[data-active="register"] .auth-tabs__link[data-auth-tab="register"] {
+    color: #1684e5;
+}
+
+.auth-scene[data-auth-entry] > section {
+    animation: auth-page-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes auth-page-enter {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auth-scene :where(a[href], button:not(:disabled), input[type="checkbox"]),
+.legal-dialog :where(a[href], button:not(:disabled)) {
+    cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-scene[data-auth-entry] > section {
+        animation: none;
+    }
+
+    .auth-tabs::before,
+    .auth-tabs__link {
+        transition: none;
+    }
 }
 
 .auth-action-link,
@@ -2641,21 +2709,6 @@
     font-weight: 700;
     line-height: 1;
     text-decoration: none;
-}
-
-.site-navbar__mark {
-    display: grid;
-    width: 36px;
-    height: 36px;
-    place-items: center;
-    border-radius: 50%;
-    background: #0a7ae6;
-    color: #fff;
-    font-size: 14px;
-}
-
-.site-navbar__wordmark span {
-    color: #0a7ae6;
 }
 
 .site-navbar__links {
