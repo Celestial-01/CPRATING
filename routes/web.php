@@ -59,6 +59,7 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->name('auth.logout');
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/profile', [ProfileController::class, 'show'])->middleware('profile.complete')->name('profile.show');
     Route::get('/profile/complete', [ProfileController::class, 'edit'])->name('profile.complete');
     Route::post('/profile/complete', [ProfileController::class, 'update'])->name('profile.complete.store');
     Route::get('/profile/complete/success', [ProfileController::class, 'success'])->name('profile.complete.success');
@@ -71,6 +72,8 @@ Route::post('/verify-email/resend', [AuthController::class, 'resendRegistrationV
     ->name('auth.verify-email.resend');
 Route::get('/register/verify/{registration}/{token}', [AuthController::class, 'verifyRegistration'])
     ->middleware(['guest', 'signed'])
+    ->missing(fn () => redirect()->route('auth.register')
+        ->with('verification_link_error', 'ไม่พบลิงก์ยืนยันนี้แล้ว กรุณาขอลิงก์ใหม่'))
     ->name('auth.registration.verify');
 Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])
     ->middleware('guest')

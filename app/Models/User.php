@@ -17,6 +17,15 @@ use Illuminate\Support\Str;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
+    private const AVATAR_COLORS = [
+        'bg-violet-600 text-white',
+        'bg-sky-600 text-white',
+        'bg-emerald-600 text-white',
+        'bg-rose-600 text-white',
+        'bg-indigo-600 text-white',
+        'bg-amber-600 text-white',
+    ];
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
@@ -80,6 +89,26 @@ class User extends Authenticatable
     public function avatarUrl(): ?string
     {
         return $this->googleAccount?->avatar_url;
+    }
+
+    public function avatarInitial(): string
+    {
+        $name = $this->displayName();
+        $emailName = Str::before($this->email, '@');
+
+        if (preg_match('/[A-Za-z]/', $name, $matches)
+            || preg_match('/[A-Za-z]/', $emailName, $matches)) {
+            return strtoupper($matches[0]);
+        }
+
+        return '?';
+    }
+
+    public function avatarColorClasses(): string
+    {
+        $colorIndex = hexdec(substr(hash('sha256', Str::lower($this->email)), 0, 2)) % count(self::AVATAR_COLORS);
+
+        return self::AVATAR_COLORS[$colorIndex];
     }
 
     /**

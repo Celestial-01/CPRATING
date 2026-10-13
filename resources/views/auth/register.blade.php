@@ -71,11 +71,12 @@
                 name="email"
                 type="email"
                 autocomplete="email"
-                placeholder="กรอกอีเมล"
+                placeholder="ชื่อผู้ใช้@kkumail.com"
                 value="{{ old('email') }}"
                 required
                 class="h-[45px] w-full rounded-[11px] border border-[#bcbcbc] bg-white px-3 text-sm outline-none transition placeholder:text-[#a8a8a8] focus:border-sky-500 focus:ring-4 focus:ring-sky-100 @error('email') border-red-400 @enderror"
             >
+            <p class="mt-2 text-xs text-slate-500">ใช้อีเมลมหาวิทยาลัยที่ลงท้ายด้วย @kkumail.com</p>
         </div>
         <button
             type="submit"
@@ -106,6 +107,7 @@
         >
         ดำเนินการต่อด้วย Google
     </a>
+    <p class="mt-2 text-center text-xs text-slate-500">เลือกบัญชี Google ที่ใช้ @kkumail.com</p>
 
     <aside
                 class="mt-5 flex items-start gap-3 rounded-[15px] border border-[#bfddfa] bg-[#edf7ff] px-3 py-2.5 text-[11px] leading-5 text-[#527ba8]"

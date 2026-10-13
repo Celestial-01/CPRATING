@@ -5,6 +5,7 @@ import {
     CircleAlert,
     LockKeyhole,
     Mail,
+    ShieldCheck,
     UserRound,
 } from 'lucide';
 import { onDomReady } from './dom-ready';
@@ -17,6 +18,7 @@ const iconSet = {
     CircleAlert,
     LockKeyhole,
     Mail,
+    ShieldCheck,
     UserRound,
 };
 
@@ -68,9 +70,15 @@ const initializeProfilePreview = () => {
 };
 
 const initializeStudentIdInput = () => {
-    if (!document.querySelector('[data-profile-form]')) return;
+    const hasProfilePage = document.querySelector('[data-profile-page]');
+    const form = document.querySelector('[data-profile-form]');
+
+    if (!hasProfilePage && !form) return;
 
     renderIcons(iconSet);
+
+    if (!form) return;
+
     initializeProfilePreview();
 };
 

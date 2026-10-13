@@ -60,16 +60,16 @@
                         aria-expanded="false"
                         aria-haspopup="menu"
                     >
-                        <span class="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-[#dceeff] text-[#0a7ae6]">
+                        <span class="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-full {{ $user->avatarColorClasses() }}">
+                            <span class="text-base font-semibold" aria-hidden="true">{{ $user->avatarInitial() }}</span>
                             @if ($user->avatarUrl())
                                 <img
                                     src="{{ $user->avatarUrl() }}"
                                     alt="รูปโปรไฟล์ของ {{ $user->displayName() }}"
-                                    class="size-full object-cover"
+                                    class="absolute inset-0 size-full object-cover"
                                     referrerpolicy="no-referrer"
+                                    data-avatar-image
                                 >
-                            @else
-                                <i data-lucide="user-round" class="size-5" aria-hidden="true"></i>
                             @endif
                         </span>
                         <span class="max-w-[120px] truncate text-sm font-semibold text-slate-700">
@@ -85,16 +85,16 @@
                         aria-hidden="true"
                     >
                         <div class="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
-                            <span class="grid size-12 shrink-0 place-items-center overflow-hidden rounded-full bg-[#dceeff] text-[#0a7ae6]">
+                            <span class="relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-full {{ $user->avatarColorClasses() }}">
+                                <span class="text-lg font-semibold" aria-hidden="true">{{ $user->avatarInitial() }}</span>
                                 @if ($user->avatarUrl())
                                     <img
                                         src="{{ $user->avatarUrl() }}"
                                         alt=""
-                                        class="size-full object-cover"
+                                        class="absolute inset-0 size-full object-cover"
                                         referrerpolicy="no-referrer"
+                                        data-avatar-image
                                     >
-                                @else
-                                    <i data-lucide="user-round" class="size-6" aria-hidden="true"></i>
                                 @endif
                             </span>
                             <div class="min-w-0">
@@ -115,13 +115,12 @@
                                 </a>
                             @endif
                             <a
-                                href="{{ route('home') }}"
+                                href="{{ route('profile.show') }}"
                                 class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-[#edf7ff] hover:text-[#0a7ae6]"
-                                data-home-nav-link
                                 role="menuitem"
                             >
-                                <i data-lucide="house" class="size-4" aria-hidden="true"></i>
-                                <span>เข้าสู่หน้าหลัก</span>
+                                <i data-lucide="user-round" class="size-4" aria-hidden="true"></i>
+                                <span>โปรไฟล์</span>
                             </a>
                             <form action="{{ route('auth.logout') }}" method="POST">
                                 @csrf
@@ -158,7 +157,7 @@
 
 <aside
     id="mobile-navigation"
-    class="mobile-menu pointer-events-none fixed inset-y-0 right-0 z-[70] flex w-[min(100%,368px)] flex-col rounded-l-[28px] bg-white px-4 pb-5 pt-5 opacity-0 shadow-[-12px_0_32px_rgba(15,23,42,0.14)] transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform md:hidden"
+    class="mobile-menu pointer-events-none fixed inset-y-0 right-0 z-[70] flex w-[min(100%,368px)] flex-col overflow-y-auto rounded-l-[28px] bg-white px-4 pb-5 pt-5 opacity-0 shadow-[-12px_0_32px_rgba(15,23,42,0.14)] transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform md:hidden"
     data-mobile-menu
     data-open="false"
     aria-label="เมนูมือถือ"
@@ -199,34 +198,65 @@
 
     <div class="mobile-menu__footer mt-auto border-t border-slate-200 pt-4 opacity-0 transition-[transform,opacity] duration-500 ease-out">
         @if ($user)
-            <div class="mb-3 flex items-center gap-3 rounded-2xl bg-[#edf7ff] px-3 py-3">
-                <span class="grid size-11 shrink-0 place-items-center overflow-hidden rounded-full bg-[#dceeff] text-[#0a7ae6]">
-                    @if ($user->avatarUrl())
-                        <img
-                            src="{{ $user->avatarUrl() }}"
-                            alt="รูปโปรไฟล์ของ {{ $user->displayName() }}"
-                            class="size-full object-cover"
-                            referrerpolicy="no-referrer"
-                        >
-                    @else
-                        <i data-lucide="user-round" class="size-5" aria-hidden="true"></i>
-                    @endif
-                </span>
-                <div class="min-w-0">
-                    <p class="truncate text-sm font-semibold text-slate-900">{{ $user->firstName() }}</p>
-                    <p class="truncate text-xs text-slate-500">{{ $user->email }}</p>
+            <div class="mb-3 overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm">
+                <button
+                    type="button"
+                    class="group flex w-full cursor-pointer items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-slate-50 focus:outline-none focus-visible:bg-slate-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-300"
+                    data-mobile-profile-toggle
+                    aria-expanded="false"
+                    aria-controls="mobile-profile-options"
+                >
+                    <span class="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-full {{ $user->avatarColorClasses() }}">
+                        <span class="text-base font-semibold" aria-hidden="true">{{ $user->avatarInitial() }}</span>
+                        @if ($user->avatarUrl())
+                            <img
+                                src="{{ $user->avatarUrl() }}"
+                                alt="รูปโปรไฟล์ของ {{ $user->displayName() }}"
+                                class="absolute inset-0 size-full object-cover"
+                                referrerpolicy="no-referrer"
+                                data-avatar-image
+                            >
+                        @endif
+                    </span>
+                    <span class="min-w-0 flex-1">
+                        <span class="block truncate text-sm font-semibold text-slate-900">{{ $user->firstName() }}</span>
+                        <span class="block truncate text-xs text-slate-500">{{ $user->email }}</span>
+                    </span>
+                    <i data-lucide="chevron-down" class="size-4 shrink-0 text-slate-500 transition-transform duration-300 group-aria-expanded:rotate-180" aria-hidden="true"></i>
+                </button>
+
+                <div
+                    id="mobile-profile-options"
+                    class="grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity] duration-300 ease-out data-[open=true]:grid-rows-[1fr] data-[open=true]:opacity-100 motion-reduce:transition-none"
+                    data-mobile-profile-panel
+                    data-open="false"
+                    aria-hidden="true"
+                    inert
+                >
+                    <div class="min-h-0 overflow-hidden">
+                        <div class="border-t border-slate-200 p-2">
+                            @if ($user->isAdmin())
+                                <a
+                                    href="{{ route('admin.dashboard') }}"
+                                    class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-[#0a7ae6] focus:outline-none focus-visible:bg-slate-50 focus-visible:ring-2 focus-visible:ring-sky-300"
+                                    data-mobile-menu-link
+                                >
+                                    <i data-lucide="layout-dashboard" class="size-4" aria-hidden="true"></i>
+                                    เข้าสู่หลังบ้าน
+                                </a>
+                            @endif
+                            <a
+                                href="{{ route('profile.show') }}"
+                                class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-[#0a7ae6] focus:outline-none focus-visible:bg-slate-50 focus-visible:ring-2 focus-visible:ring-sky-300"
+                                data-mobile-menu-link
+                            >
+                                <i data-lucide="user-round" class="size-4" aria-hidden="true"></i>
+                                โปรไฟล์
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
-            @if ($user->isAdmin())
-                <a
-                    href="{{ route('admin.dashboard') }}"
-                    class="mb-2 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-3 text-[15px] font-semibold text-slate-700 transition hover:bg-[#edf7ff] hover:text-[#0a7ae6] focus:outline-none focus:ring-4 focus:ring-sky-100"
-                    data-mobile-menu-link
-                >
-                    <i data-lucide="layout-dashboard" class="size-4" aria-hidden="true"></i>
-                    เข้าสู่หลังบ้าน
-                </a>
-            @endif
             <form action="{{ route('auth.logout') }}" method="POST">
                 @csrf
                 <button

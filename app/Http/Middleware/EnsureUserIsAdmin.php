@@ -10,8 +10,14 @@ class EnsureUserIsAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        if ($request->user()?->isAdmin()) {
+            return $next($request);
+        }
 
-        return $next($request);
+        if ($request->expectsJson()) {
+            abort(403);
+        }
+
+        return redirect()->route('home');
     }
 }
