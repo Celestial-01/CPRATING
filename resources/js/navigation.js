@@ -5,15 +5,38 @@ import { prefersReducedMotion } from './utils';
 
 const iconSet = { ChevronDown, ChevronRight, House, LayoutDashboard, LogOut, Menu, UserRound, X };
 
+const initializeAvatarFallbacks = () => {
+    document.querySelectorAll('[data-avatar-image]').forEach((image) => {
+        const showFallback = () => {
+            image.hidden = true;
+        };
+
+        image.addEventListener('error', showFallback, { once: true });
+
+        if (image.complete && image.naturalWidth === 0) showFallback();
+    });
+};
+
 const initializeMobileMenu = () => {
     const toggle = document.querySelector('[data-mobile-menu-toggle]');
     const menu = document.querySelector('[data-mobile-menu]');
     const close = menu?.querySelector('[data-mobile-menu-close]');
     const overlay = document.querySelector('[data-mobile-menu-overlay]');
+    const profileToggle = menu?.querySelector('[data-mobile-profile-toggle]');
+    const profilePanel = menu?.querySelector('[data-mobile-profile-panel]');
 
     if (!toggle || !menu || !close || !overlay) return;
 
     let previouslyFocusedElement = null;
+
+    const setProfileOpen = (isOpen) => {
+        if (!profileToggle || !profilePanel) return;
+
+        profileToggle.setAttribute('aria-expanded', String(isOpen));
+        profilePanel.dataset.open = String(isOpen);
+        profilePanel.setAttribute('aria-hidden', String(!isOpen));
+        profilePanel.inert = !isOpen;
+    };
 
     const setMenuOpen = (isOpen, restoreFocus = true) => {
         if ((menu.dataset.open === 'true') === isOpen) return;
@@ -35,6 +58,8 @@ const initializeMobileMenu = () => {
             return;
         }
 
+        setProfileOpen(false);
+
         if (restoreFocus) {
             (previouslyFocusedElement ?? toggle).focus();
             previouslyFocusedElement = null;
@@ -42,6 +67,9 @@ const initializeMobileMenu = () => {
     };
 
     toggle.addEventListener('click', () => setMenuOpen(true));
+    profileToggle?.addEventListener('click', () => {
+        setProfileOpen(profileToggle.getAttribute('aria-expanded') !== 'true');
+    });
     close.addEventListener('click', () => setMenuOpen(false));
     overlay.addEventListener('click', () => setMenuOpen(false));
     menu.addEventListener('click', (event) => {
@@ -149,6 +177,7 @@ const initializeHomeNavigation = () => {
 
 onDomReady(() => {
     renderIcons(iconSet);
+    initializeAvatarFallbacks();
     initializeMobileMenu();
     initializeHomeNavbar();
     initializeHomeNavigation();

@@ -58,6 +58,7 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->name('auth.logout');
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/profile', [ProfileController::class, 'show'])->middleware('profile.complete')->name('profile.show');
     Route::get('/profile/complete', [ProfileController::class, 'edit'])->name('profile.complete');
     Route::post('/profile/complete', [ProfileController::class, 'update'])->name('profile.complete.store');
     Route::get('/profile/complete/success', [ProfileController::class, 'success'])->name('profile.complete.success');

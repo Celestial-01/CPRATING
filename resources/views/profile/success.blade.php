@@ -3,7 +3,7 @@
 @section('title', 'ยินดีต้อนรับ')
 
 @section('content')
-    <main class="auth-scene flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
+    <main class="auth-scene flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-10" data-profile-page>
         <x-site-brand class="mb-6" />
 
         <section
@@ -22,11 +22,10 @@
             </p>
 
             <div class="mt-6 flex flex-wrap items-center justify-center gap-2 rounded-[18px] border border-slate-200 bg-[#f8fbff] px-4 py-4">
-                <span class="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#dceeff] text-[#0a7ae6]">
+                <span class="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-full {{ $user->avatarColorClasses() }}">
+                    <span class="text-base font-semibold" aria-hidden="true">{{ $user->avatarInitial() }}</span>
                     @if ($user->avatarUrl())
-                        <img src="{{ $user->avatarUrl() }}" alt="" class="size-full object-cover" referrerpolicy="no-referrer">
-                    @else
-                        <i data-lucide="user-round" class="size-5" aria-hidden="true"></i>
+                        <img src="{{ $user->avatarUrl() }}" alt="" class="absolute inset-0 size-full object-cover" referrerpolicy="no-referrer" data-avatar-image>
                     @endif
                 </span>
                 <strong class="text-sm text-slate-900">{{ $user->firstName() }}</strong>
@@ -38,17 +37,11 @@
             </div>
 
             <a
-                href="{{ route('courses.index') }}"
+                href="{{ route('home') }}"
                 class="mt-6 inline-flex h-13 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#0878ed] to-[#2e94f4] px-4 text-sm font-semibold text-white shadow-[0_14px_26px_rgba(22,132,223,0.25)] transition hover:-translate-y-px hover:brightness-105 focus:outline-none focus:ring-4 focus:ring-sky-200"
             >
-                เริ่มค้นหารายวิชา
-                <i data-lucide="arrow-right" class="size-4" aria-hidden="true"></i>
-            </a>
-            <a
-                href="{{ route('home') }}"
-                class="mt-5 inline-flex text-sm font-medium text-[#0a70d8] underline-offset-4 transition hover:underline focus:outline-none focus-visible:underline"
-            >
                 กลับหน้าหลัก
+                <i data-lucide="arrow-right" class="size-4" aria-hidden="true"></i>
             </a>
         </section>
     </main>

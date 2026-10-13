@@ -10,6 +10,14 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    public function show(Request $request): View
+    {
+        return view('profile.show', [
+            'user' => $request->user()->loadMissing('googleAccount'),
+            'majorOptions' => Course::MAJORS,
+        ]);
+    }
+
     public function edit(Request $request): View|RedirectResponse
     {
         $user = $request->user();

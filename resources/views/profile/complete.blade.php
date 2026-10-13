@@ -3,7 +3,7 @@
 @section('title', 'เพิ่มข้อมูลนักศึกษา')
 
 @section('content')
-    <main class="auth-scene flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
+    <main class="auth-scene flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-10" data-profile-page>
         <x-site-brand class="mb-6" />
 
         <section
@@ -33,16 +33,16 @@
             </header>
 
             <div class="mt-7 flex items-center gap-3 rounded-[18px] bg-[#f2f7fd] px-4 py-3.5 sm:px-5">
-                <span class="grid size-12 shrink-0 place-items-center overflow-hidden rounded-full bg-[#dceeff] text-[#0a7ae6]">
+                <span class="relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-full {{ $user->avatarColorClasses() }}">
+                    <span class="text-lg font-semibold" aria-hidden="true">{{ $user->avatarInitial() }}</span>
                     @if ($user->avatarUrl())
                         <img
                             src="{{ $user->avatarUrl() }}"
                             alt="รูปโปรไฟล์ของ {{ $user->displayName() }}"
-                            class="size-full object-cover"
+                            class="absolute inset-0 size-full object-cover"
                             referrerpolicy="no-referrer"
+                            data-avatar-image
                         >
-                    @else
-                        <i data-lucide="user-round" class="size-6" aria-hidden="true"></i>
                     @endif
                 </span>
                 <div class="min-w-0 flex-1">
@@ -134,11 +134,10 @@
                 <aside class="rounded-[18px] border border-dashed border-[#afd2f5] px-4 py-3.5" aria-live="polite">
                     <p class="text-xs text-slate-500">ตัวอย่างแท็กที่จะแสดงในรีวิว</p>
                     <div class="mt-3 flex items-center gap-2">
-                        <span class="grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-[#dceeff] text-[#0a7ae6]">
+                        <span class="relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-full {{ $user->avatarColorClasses() }}">
+                            <span class="text-sm font-semibold" aria-hidden="true">{{ $user->avatarInitial() }}</span>
                             @if ($user->avatarUrl())
-                                <img src="{{ $user->avatarUrl() }}" alt="" class="size-full object-cover" referrerpolicy="no-referrer">
-                            @else
-                                <i data-lucide="user-round" class="size-4" aria-hidden="true"></i>
+                                <img src="{{ $user->avatarUrl() }}" alt="" class="absolute inset-0 size-full object-cover" referrerpolicy="no-referrer" data-avatar-image>
                             @endif
                         </span>
                         <strong class="max-w-[130px] truncate text-sm text-slate-900">{{ $user->firstName() }}</strong>
