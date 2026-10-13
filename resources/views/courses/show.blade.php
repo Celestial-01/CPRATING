@@ -219,11 +219,15 @@
                 </div>
             </div>
         </section>
-
         <section
             id="comments"
             class="mt-8 rounded-[22px] border border-slate-200 bg-white p-5 sm:p-6"
             aria-labelledby="comments-title">
+            @php
+            $sort = request('sort') === 'popular' ? 'popular' : 'latest';
+            $heartPath = 'M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z';
+            @endphp
+
             <div class="flex items-center justify-between">
                 <h2
                     id="comments-title"
@@ -234,29 +238,23 @@
                         aria-hidden="true"></i>
                     ความคิดเห็น
                     <span class="text-sm font-normal text-slate-400">
-                        ({{ count($comments) }})
+                        ({{ $comments->count() + $comments->sum(fn ($c) => $c->replies->count()) }})
                     </span>
                 </h2>
 
-                <div
-                    class="flex rounded-full border border-slate-200 p-0.5 text-sm"
-                    data-comment-sort>
-                    <button
-                        type="button"
+                <div class="flex rounded-full border border-slate-200 p-0.5 text-sm">
+                    <a
+                        href="{{ request()->fullUrlWithQuery(['sort' => 'latest']) }}#comments"
                         class="cursor-pointer whitespace-nowrap rounded-full px-3 py-1 text-xs transition-colors sm:px-5 sm:py-1.5 sm:text-sm data-[active=true]:bg-slate-950 data-[active=true]:text-white data-[active=false]:text-slate-500 data-[active=false]:hover:bg-slate-50"
-                        aria-pressed="true"
-                        data-active="true"
-                        data-comment-sort-option="latest">
+                        data-active="{{ $sort === 'latest' ? 'true' : 'false' }}">
                         ล่าสุด
-                    </button>
-                    <button
-                        type="button"
+                    </a>
+                    <a
+                        href="{{ request()->fullUrlWithQuery(['sort' => 'popular']) }}#comments"
                         class="cursor-pointer whitespace-nowrap rounded-full px-3 py-1 text-xs transition-colors sm:px-5 sm:py-1.5 sm:text-sm data-[active=true]:bg-slate-950 data-[active=true]:text-white data-[active=false]:text-slate-500 data-[active=false]:hover:bg-slate-50"
-                        aria-pressed="false"
-                        data-active="false"
-                        data-comment-sort-option="popular">
+                        data-active="{{ $sort === 'popular' ? 'true' : 'false' }}">
                         ยอดนิยม
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -331,25 +329,170 @@
                         </div>
 
                         <p class="mt-1 whitespace-pre-line break-words text-xs leading-5 text-slate-600">{{ $comment->content }}</p>
+
+                        @auth
+                        <div class="mt-1.5 flex items-center gap-3 text-[11px] text-slate-400">
+                            <button
+                                type="button"
+                                class="cursor-pointer font-medium hover:text-slate-700"
+                                data-reply-toggle="reply-form-{{ $comment->id }}">
+                                ตอบกลับ
+                            </button>
+
+                            @if ((int) $comment->user_id === (int) auth()->id())
+                            <form
+                                action="{{ route('comments.destroy', $comment->id) }}"
+                                method="POST">
+                                @csrf
+                                @method('DELETE')
+
+                                <button
+                                    type="submit"
+                                    class="cursor-pointer text-red-400 hover:text-red-600"
+                                    onclick="return confirm('ต้องการลบความคิดเห็นนี้หรือไม่?')">
+                                    ลบ
+                                </button>
+                            </form>
+                            @endif
+                        </div>
+
+                        <form
+                            id="reply-form-{{ $comment->id }}"
+                            action="{{ route('comments.store') }}"
+                            method="POST"
+                            class="mt-2 hidden">
+                            @csrf
+                            <input type="hidden" name="course_code" value="{{ $course['code'] }}">
+                            <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+
+                            <div class="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    name="content"
+                                    required
+                                    maxlength="2000"
+                                    value="{{ '@'.($comment->user?->name ?? 'ผู้ใช้').' ' }}"
+                                    class="min-w-0 flex-1 rounded-full border border-slate-200 px-4 py-2 text-xs outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-50">
+                                <button
+                                    type="submit"
+                                    class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-[#63b0fa] px-3.5 py-2 text-xs font-medium text-white hover:bg-[#3f98ee]">
+                                    <i data-lucide="send" class="size-3.5" aria-hidden="true"></i>
+                                    ส่ง
+                                </button>
+                            </div>
+                        </form>
+                        @endauth
+
+                        {{-- รีพลายของคอมเมนต์นี้ --}}
+                        @if ($comment->replies->isNotEmpty())
+                        <div class="mt-4 space-y-4">
+                            @foreach ($comment->replies as $reply)
+                            <div class="flex gap-3">
+                                <div class="size-8 shrink-0 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600">
+                                    {{ strtoupper(substr($reply->user?->name ?? 'U', 0, 1)) }}
+                                </div>
+
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="text-xs font-medium text-slate-700">
+                                            {{ $reply->user?->name ?? 'ผู้ใช้' }}
+                                        </h4>
+
+                                        <span class="text-[10px] text-slate-400">
+                                            {{ $reply->created_at?->diffForHumans() }}
+                                        </span>
+                                    </div>
+
+                                    <p class="mt-1 whitespace-pre-line break-words text-xs leading-5 text-slate-600">@if ($reply->replyToUser)<span class="font-medium text-blue-600">{{ '@'.$reply->replyToUser->name }}</span> @endif{{ $reply->content }}</p>
+
+                                    @auth
+                                    <div class="mt-1.5 flex items-center gap-3 text-[11px] text-slate-400">
+                                        <button
+                                            type="button"
+                                            class="cursor-pointer font-medium hover:text-slate-700"
+                                            data-reply-toggle="reply-form-{{ $reply->id }}">
+                                            ตอบกลับ
+                                        </button>
+
+                                        @if ((int) $reply->user_id === (int) auth()->id())
+                                        <form
+                                            action="{{ route('comments.destroy', $reply->id) }}"
+                                            method="POST">
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button
+                                                type="submit"
+                                                class="cursor-pointer text-red-400 hover:text-red-600"
+                                                onclick="return confirm('ต้องการลบความคิดเห็นนี้หรือไม่?')">
+                                                ลบ
+                                            </button>
+                                        </form>
+                                        @endif
+                                    </div>
+
+                                    <form
+                                        id="reply-form-{{ $reply->id }}"
+                                        action="{{ route('comments.store') }}"
+                                        method="POST"
+                                        class="mt-2 hidden">
+                                        @csrf
+                                        <input type="hidden" name="course_code" value="{{ $course['code'] }}">
+                                        <input type="hidden" name="parent_id" value="{{ $reply->id }}">
+
+                                        <div class="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                name="content"
+                                                required
+                                                maxlength="2000"
+                                                value="{{ '@'.($reply->user?->name ?? 'ผู้ใช้').' ' }}"
+                                                class="min-w-0 flex-1 rounded-full border border-slate-200 px-4 py-2 text-xs outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-50">
+                                            <button
+                                                type="submit"
+                                                class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-[#63b0fa] px-3.5 py-2 text-xs font-medium text-white hover:bg-[#3f98ee]">
+                                                <i data-lucide="send" class="size-3.5" aria-hidden="true"></i>
+                                                ส่ง
+                                            </button>
+                                        </div>
+                                    </form>
+                                    @endauth
+                                </div>
+
+                                {{-- หัวใจของรีพลาย --}}
+                                <button
+                                    type="button"
+                                    data-like-btn
+                                    data-url="{{ auth()->check() ? route('comments.like', $comment->id) : '' }}"
+                                    data-login="{{ route('auth.login') }}"
+                                    aria-label="กดใจ"
+                                    class="flex w-9 shrink-0 cursor-pointer flex-col items-center gap-1 self-start pt-0.5 transition-colors {{ $comment->liked_by_me ? 'text-red-500' : 'text-neutral-600 hover:text-neutral-900' }}">
+                                    <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"
+                                        class="size-6 {{ $comment->liked_by_me ? 'fill-current' : 'fill-none' }}" aria-hidden="true">
+                                        <path d="{{ $heartPath }}" />
+                                    </svg>
+                                    <span data-like-count class="min-h-[18px] text-sm leading-[18px]">{{ $comment->likes_count ?: '' }}</span>
+                                </button>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
                     </div>
 
-                    @auth
-                    @if ((int) $comment->user_id === (int) auth()->id())
-                    <form
-                        action="{{ route('comments.destroy', $comment->id) }}"
-                        method="POST">
-                        @csrf
-                        @method('DELETE')
-
-                        <button
-                            type="submit"
-                            class="text-xs text-red-400 hover:text-red-600"
-                            onclick="return confirm('ต้องการลบความคิดเห็นนี้หรือไม่?')">
-                            ลบ
-                        </button>
-                    </form>
-                    @endif
-                    @endauth
+                    {{-- หัวใจของคอมเมนต์หลัก --}}
+                    <button
+                        type="button"
+                        data-like-btn
+                        data-url="{{ auth()->check() ? route('comments.like', $comment->id) : '' }}"
+                        data-login="{{ route('auth.login') }}"
+                        aria-label="กดใจ"
+                        class="flex shrink-0 cursor-pointer flex-col items-center gap-0.5 self-start pt-1 transition-colors {{ $comment->liked_by_me ? 'text-red-500' : 'text-black hover:opacity-60' }}">
+                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="size-4 {{ $comment->liked_by_me ? 'fill-current' : 'fill-none' }}" aria-hidden="true">
+                            <path d="{{ $heartPath }}" />
+                        </svg>
+                        <span data-like-count class="min-h-[14px] text-[10px] leading-[14px]">{{ $comment->likes_count ?: '' }}</span>
+                    </button>
                 </article>
                 @empty
                 <p class="py-6 text-center text-sm text-slate-400">
@@ -369,6 +512,7 @@
                     aria-hidden="true"></i>
             </button>
         </section>
+
 
         <section
             class="mt-9"
@@ -392,6 +536,80 @@
     <div id="toast" role="status" aria-live="polite"></div>
     <script type="application/json" data-course-detail-copy>
         @json($courseDetailCopy)
+    </script>
+
+    <script>
+        document.addEventListener('click', function(event) {
+            // ---- ปุ่มตอบกลับ ----
+            var replyBtn = event.target.closest('[data-reply-toggle]');
+            if (replyBtn) {
+                var form = document.getElementById(replyBtn.dataset.replyToggle);
+                if (!form) return;
+
+                form.classList.toggle('hidden');
+
+                if (!form.classList.contains('hidden')) {
+                    var input = form.querySelector('input[name="content"]');
+                    input.focus();
+                    input.setSelectionRange(input.value.length, input.value.length);
+                }
+                return;
+            }
+
+            // ---- ปุ่มกดใจ ----
+            var likeBtn = event.target.closest('[data-like-btn]');
+            if (!likeBtn) return;
+
+            // ยังไม่ล็อกอิน -> ไปหน้าเข้าสู่ระบบ
+            if (!likeBtn.dataset.url) {
+                window.location.href = likeBtn.dataset.login;
+                return;
+            }
+
+            if (likeBtn.dataset.busy) return;
+            likeBtn.dataset.busy = '1';
+
+            fetch(likeBtn.dataset.url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('like failed');
+                    return res.json();
+                })
+                .then(function(data) {
+                    var svg = likeBtn.querySelector('svg');
+                    likeBtn.classList.toggle('text-red-500', data.liked);
+                    likeBtn.classList.toggle('text-neutral-600', !data.liked);
+                    svg.classList.toggle('fill-current', data.liked);
+                    svg.classList.toggle('fill-none', !data.liked);
+
+                    likeBtn.querySelector('[data-like-count]').textContent = data.count > 0 ? data.count : '';
+                })
+                .catch(function() {
+                    alert('ไม่สามารถกดใจได้ กรุณาลองใหม่อีกครั้ง');
+                })
+                .finally(function() {
+                    delete likeBtn.dataset.busy;
+                });
+        });
+
+        //กด Enter = ส่งคอมเมนต์
+        var commentBox = document.getElementById('course-comment');
+        if (commentBox) {
+            commentBox.addEventListener('keydown', function(event) {
+                if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
+
+                event.preventDefault();
+
+                if (commentBox.value.trim() === '') return;
+
+                commentBox.form.requestSubmit();
+            });
+        }
     </script>
     <x-footer />
 </div>

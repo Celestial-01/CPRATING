@@ -3288,3 +3288,37 @@
         transition: none;
     }
 }
+
+/* Fix Complete Profile page layout */
+.auth-scene {
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+    padding-bottom: 3rem;
+}
+
+.auth-scene form[data-profile-form] button[type="submit"] {
+    display: inline-flex;
+    visibility: visible;
+    opacity: 1;
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
+    min-height: 52px;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.auth-scene section {
+    flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+    .auth-scene {
+        justify-content: flex-start;
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+    }
+}
+
+
