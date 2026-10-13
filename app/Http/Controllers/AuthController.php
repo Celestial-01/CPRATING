@@ -38,7 +38,7 @@ class AuthController extends Controller
     {
         $this->normalizeEmailInput($request);
 
-        $credentials = $request->validate([
+        $credentials = $this->validateAuthInput($request, [
             'email' => [
                 'required',
                 'email',
@@ -160,7 +160,7 @@ class AuthController extends Controller
     {
         $this->normalizeEmailInput($request);
 
-        $validated = $request->validate([
+        $validated = $this->validateAuthInput($request, [
             'email' => [
                 'required',
                 'string',
@@ -256,7 +256,7 @@ class AuthController extends Controller
             return redirect()->route('auth.register');
         }
 
-        $validated = $request->validate([
+        $validated = $this->validateAuthInput($request, [
             'password' => [
                 'required',
                 'confirmed',
@@ -278,7 +278,7 @@ class AuthController extends Controller
             return redirect()->route('auth.set-password');
         }
 
-        $validated = $request->validate([
+        $validated = $this->validateAuthInput($request, [
             'name' => [
                 'required',
                 'string',
@@ -385,7 +385,7 @@ class AuthController extends Controller
     {
         $this->normalizeEmailInput($request);
 
-        $validated = $request->validate([
+        $validated = $this->validateAuthInput($request, [
             'email' => [
                 'required',
                 'email',
@@ -455,7 +455,7 @@ class AuthController extends Controller
     {
         $this->normalizeEmailInput($request);
 
-        $validated = $request->validate([
+        $validated = $this->validateAuthInput($request, [
             'token' => ['required', 'string'],
             'email' => ['required', 'email', new KkuMailEmail],
             'password' => [
@@ -520,6 +520,24 @@ class AuthController extends Controller
         if (is_string($email)) {
             $request->merge(['email' => Str::lower(trim($email))]);
         }
+    }
+
+    private function validateAuthInput(Request $request, array $rules): array
+    {
+        return $request->validate($rules, [
+            'required' => 'กรุณากรอก:attribute',
+            'email' => 'กรุณากรอก:attributeให้ถูกต้อง',
+            'string' => ':attributeต้องเป็นข้อความ',
+            'confirmed' => 'การยืนยัน:attributeไม่ตรงกัน',
+            'min.string' => ':attributeต้องมีอย่างน้อย :min ตัวอักษร',
+            'max.string' => ':attributeต้องไม่เกิน :max ตัวอักษร',
+            'token.required' => 'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้อง กรุณาขอลิงก์ใหม่',
+            'token.string' => 'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้อง กรุณาขอลิงก์ใหม่',
+        ], [
+            'email' => 'อีเมล',
+            'password' => 'รหัสผ่าน',
+            'name' => 'ชื่อผู้ใช้',
+        ]);
     }
 
     private function googleFailure(string $message): RedirectResponse

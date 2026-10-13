@@ -43,6 +43,7 @@
             id="forgot-email"
             name="email"
             type="email"
+            data-auth-email-input
             autocomplete="email"
             placeholder="ชื่อผู้ใช้@kkumail.com"
             value="{{ old('email') }}"

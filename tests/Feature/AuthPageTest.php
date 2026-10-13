@@ -91,11 +91,41 @@ test('an unknown course code returns not found', function () {
 test('login and registration pages are available', function () {
     $this->get(route('auth.login'))
         ->assertOk()
-        ->assertViewIs('auth.login');
+        ->assertViewIs('auth.login')
+        ->assertSee('src="'.asset('images/cprating-logo.svg').'"', false)
+        ->assertSee('data-auth-entry', false)
+        ->assertSee('data-active="login"', false)
+        ->assertSee('data-auth-tab="register"', false)
+        ->assertSee('data-auth-email-input', false)
+        ->assertDontSee('data-google-error-dialog', false);
 
     $this->get(route('auth.register'))
         ->assertOk()
-        ->assertViewIs('auth.register');
+        ->assertViewIs('auth.register')
+        ->assertSee('data-auth-entry', false)
+        ->assertSee('data-active="register"', false)
+        ->assertSee('data-auth-tab="login"', false)
+        ->assertSee('data-auth-email-input', false)
+        ->assertSee('src="'.asset('images/cprating-logo.svg').'"', false);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('src="'.asset('images/cprating-logo.svg').'"', false);
+});
+
+test('missing auth fields use clear Thai validation messages', function () {
+    $this->from(route('auth.login'))
+        ->post(route('auth.login.store'), [])
+        ->assertRedirect(route('auth.login'))
+        ->assertSessionHasErrors([
+            'email' => 'กรุณากรอกอีเมล',
+            'password' => 'กรุณากรอกรหัสผ่าน',
+        ]);
+
+    $this->from(route('auth.register'))
+        ->post(route('auth.register.store'), [])
+        ->assertRedirect(route('auth.register'))
+        ->assertSessionHasErrors(['email' => 'กรุณากรอกอีเมล']);
 });
 
 test('an authenticated navbar displays the user name, email, and Google avatar', function () {
@@ -268,6 +298,8 @@ test('canceling Google sign-in returns to the auth layout with a retry link', fu
     $this->get(route('auth.login'))
         ->assertOk()
         ->assertSee('การดำเนินการด้วย Google ถูกยกเลิก')
+        ->assertSee('data-google-error-dialog', false)
+        ->assertSee('data-google-error-close', false)
         ->assertSee('href="'.route('auth.google.redirect').'"', false);
 
     $this->assertGuest();

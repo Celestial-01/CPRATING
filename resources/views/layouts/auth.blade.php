@@ -11,6 +11,7 @@
 >
     <main
         class="auth-scene relative isolate flex min-h-screen items-center justify-center overflow-hidden px-4 py-6 sm:px-6 sm:py-10"
+        @if (request()->routeIs('auth.login', 'auth.register')) data-auth-entry @endif
     >
         <div
             class="pointer-events-none absolute inset-0 -z-10"
@@ -52,10 +53,16 @@
                 >
                     <a
                         href="{{ url('/') }}"
-                        class="grid size-[100px] place-items-center rounded-full bg-[#d8d8d8] text-base font-normal text-slate-700"
+                        class="inline-flex items-center justify-center rounded-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-200"
                         aria-label="กลับหน้าหลัก"
                     >
-                        logo
+                        <img
+                            src="{{ asset('images/cprating-logo.svg') }}"
+                            alt=""
+                            class="block h-auto w-[210px] sm:w-[230px]"
+                            width="307"
+                            height="80"
+                        >
                     </a>
                 </div>
             @endif

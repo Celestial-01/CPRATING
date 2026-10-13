@@ -5,18 +5,21 @@
 @section('content')
     <nav
         class="auth-tabs mb-9 grid grid-cols-2 rounded-[15px] bg-[#e9f5ff] p-1 text-[17px] font-normal"
+        data-active="register"
         aria-label="การยืนยันตัวตน"
     >
         <a
             href="{{ route('auth.login') }}"
             class="auth-tabs__link rounded-[15px] px-4 py-2.5 text-center"
+            data-auth-tab="login"
         >
             เข้าสู่ระบบ
         </a>
         <a
             href="{{ route('auth.register') }}"
-            class="auth-tabs__link rounded-[15px] bg-white px-4 py-2.5 text-center shadow-[0_0_0_5px_rgba(255,255,255,.55)]"
+            class="auth-tabs__link rounded-[15px] px-4 py-2.5 text-center"
             aria-current="page"
+            data-auth-tab="register"
         >
             สมัครสมาชิก
         </a>
@@ -70,6 +73,7 @@
                 id="email"
                 name="email"
                 type="email"
+                data-auth-email-input
                 autocomplete="email"
                 placeholder="ชื่อผู้ใช้@kkumail.com"
                 value="{{ old('email') }}"
