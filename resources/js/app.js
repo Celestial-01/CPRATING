@@ -7,3 +7,4 @@ import './navigation';
 import './admin';
 import './course-inline-edit';
 import './plans';
+import './profile';
