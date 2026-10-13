@@ -26,7 +26,7 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'email' => fake()->unique()->userName().'@kkumail.com',
             'student_id' => fake()->unique()->numerify('69#######-#'),
             'major_code' => fake()->randomElement(['CS', 'AI', 'CY', 'GIS', 'ITII']),
             'email_verified_at' => now(),

@@ -4,6 +4,7 @@ namespace App\Actions\Auth;
 
 use App\Mail\RegistrationVerificationMail;
 use App\Models\RegistrationToken;
+use App\Rules\KkuMailEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\Mime\Exception\RfcComplianceException;
+use Throwable;
 
 final class RegistrationService
 {
@@ -20,15 +22,23 @@ final class RegistrationService
     {
         $email = $this->normalizeEmail($email);
 
+        if (! KkuMailEmail::accepts($email)) {
+            throw ValidationException::withMessages([
+                'email' => 'กรุณาใช้อีเมลมหาวิทยาลัยที่ลงท้ายด้วย @kkumail.com',
+            ]);
+        }
+
         $plainToken = Str::random(64);
-        $registrationToken = RegistrationToken::updateOrCreate(
-            ['email' => $email],
-            [
-                'token_hash' => Hash::make($plainToken),
-                'expires_at' => now()->addMinutes(self::TOKEN_TTL_MINUTES),
-                'used_at' => null,
-            ],
-        );
+        $registrationToken = RegistrationToken::firstOrNew(['email' => $email]);
+        $previousToken = $registrationToken->exists
+            ? $registrationToken->only(['token_hash', 'expires_at', 'used_at'])
+            : null;
+
+        $registrationToken->fill([
+            'token_hash' => Hash::make($plainToken),
+            'expires_at' => now()->addMinutes(self::TOKEN_TTL_MINUTES),
+            'used_at' => null,
+        ])->save();
 
         $verificationUrl = URL::temporarySignedRoute(
             'auth.registration.verify',
@@ -41,11 +51,23 @@ final class RegistrationService
 
         try {
             Mail::to($registrationToken->email)->send(new RegistrationVerificationMail($verificationUrl));
-        } catch (RfcComplianceException) {
-            $registrationToken->delete();
+        } catch (Throwable $exception) {
+            $currentToken = RegistrationToken::query()
+                ->whereKey($registrationToken->id)
+                ->where('token_hash', $registrationToken->token_hash);
+
+            if ($previousToken) {
+                $currentToken->update($previousToken);
+            } else {
+                $currentToken->delete();
+            }
+
+            report($exception);
 
             throw ValidationException::withMessages([
-                'email' => 'ไม่สามารถส่งอีเมลยืนยันไปยังอีเมลนี้ได้ กรุณาตรวจสอบอีเมลแล้วลองใหม่อีกครั้ง',
+                'email' => $exception instanceof RfcComplianceException
+                    ? 'ไม่สามารถส่งอีเมลยืนยันไปยังอีเมลนี้ได้ กรุณาตรวจสอบอีเมลแล้วลองใหม่อีกครั้ง'
+                    : 'ส่งลิงก์ยืนยันไม่สำเร็จ กรุณาลองอีกครั้งในภายหลัง',
             ]);
         }
 
@@ -67,7 +89,10 @@ final class RegistrationService
 
         $registration = RegistrationToken::query()->find($id);
 
-        if ($registration && ! $registration->used_at && ! $registration->expires_at->isPast()) {
+        if ($registration
+            && KkuMailEmail::accepts($registration->email)
+            && ! $registration->used_at
+            && ! $registration->expires_at->isPast()) {
             return $registration;
         }
 
@@ -89,6 +114,7 @@ final class RegistrationService
 
         if ($registration
             && $registration->email === $email
+            && KkuMailEmail::accepts($registration->email)
             && ! $registration->used_at) {
             return $registration;
         }

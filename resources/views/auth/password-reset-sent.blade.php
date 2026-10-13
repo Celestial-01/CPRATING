@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'ยืนยันอีเมล')
+@section('title', 'ตรวจสอบอีเมล')
 @section('content')
     <div class="mx-auto mb-[18px] grid size-[58px] place-items-center rounded-full bg-gradient-to-br from-[#b7e5ff] to-[#e8f7ff] text-[#1684df]">
         <i
@@ -15,7 +15,7 @@
             ตรวจสอบอีเมลของคุณ
         </h1>
         <p class="mt-2 text-sm text-slate-400">
-            เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง
+            หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์รีเซ็ตรหัสผ่านไปยัง
         </p>
         <p class="mt-1 break-all text-base font-medium text-slate-900">
             {{ $email ?: 'อีเมลของคุณ' }}
@@ -25,14 +25,21 @@
     <aside
         class="mt-5 rounded-[15px] border border-[#bcbcbc] px-4 py-3 text-sm leading-6 text-[#929292]"
     >
-        กรุณาตรวจสอบอีเมลของคุณและคลิกลิงก์เพื่อดำเนินการรีเซ็ตรหัสผ่าน
+        กรุณาตรวจสอบกล่องจดหมายและจดหมายขยะ แล้วคลิกลิงก์เพื่อรีเซ็ตรหัสผ่าน
         <br>
         <span class="text-xs">ลิงก์จะหมดอายุใน 15 นาที</span>
     </aside>
 
     <a
+        href="{{ route('auth.forgot-password') }}"
+        class="mt-5 flex h-[45px] items-center justify-center rounded-[15px] bg-gradient-to-r from-[#1684df] to-[#56afff] px-4 text-sm font-medium text-white transition hover:brightness-105 focus:outline-none focus:ring-4 focus:ring-sky-200"
+    >
+        ขอลิงก์ใหม่
+    </a>
+
+    <a
         href="{{ route('auth.login') }}"
-        class="auth-secondary-link mt-5 flex h-[45px] items-center justify-center rounded-[15px] border border-[#bcbcbc] text-sm transition hover:bg-slate-50"
+        class="auth-secondary-link mt-3 flex h-[45px] items-center justify-center rounded-[15px] border border-[#bcbcbc] text-sm transition hover:bg-slate-50"
     >
         กลับสู่หน้าเข้าสู่ระบบ
     </a>

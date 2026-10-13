@@ -66,12 +66,12 @@
 
     @if (session('verification_resend_error'))
         <div
-            class="mt-4 flex items-center gap-2 rounded-[12px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm leading-5 text-amber-700"
+            class="mt-4 flex items-center gap-2 rounded-[12px] border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-5 text-red-700"
             role="alert"
             aria-live="polite"
         >
             <i
-                data-lucide="clock-3"
+                data-lucide="circle-alert"
                 class="size-4 shrink-0"
                 aria-hidden="true"
             ></i>

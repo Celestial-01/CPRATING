@@ -2,6 +2,11 @@
 
 @section('title', 'ตั้งชื่อผู้ใช้')
 @section('content')
+    @if ($errors->any())
+        <div class="mb-5 rounded-[12px] border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-6 text-red-700" role="alert">
+            {{ $errors->first() }}
+        </div>
+    @endif
     <header>
         <h1 class="text-[22px] font-semibold leading-7 text-[#111111]">
             ตั้งชื่อผู้ใช้ของคุณ
@@ -45,7 +50,7 @@
             >
         </div>
         <p class="mt-2 text-xs text-slate-400">
-            ใช้ได้แค่ a-z, A-Z, 0-9 และ _ (3–20 ตัวอักษร)
+            ใช้ชื่อที่ต้องการแสดงบนโปรไฟล์ได้ ไม่เกิน 255 ตัวอักษร
         </p>
         <button
             type="submit"

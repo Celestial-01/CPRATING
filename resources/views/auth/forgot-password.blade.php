@@ -13,10 +13,16 @@
 
     @if (session('reset_link_error'))
         <div
-            class="mt-5 rounded-[12px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm leading-5 text-amber-700"
+            class="mt-5 rounded-[12px] border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-5 text-red-700"
             role="alert"
         >
             {{ session('reset_link_error') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="mt-5 rounded-[12px] border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-6 text-red-700" role="alert">
+            {{ $errors->first() }}
         </div>
     @endif
 
@@ -38,11 +44,15 @@
             name="email"
             type="email"
             autocomplete="email"
-            placeholder="กรอกอีเมล"
+            placeholder="ชื่อผู้ใช้@kkumail.com"
             value="{{ old('email') }}"
             required
             class="h-[45px] w-full rounded-[11px] border border-[#bcbcbc] px-3 text-sm outline-none transition placeholder:text-[#a8a8a8] focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
         >
+        <p class="mt-2 text-xs text-slate-500">ใช้อีเมลที่ลงท้ายด้วย @kkumail.com</p>
+        @error('email')
+            <p class="mt-2 text-sm text-red-600" role="alert">{{ $message }}</p>
+        @enderror
         <button
             type="submit"
             class="mt-5 h-[45px] w-full rounded-[15px] bg-gradient-to-r from-[#1684df] to-[#56afff] px-4 text-sm text-white shadow-sm transition hover:brightness-105 focus:outline-none focus:ring-4 focus:ring-sky-200"

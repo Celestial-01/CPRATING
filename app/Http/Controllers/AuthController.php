@@ -6,15 +6,19 @@ use App\Actions\Auth\RegistrationService;
 use App\Models\RegistrationToken;
 use App\Models\SocialAccount;
 use App\Models\User;
+use App\Rules\KkuMailEmail;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -32,10 +36,13 @@ class AuthController extends Controller
 
     public function login(Request $request): RedirectResponse
     {
+        $this->normalizeEmailInput($request);
+
         $credentials = $request->validate([
             'email' => [
                 'required',
                 'email',
+                new KkuMailEmail,
             ],
             'password' => [
                 'required',
@@ -58,48 +65,90 @@ class AuthController extends Controller
 
     public function redirectToGoogle(): RedirectResponse
     {
-        return Socialite::driver('google')->redirect();
+        try {
+            return Socialite::driver('google')->redirect();
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return $this->googleFailure('ยังเชื่อมต่อ Google ไม่ได้ในขณะนี้ กรุณาลองอีกครั้ง');
+        }
     }
 
     public function handleGoogleCallback(Request $request): RedirectResponse
     {
-        $googleUser = Socialite::driver('google')->user();
-        $socialAccount = SocialAccount::query()
-            ->where('provider', 'google')
-            ->where('provider_user_id', $googleUser->getId())
-            ->first();
-
-        $user = $socialAccount?->user;
-
-        if (! $user) {
-            $user = User::firstOrCreate(
-                ['email' => $googleUser->getEmail()],
-                [
-                    'name' => $googleUser->getName() ?: $googleUser->getNickname() ?: 'ผู้ใช้ Google',
-                    'password' => null,
-                    'email_verified_at' => now(),
-                    'role' => 'user',
-                ],
-            );
-
-            SocialAccount::firstOrCreate([
-                'provider' => 'google',
-                'provider_user_id' => $googleUser->getId(),
-            ], [
-                'user_id' => $user->id,
-            ]);
+        if ($request->filled('error')) {
+            return $this->googleFailure('การดำเนินการด้วย Google ถูกยกเลิก คุณสามารถลองอีกครั้งได้');
         }
 
-        SocialAccount::updateOrCreate(
-            [
-                'provider' => 'google',
-                'provider_user_id' => $googleUser->getId(),
-            ],
-            [
-                'user_id' => $user->id,
-                'avatar_url' => $googleUser->getAvatar(),
-            ],
-        );
+        try {
+            $googleUser = Socialite::driver('google')->user();
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return $this->googleFailure('เชื่อมต่อ Google ไม่สำเร็จหรือการยืนยันหมดอายุ กรุณาลองอีกครั้ง');
+        }
+
+        $email = $googleUser->getEmail();
+
+        if (! KkuMailEmail::accepts($email)) {
+            return $this->googleFailure('กรุณาใช้บัญชี Google ของมหาวิทยาลัยที่ลงท้ายด้วย @kkumail.com');
+        }
+
+        if (($googleUser->getRaw()['email_verified'] ?? false) !== true) {
+            return $this->googleFailure('บัญชี Google นี้ยังไม่ได้ยืนยันอีเมล');
+        }
+
+        if (! $googleUser->getId()) {
+            return $this->googleFailure('Google ไม่ได้ส่งข้อมูลบัญชีที่จำเป็น กรุณาลองอีกครั้ง');
+        }
+
+        try {
+            $user = DB::transaction(function () use ($googleUser, $email): ?User {
+                $socialAccount = SocialAccount::query()
+                    ->where('provider', 'google')
+                    ->where('provider_user_id', $googleUser->getId())
+                    ->first();
+
+                if ($socialAccount && $socialAccount->user?->email !== Str::lower($email)) {
+                    return null;
+                }
+
+                $user = $socialAccount?->user ?? User::firstOrCreate(
+                    ['email' => Str::lower($email)],
+                    [
+                        'name' => $googleUser->getName() ?: $googleUser->getNickname() ?: 'ผู้ใช้ Google',
+                        'password' => null,
+                        'email_verified_at' => now(),
+                        'role' => 'user',
+                    ],
+                );
+
+                if ($user->googleAccount && $user->googleAccount->provider_user_id !== $googleUser->getId()) {
+                    return null;
+                }
+
+                SocialAccount::updateOrCreate(
+                    [
+                        'provider' => 'google',
+                        'provider_user_id' => $googleUser->getId(),
+                    ],
+                    [
+                        'user_id' => $user->id,
+                        'avatar_url' => $googleUser->getAvatar(),
+                    ],
+                );
+
+                return $user;
+            });
+        } catch (QueryException $exception) {
+            report($exception);
+
+            return $this->googleFailure('บันทึกการเชื่อมต่อ Google ไม่สำเร็จ กรุณาลองเข้าสู่ระบบอีกครั้ง');
+        }
+
+        if (! $user) {
+            return $this->googleFailure('บัญชี Google นี้เชื่อมกับบัญชีอื่นอยู่ กรุณาใช้บัญชีเดิมหรือเข้าสู่ระบบด้วยอีเมล');
+        }
 
         Auth::login($user, remember: true);
         $request->session()->regenerate();
@@ -109,13 +158,15 @@ class AuthController extends Controller
 
     public function register(Request $request): RedirectResponse
     {
+        $this->normalizeEmailInput($request);
+
         $validated = $request->validate([
             'email' => [
                 'required',
                 'string',
-                'lowercase',
                 'email',
                 'max:255',
+                new KkuMailEmail,
             ],
         ]);
 
@@ -148,7 +199,12 @@ class AuthController extends Controller
             return redirect()->route('auth.login');
         }
 
-        $registrationToken = $this->registrationService->sendVerification($pendingRegistration->email);
+        try {
+            $registrationToken = $this->registrationService->sendVerification($pendingRegistration->email);
+        } catch (ValidationException $exception) {
+            return redirect()->route('auth.verify-email')
+                ->with('verification_resend_error', $exception->errors()['email'][0]);
+        }
         $request->session()->put('pending_registration_id', $registrationToken->id);
 
         return redirect()
@@ -158,6 +214,10 @@ class AuthController extends Controller
 
     public function verifyRegistration(Request $request, RegistrationToken $registration, string $token): RedirectResponse
     {
+        if (! KkuMailEmail::accepts($registration->email)) {
+            return redirect()->route('auth.register')->with('verification_link_error', 'กรุณาใช้อีเมล @kkumail.com สมัครสมาชิก');
+        }
+
         if ($registration->used_at) {
             return redirect()
                 ->route('auth.login')
@@ -226,14 +286,46 @@ class AuthController extends Controller
             ],
         ]);
 
-        $user = User::firstOrNew(['email' => $registration->email]);
-        $user->forceFill([
-            'name' => $validated['name'],
-            'password' => $request->session()->get('registration_password'),
-            'email_verified_at' => now(),
-        ])->save();
+        try {
+            $user = DB::transaction(function () use ($registration, $request, $validated): ?User {
+                $activeRegistration = RegistrationToken::query()->lockForUpdate()->find($registration->id);
 
-        $registration->update(['used_at' => now()]);
+                if (! $activeRegistration || $activeRegistration->used_at || $activeRegistration->expires_at->isPast()) {
+                    return null;
+                }
+
+                $user = User::query()->where('email', $activeRegistration->email)->lockForUpdate()->first()
+                    ?? new User(['email' => $activeRegistration->email]);
+
+                if ($user->password) {
+                    return null;
+                }
+
+                $user->forceFill([
+                    'name' => $validated['name'],
+                    'password' => $request->session()->get('registration_password'),
+                    'email_verified_at' => now(),
+                ])->save();
+
+                $activeRegistration->update(['used_at' => now()]);
+
+                return $user;
+            });
+        } catch (QueryException $exception) {
+            report($exception);
+
+            return back()
+                ->withErrors(['name' => 'บันทึกบัญชีไม่สำเร็จ กรุณาลองอีกครั้ง'])
+                ->onlyInput('name');
+        }
+
+        if (! $user) {
+            $this->registrationService->forgetSession($request);
+
+            return redirect()->route('auth.login')
+                ->with('status', 'ลิงก์นี้ถูกใช้แล้วหรือบัญชีถูกสร้างแล้ว กรุณาเข้าสู่ระบบ');
+        }
+
         $this->registrationService->forgetSession($request);
         Auth::login($user);
         $request->session()->regenerate();
@@ -291,14 +383,37 @@ class AuthController extends Controller
 
     public function sendPasswordResetLink(Request $request): RedirectResponse
     {
+        $this->normalizeEmailInput($request);
+
         $validated = $request->validate([
             'email' => [
                 'required',
                 'email',
+                new KkuMailEmail,
             ],
         ]);
 
-        Password::sendResetLink(['email' => $validated['email']]);
+        try {
+            $status = Password::sendResetLink(['email' => $validated['email']]);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $user = User::query()->where('email', $validated['email'])->first();
+
+            if ($user) {
+                Password::broker()->deleteToken($user);
+            }
+
+            return back()
+                ->withInput($request->only('email'))
+                ->with('reset_link_error', 'ส่งลิงก์รีเซ็ตรหัสผ่านไม่สำเร็จ กรุณาลองอีกครั้งในภายหลัง');
+        }
+
+        if ($status === Password::RESET_THROTTLED) {
+            return back()
+                ->withInput($request->only('email'))
+                ->with('reset_link_error', 'ส่งคำขอบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่');
+        }
 
         $request->session()->put('password_reset_email', $validated['email']);
 
@@ -322,7 +437,7 @@ class AuthController extends Controller
     public function showResetPassword(string $token, Request $request): View|RedirectResponse
     {
         $email = $request->query('email');
-        $user = is_string($email) ? User::query()->where('email', $email)->first() : null;
+        $user = KkuMailEmail::accepts($email) ? User::query()->where('email', Str::lower($email))->first() : null;
 
         if (! $user || ! Password::broker()->tokenExists($user, $token)) {
             return redirect()
@@ -338,9 +453,11 @@ class AuthController extends Controller
 
     public function resetPassword(Request $request): RedirectResponse
     {
+        $this->normalizeEmailInput($request);
+
         $validated = $request->validate([
             'token' => ['required', 'string'],
-            'email' => ['required', 'email'],
+            'email' => ['required', 'email', new KkuMailEmail],
             'password' => [
                 'required',
                 'confirmed',
@@ -361,9 +478,9 @@ class AuthController extends Controller
         );
 
         if ($status !== Password::PASSWORD_RESET) {
-            return back()
-                ->withInput($request->only('email'))
-                ->withErrors(['email' => __($status)]);
+            return redirect()
+                ->route('auth.forgot-password')
+                ->with('reset_link_error', 'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุ กรุณาขอลิงก์ใหม่');
         }
 
         $request->session()->forget('password_reset_email');
@@ -394,5 +511,19 @@ class AuthController extends Controller
 
         return is_string($path)
             && ($path === '/admin' || str_starts_with($path, '/admin/'));
+    }
+
+    private function normalizeEmailInput(Request $request): void
+    {
+        $email = $request->input('email');
+
+        if (is_string($email)) {
+            $request->merge(['email' => Str::lower(trim($email))]);
+        }
+    }
+
+    private function googleFailure(string $message): RedirectResponse
+    {
+        return redirect()->route('auth.login')->with('google_error', $message);
     }
 }

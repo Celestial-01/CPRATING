@@ -37,6 +37,18 @@
         </div>
     @endif
 
+    @if (session('google_error'))
+        <div class="mb-5 rounded-[15px] border border-red-200 bg-red-50 px-4 py-4 text-sm leading-6 text-red-700" role="alert" aria-live="assertive">
+            <div class="flex items-start gap-2.5">
+                <i data-lucide="circle-alert" class="mt-1 size-4 shrink-0" aria-hidden="true"></i>
+                <p>{{ session('google_error') }}</p>
+            </div>
+            <a href="{{ route('auth.google.redirect') }}" class="mt-3 inline-flex font-semibold text-red-800 underline underline-offset-4 hover:text-red-950">
+                ลองดำเนินการด้วย Google อีกครั้ง
+            </a>
+        </div>
+    @endif
+
     <header
         class="mb-7 text-center"
     >
@@ -71,9 +83,10 @@
                 name="email"
                 type="email"
                 autocomplete="email"
-                placeholder="กรอกอีเมล"
+                placeholder="ชื่อผู้ใช้@kkumail.com"
                 class="h-[45px] w-full rounded-[11px] border border-[#bcbcbc] bg-white px-3 text-sm outline-none transition placeholder:text-[#a8a8a8] focus:border-sky-500 focus:ring-4 focus:ring-sky-100 @error('email') border-red-400 @enderror"
             >
+            <p class="mt-2 text-xs text-slate-500">ใช้บัญชีที่ลงท้ายด้วย @kkumail.com</p>
         </div>
         <div>
             <label
@@ -160,6 +173,7 @@
         >
         ดำเนินการต่อด้วย Google
     </a>
+    <p class="mt-2 text-center text-xs text-slate-500">เลือกบัญชี Google ที่ใช้ @kkumail.com</p>
 
     <aside
                 class="mt-5 flex items-start gap-3 rounded-[15px] border border-[#bfddfa] bg-[#edf7ff] px-3 py-2.5 text-[11px] leading-5 text-[#527ba8]"
