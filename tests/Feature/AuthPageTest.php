@@ -25,6 +25,8 @@ test('the home page is available', function () {
         ->assertSee('ไฮไลต์')
         ->assertSee('เสียงจาก')
         ->assertSee('คำถามที่พบบ่อย')
+        ->assertSee('data-home-nav-link', false)
+        ->assertSee('data-home-hero', false)
         ->assertSee('CPRATING');
 });
 
