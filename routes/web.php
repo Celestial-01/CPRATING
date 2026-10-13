@@ -9,19 +9,22 @@ use App\Http\Controllers\CourseCatalogController;
 use App\Http\Controllers\CourseRatingController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudyPlanController;
 use App\Http\Controllers\CommentController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/home', [HomeController::class, 'index'])->name('home.index');
-Route::get('/courses', [CourseCatalogController::class, 'index'])->name('courses.index');
-Route::get('/plans', [StudyPlanController::class, 'index'])->name('plans.index');
-Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
-Route::get('/courses/{code}', [CourseCatalogController::class, 'show'])->name('courses.show');
-Route::post('/courses/{code}/rating', [CourseRatingController::class, 'store'])
-    ->middleware('auth')
-    ->name('courses.rating.store');
+Route::middleware('profile.complete')->group(function (): void {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/home', [HomeController::class, 'index'])->name('home.index');
+    Route::get('/courses', [CourseCatalogController::class, 'index'])->name('courses.index');
+    Route::get('/plans', [StudyPlanController::class, 'index'])->name('plans.index');
+    Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
+    Route::get('/courses/{code}', [CourseCatalogController::class, 'show'])->name('courses.show');
+    Route::post('/courses/{code}/rating', [CourseRatingController::class, 'store'])
+        ->middleware('auth')
+        ->name('courses.rating.store');
+});
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')
@@ -54,6 +57,12 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('auth.logout');
+
+Route::middleware('auth')->group(function (): void {
+    Route::get('/profile/complete', [ProfileController::class, 'edit'])->name('profile.complete');
+    Route::post('/profile/complete', [ProfileController::class, 'update'])->name('profile.complete.store');
+    Route::get('/profile/complete/success', [ProfileController::class, 'success'])->name('profile.complete.success');
+});
 Route::get('/verify-email', [AuthController::class, 'showVerifyEmail'])
     ->middleware('guest')
     ->name('auth.verify-email');

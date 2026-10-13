@@ -158,13 +158,28 @@ class AuthController extends Controller
 
     public function verifyRegistration(Request $request, RegistrationToken $registration, string $token): RedirectResponse
     {
-        abort_if(
-            $registration->used_at ||
-            $registration->expires_at->isPast() ||
-            ! Hash::check($token, $registration->token_hash),
-            410,
-            'ลิงก์สมัครสมาชิกหมดอายุหรือถูกใช้งานแล้ว',
-        );
+        if ($registration->used_at) {
+            return redirect()
+                ->route('auth.login')
+                ->with('status', 'อีเมลนี้ยืนยันแล้ว กรุณาเข้าสู่ระบบ');
+        }
+
+        if ($registration->expires_at->isPast()) {
+            $request->session()->put([
+                'pending_registration_id' => $registration->id,
+                'registration_email' => $registration->email,
+            ]);
+
+            return redirect()
+                ->route('auth.verify-email')
+                ->with('verification_link_error', 'ลิงก์ยืนยันอีเมลหมดอายุแล้ว กรุณาส่งลิงก์ใหม่');
+        }
+
+        if (! Hash::check($token, $registration->token_hash)) {
+            return redirect()
+                ->route('auth.register')
+                ->with('verification_link_error', 'ลิงก์ยืนยันอีเมลไม่ถูกต้อง กรุณาสมัครสมาชิกใหม่อีกครั้ง');
+        }
 
         $request->session()->forget('pending_registration_id');
         $request->session()->put('registration_token_id', $registration->id);
@@ -223,7 +238,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('home');
+        return $this->redirectAfterAuthentication($request, $user);
     }
 
     public function logout(Request $request): RedirectResponse
@@ -233,7 +248,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('auth.login');
+        return redirect()->route('home');
     }
 
     public function showVerifyEmail(Request $request): View|RedirectResponse
@@ -358,6 +373,10 @@ class AuthController extends Controller
 
     private function redirectAfterAuthentication(Request $request, User $user): RedirectResponse
     {
+        if (! $user->isAdmin() && ! $user->hasCompletedProfile()) {
+            return redirect()->route('profile.complete');
+        }
+
         if (! $user->isAdmin() && $this->isAdminIntendedUrl($request->session()->get('url.intended'))) {
             $request->session()->forget('url.intended');
         }

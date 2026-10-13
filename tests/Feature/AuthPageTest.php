@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\URL;
+use Symfony\Component\Mime\Exception\RfcComplianceException;
 
 uses(RefreshDatabase::class);
 
@@ -24,6 +25,8 @@ test('the home page is available', function () {
         ->assertSee('ไฮไลต์')
         ->assertSee('เสียงจาก')
         ->assertSee('คำถามที่พบบ่อย')
+        ->assertSee('data-home-nav-link', false)
+        ->assertSee('data-home-hero', false)
         ->assertSee('CPRATING');
 });
 
@@ -207,6 +210,20 @@ test('a registration request sends a verification email without authenticating t
     });
 });
 
+test('a registration whose stored email cannot be sent to fails with a Thai validation error instead of a crash', function () {
+
+    Mail::shouldReceive('to')->once()->andThrow(
+        new RfcComplianceException('Email "c" does not comply with addr-spec of RFC 2822.'),
+    );
+
+    $this->from(route('auth.register'))
+        ->post(route('auth.register.store'), ['email' => 'ada@example.com'])
+        ->assertRedirect(route('auth.register'))
+        ->assertSessionHasErrors(['email' => 'ไม่สามารถส่งอีเมลยืนยันไปยังอีเมลนี้ได้ กรุณาตรวจสอบอีเมลแล้วลองใหม่อีกครั้ง']);
+
+    expect(RegistrationToken::query()->where('email', 'ada@example.com')->exists())->toBeFalse();
+});
+
 test('a user can resend the registration verification email', function () {
     Mail::fake();
 
@@ -285,16 +302,105 @@ test('a user completes registration after verifying the email', function () {
         'password_confirmation' => 'password123',
     ])->assertRedirectToRoute('auth.set-username');
     $this->post(route('auth.set-username.store'), ['name' => 'Ada Lovelace'])
-        ->assertRedirectToRoute('home');
+        ->assertRedirectToRoute('profile.complete');
+
+    $this->post(route('profile.complete.store'), [
+        'student_id' => '690000001-1',
+        'major_code' => 'CS',
+    ])->assertRedirectToRoute('profile.complete.success');
+
+    $this->get(route('profile.complete.success'))
+        ->assertOk()
+        ->assertViewIs('profile.success')
+        ->assertSee('KKU 63')
+        ->assertSee('CS');
+
+    $this->get(route('home'))->assertOk();
 
     $this->assertAuthenticated();
-    $this->assertDatabaseHas('users', ['email' => 'ada@example.com', 'name' => 'Ada Lovelace']);
+    $this->assertDatabaseHas('users', [
+        'email' => 'ada@example.com',
+        'name' => 'Ada Lovelace',
+        'student_id' => '690000001-1',
+        'major_code' => 'CS',
+    ]);
 
-    $this->post(route('auth.logout'));
+    $this->post(route('auth.logout'))->assertRedirectToRoute('home');
     $this->get(route('auth.verify-email'))->assertRedirectToRoute('auth.register');
 });
 
-test('a registration verification token cannot be reused', function () {
+test('an incomplete profile is redirected to the required student information form', function () {
+    $user = User::factory()->create([
+        'student_id' => null,
+        'major_code' => null,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('home'))
+        ->assertRedirectToRoute('profile.complete');
+
+    $this->actingAs($user)
+        ->get(route('profile.complete'))
+        ->assertOk()
+        ->assertViewIs('profile.complete')
+        ->assertSee('name="student_id"', false)
+        ->assertSee('name="major_code"', false);
+
+    $this->actingAs($user)
+        ->post(route('profile.complete.store'), [
+            'student_id' => '690000002-2',
+            'major_code' => 'AI',
+        ])
+        ->assertRedirectToRoute('profile.complete.success');
+
+    expect($user->fresh()->profileTags())->toBe(['kku63', 'AI']);
+});
+
+test('profile completion identifies the account source correctly', function () {
+    $emailUser = User::factory()->create([
+        'student_id' => null,
+        'major_code' => null,
+    ]);
+
+    $this->actingAs($emailUser)
+        ->get(route('profile.complete'))
+        ->assertSee('อีเมลที่ยืนยันแล้ว');
+
+    $googleUser = User::factory()->create([
+        'student_id' => null,
+        'major_code' => null,
+    ]);
+
+    SocialAccount::create([
+        'user_id' => $googleUser->id,
+        'provider' => 'google',
+        'provider_user_id' => 'profile-google-user',
+    ]);
+
+    $this->actingAs($googleUser)
+        ->get(route('profile.complete'))
+        ->assertSee('จาก Google');
+});
+
+test('an admin bypasses the profile completion flow', function () {
+    $admin = User::factory()->admin()->create([
+        'student_id' => null,
+        'major_code' => null,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('profile.complete'))
+        ->assertRedirectToRoute('admin.dashboard');
+
+    $this->actingAs($admin)
+        ->post(route('profile.complete.store'), [
+            'student_id' => '690000003-3',
+            'major_code' => 'CS',
+        ])
+        ->assertRedirectToRoute('admin.dashboard');
+});
+
+test('an expired registration link returns to the verification page with a resend error', function () {
     $registration = RegistrationToken::create([
         'email' => 'ada@example.com',
         'token_hash' => Hash::make('test-token'),
@@ -306,7 +412,73 @@ test('a registration verification token cannot be reused', function () {
         ['registration' => $registration->id, 'token' => 'test-token'],
     );
 
-    $this->get($url)->assertStatus(410);
+    $this->get($url)
+        ->assertRedirectToRoute('auth.verify-email')
+        ->assertSessionHas('verification_link_error');
+
+    $this->get(route('auth.verify-email'))
+        ->assertOk()
+        ->assertSee('ลิงก์ยืนยันอีเมลหมดอายุแล้ว กรุณาส่งลิงก์ใหม่');
+});
+
+test('a used registration link sends the user to login with a status message', function () {
+    $registration = RegistrationToken::create([
+        'email' => 'ada@example.com',
+        'token_hash' => Hash::make('test-token'),
+        'expires_at' => now()->addMinutes(15),
+        'used_at' => now(),
+    ]);
+    $url = URL::temporarySignedRoute(
+        'auth.registration.verify',
+        now()->addMinutes(15),
+        ['registration' => $registration->id, 'token' => 'test-token'],
+    );
+
+    $this->get($url)
+        ->assertRedirectToRoute('auth.login')
+        ->assertSessionHas('status');
+
+    $this->get(route('auth.login'))
+        ->assertOk()
+        ->assertSee('อีเมลนี้ยืนยันแล้ว กรุณาเข้าสู่ระบบ');
+});
+
+test('a registration link with an invalid token returns to registration with an error', function () {
+    $registration = RegistrationToken::create([
+        'email' => 'ada@example.com',
+        'token_hash' => Hash::make('expected-token'),
+        'expires_at' => now()->addMinutes(15),
+    ]);
+    $url = URL::temporarySignedRoute(
+        'auth.registration.verify',
+        now()->addMinutes(15),
+        ['registration' => $registration->id, 'token' => 'wrong-token'],
+    );
+
+    $this->get($url)
+        ->assertRedirectToRoute('auth.register')
+        ->assertSessionHas('verification_link_error');
+
+    $this->get(route('auth.register'))
+        ->assertOk()
+        ->assertSee('ลิงก์ยืนยันอีเมลไม่ถูกต้อง กรุณาสมัครสมาชิกใหม่อีกครั้ง');
+});
+
+test('an expired signed registration link does not expose a raw 403 error', function () {
+    $registration = RegistrationToken::create([
+        'email' => 'ada@example.com',
+        'token_hash' => Hash::make('test-token'),
+        'expires_at' => now()->addMinutes(15),
+    ]);
+    $url = URL::temporarySignedRoute(
+        'auth.registration.verify',
+        now()->subMinute(),
+        ['registration' => $registration->id, 'token' => 'test-token'],
+    );
+
+    $this->get($url)
+        ->assertRedirectToRoute('auth.register')
+        ->assertSessionHas('verification_link_error');
 });
 
 test('a Google-only account can complete email registration with the same email', function () {
@@ -346,8 +518,12 @@ test('a user can log in and log out', function () {
 
     $this->assertAuthenticatedAs($user);
 
-    $this->post(route('auth.logout'))->assertRedirectToRoute('auth.login');
+    $this->post(route('auth.logout'))->assertRedirectToRoute('home');
     $this->assertGuest();
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee(route('auth.login'), false);
 });
 
 test('a regular user is sent home when login was triggered by an admin URL', function () {

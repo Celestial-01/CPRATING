@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\Mime\Exception\RfcComplianceException;
 
 final class RegistrationService
 {
@@ -16,6 +18,8 @@ final class RegistrationService
 
     public function sendVerification(string $email): RegistrationToken
     {
+        $email = $this->normalizeEmail($email);
+
         $plainToken = Str::random(64);
         $registrationToken = RegistrationToken::updateOrCreate(
             ['email' => $email],
@@ -35,9 +39,22 @@ final class RegistrationService
             ],
         );
 
-        Mail::to($registrationToken->email)->send(new RegistrationVerificationMail($verificationUrl));
+        try {
+            Mail::to($registrationToken->email)->send(new RegistrationVerificationMail($verificationUrl));
+        } catch (RfcComplianceException) {
+            $registrationToken->delete();
+
+            throw ValidationException::withMessages([
+                'email' => 'ไม่สามารถส่งอีเมลยืนยันไปยังอีเมลนี้ได้ กรุณาตรวจสอบอีเมลแล้วลองใหม่อีกครั้ง',
+            ]);
+        }
 
         return $registrationToken;
+    }
+
+    private function normalizeEmail(string $email): string
+    {
+        return Str::lower(trim($email));
     }
 
     public function activeToken(Request $request): ?RegistrationToken
