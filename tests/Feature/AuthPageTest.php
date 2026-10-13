@@ -131,7 +131,7 @@ test('an admin can open the dashboard from the authenticated navbar', function (
         ->assertViewIs('admin.dashboard');
 });
 
-test('a regular user cannot see or access the admin dashboard', function () {
+test('a regular user cannot see the admin link and is sent home when opening the dashboard', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
@@ -141,7 +141,13 @@ test('a regular user cannot see or access the admin dashboard', function () {
 
     $this->actingAs($user)
         ->get(route('admin.dashboard'))
-        ->assertForbidden();
+        ->assertRedirectToRoute('home');
+
+    $this->assertAuthenticatedAs($user);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('data-user-menu', false);
 });
 
 test('the admin courses path opens the existing admin UI', function () {
@@ -157,12 +163,14 @@ test('the admin courses path opens the existing admin UI', function () {
         ->assertViewIs('admin.dashboard');
 });
 
-test('a regular user cannot open the admin courses path', function () {
+test('a regular user is sent home when opening an admin course page', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
         ->get('/admin/courses/')
-        ->assertForbidden();
+        ->assertRedirectToRoute('home');
+
+    $this->assertAuthenticatedAs($user);
 });
 
 test('admin pages from the partner baseline render with the current route structure', function () {
@@ -539,6 +547,16 @@ test('a regular user is sent home when login was triggered by an admin URL', fun
 
     $this->assertAuthenticatedAs($user);
     $this->assertFalse(session()->has('url.intended'));
+});
+
+test('a regular user receives forbidden for a JSON admin request', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->getJson(route('admin.dashboard'))
+        ->assertForbidden();
+
+    $this->assertAuthenticatedAs($user);
 });
 
 test('an admin keeps the intended admin URL after login', function () {
