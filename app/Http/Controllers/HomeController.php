@@ -21,7 +21,7 @@ class HomeController extends Controller
             ->get();
         $popularCourses = Course::query()
             ->forPublicCatalog()
-            ->orderByDesc('ratings_count')
+            ->popular()
             ->orderByDesc('interest_average')
             ->orderBy('course_code')
             ->limit(5)
