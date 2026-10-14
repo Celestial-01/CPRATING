@@ -8,14 +8,14 @@
 >
     <form
         method="POST"
-        action="{{ route('courses.rating.store', $course['code']) }}"
+        action="{{ route('courses.rating.store', $course->course_code) }}"
         class="p-6 sm:p-8"
     >
         @csrf
         <header class="flex items-start justify-between gap-5">
             <div class="min-w-0">
                 <span class="text-xs font-semibold tracking-[0.12em] text-[#2b7fff]">
-                    {{ $course['code'] }}
+                    {{ $course->course_code }}
                 </span>
                 <h2
                     id="course-rating-title"
@@ -24,7 +24,7 @@
                     ให้คะแนนวิชานี้
                 </h2>
                 <p class="mt-1 truncate text-sm text-slate-500">
-                    {{ $course['title'] }}
+                    {{ $course->course_name_th }}
                 </p>
             </div>
 

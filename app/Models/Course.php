@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 class Course extends Model
 {
@@ -62,7 +64,6 @@ class Course extends Model
         'major',
         'course_type',
         'image',
-        'is_active',
         'is_offered',
         'publication_status',
     ];
@@ -73,69 +74,6 @@ class Course extends Model
             'credits' => 'integer',
             'is_offered' => 'boolean',
         ];
-    }
-
-    public function scopePublished(Builder $query): Builder
-    {
-        return $query->where('publication_status', self::PUBLICATION_PUBLISHED);
-    }
-
-    public function scopeOffered(Builder $query): Builder
-    {
-        return $query->where('is_offered', true);
-    }
-
-    public function teachers(): BelongsToMany
-    {
-        return $this->belongsToMany(Teacher::class);
-    }
-
-    public function topics(): BelongsToMany
-    {
-        return $this->belongsToMany(Topic::class);
-    }
-
-    public function prerequisiteCourses(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Course::class,
-            'course_prerequisite',
-            'course_id',
-            'prerequisite_course_id',
-        );
-    }
-
-    public function dependentCourses(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Course::class,
-            'course_prerequisite',
-            'prerequisite_course_id',
-            'course_id',
-        );
-    }
-
-    /**
-     * Compatibility aliases for the admin controller and views from main.
-     */
-    public function previousCourses(): BelongsToMany
-    {
-        return $this->prerequisiteCourses();
-    }
-
-    public function nextCourses(): BelongsToMany
-    {
-        return $this->dependentCourses();
-    }
-
-    protected function getIsActiveAttribute(): bool
-    {
-        return (bool) ($this->attributes['is_offered'] ?? false);
-    }
-
-    protected function setIsActiveAttribute(mixed $value): void
-    {
-        $this->attributes['is_offered'] = (bool) $value;
     }
 
     protected function image(): Attribute
@@ -170,6 +108,91 @@ class Course extends Model
             : $path;
     }
 
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('publication_status', self::PUBLICATION_PUBLISHED);
+    }
+
+    public function scopeOffered(Builder $query): Builder
+    {
+        return $query->where('is_offered', true);
+    }
+
+    public function scopeForPublicCatalog(Builder $query): Builder
+    {
+        return $query
+            ->published()
+            ->with([
+                'teachers',
+                'topics',
+                'prerequisiteCourses' => fn ($query) => $query->published(),
+                'dependentCourses' => fn ($query) => $query->published(),
+            ])
+            ->withStatistics();
+    }
+
+    public function scopeWithStatistics(Builder $query): Builder
+    {
+        return $query
+            ->withCount([
+                'comments' => fn ($query) => $query->approved(),
+                'ratings',
+            ])
+            ->withAvg('ratings as interest_average', 'interest')
+            ->withAvg('ratings as difficulty_average', 'difficulty')
+            ->withAvg('ratings as workload_average', 'workload');
+    }
+
+    public function scopeMatching(Builder $query, string $search): Builder
+    {
+        if ($search === '') {
+            return $query;
+        }
+
+        return $query->where(function (Builder $query) use ($search): void {
+            $pattern = '%'.$search.'%';
+
+            $query->where('course_code', 'like', $pattern)
+                ->orWhere('course_name_th', 'like', $pattern)
+                ->orWhere('course_name_en', 'like', $pattern);
+        });
+    }
+
+
+
+
+
+    public function teachers(): BelongsToMany
+    {
+        return $this->belongsToMany(Teacher::class);
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class, 'course_code', 'course_code');
+    }
+
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(CourseRating::class, 'course_code', 'course_code');
+    }
+
+    public function studyPlanCourses(): HasMany
+    {
+        return $this->hasMany(StudyPlanCourse::class);
+    }
+
+
+
+    /** @return Collection<string, int> */
+
+
+    /** @param Collection<string, int> $gradeCounts */
+
+
+    /** @param Collection<string, int> $gradeCounts */
+
+
     public function imageUrl(): ?string
     {
         $image = self::normalizeImagePath($this->image);
@@ -190,5 +213,58 @@ class Course extends Model
         return $image && ! filter_var($image, FILTER_VALIDATE_URL)
             ? $image
             : null;
+    }
+
+    public function interestRating(): ?float
+    {
+        return $this->interest_average === null
+            ? null
+            : round((float) $this->interest_average, 1);
+    }
+
+    public function difficultyPercentage(): ?int
+    {
+        return $this->difficulty_average === null
+            ? null
+            : (int) round((float) $this->difficulty_average * 20);
+    }
+
+    public function workloadPercentage(): ?int
+    {
+        return $this->workload_average === null
+            ? null
+            : (int) round((float) $this->workload_average * 20);
+    }
+
+    public function instructorNames(): string
+    {
+        return $this->teachers
+            ->map(fn (Teacher $teacher): string => $teacher->display_name)
+            ->implode(', ');
+    }
+
+    public function topics(): BelongsToMany
+    {
+        return $this->belongsToMany(Topic::class);
+    }
+
+    public function prerequisiteCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Course::class,
+            'course_prerequisite',
+            'course_id',
+            'prerequisite_course_id',
+        );
+    }
+
+    public function dependentCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Course::class,
+            'course_prerequisite',
+            'prerequisite_course_id',
+            'course_id',
+        );
     }
 }

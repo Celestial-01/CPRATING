@@ -2,37 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CourseRating;
-use App\Support\CourseCatalog;
+use App\Models\Course;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CourseRatingController extends Controller
 {
-    public function store(Request $request, string $code): RedirectResponse
+    public function store(Request $request, Course $course): RedirectResponse
     {
-        $course = CourseCatalog::find($code);
+        abort_unless($course->publication_status === Course::PUBLICATION_PUBLISHED, 404);
 
-        if ($course === null) {
-            throw new NotFoundHttpException;
-        }
-
-        $rating = $request->validate([
+        $validated = $request->validate([
             'difficulty' => ['required', 'integer', 'between:1,5'],
             'workload' => ['required', 'integer', 'between:1,5'],
             'interest' => ['required', 'integer', 'between:1,5'],
         ]);
 
-        $savedRating = CourseRating::query()->createOrFirst(
-            ['user_id' => $request->user()->id, 'course_code' => $course['code']],
-            $rating,
+        $savedRating = $course->ratings()->createOrFirst(
+            ['user_id' => $request->user()->id],
+            $validated,
         );
 
         return redirect()
-            ->route('courses.show', $course['code'])
+            ->route('courses.show', $course->course_code)
             ->with('rating_status', $savedRating->wasRecentlyCreated
                 ? 'บันทึกคะแนนแล้ว'
                 : 'คุณให้คะแนนวิชานี้ไปแล้ว');
     }
+
+
 }

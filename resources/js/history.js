@@ -2,6 +2,7 @@ import {
     ArrowLeft,
     ArrowRight,
     ArrowUpRight,
+    BookOpen,
     Bookmark,
     Clock,
 } from 'lucide';
@@ -15,7 +16,7 @@ import {
 } from './course-storage';
 import { createToast, formatCopy, parseJson } from './utils';
 
-const iconSet = { ArrowLeft, ArrowRight, ArrowUpRight, Bookmark, Clock };
+const iconSet = { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Bookmark, Clock };
 const PREVIEW_LIMIT = 4;
 const sectionNames = ['viewed', 'saved'];
 

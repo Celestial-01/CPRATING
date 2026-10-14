@@ -86,10 +86,6 @@ const animateCount = (element) => {
 };
 
 const setHighlightAnimated = (card, active) => {
-    card
-        .querySelectorAll('.rd-fill')
-        .forEach((element) => element.classList.toggle('on', active));
-
     card.querySelectorAll('[data-highlight-progress]').forEach((element) => {
         const target = Number(element.dataset.highlightProgress || 0);
 
@@ -108,9 +104,9 @@ const setHighlightAnimated = (card, active) => {
 
 const initializeScrollChrome = (page) => {
     const hero = select('#top', page);
-    const progress = select('#prog i');
-    const topButton = select('#top-btn');
-    const statement = select('#st', page);
+    const progress = select('#scroll-progress i');
+    const topButton = select('#back-to-top');
+    const statement = select('#home-statement', page);
     const statementWords = [];
 
     if (statement) {
@@ -121,7 +117,7 @@ const initializeScrollChrome = (page) => {
         words.forEach((word, index) => {
             const isKeyword = word.startsWith('*');
             const span = document.createElement('span');
-            span.className = `w${isKeyword ? ' k' : ''}`;
+            span.className = `statement-word${isKeyword ? ' k' : ''}`;
             span.textContent = word.replace('*', '');
             span.setAttribute('aria-hidden', 'true');
             fragment.append(span);
@@ -138,7 +134,7 @@ const initializeScrollChrome = (page) => {
             progress.style.transform = `scaleX(${Math.min(window.scrollY / documentHeight, 1)})`;
         }
         if (topButton) {
-            topButton.classList.toggle('on', window.scrollY >= window.innerHeight * 0.8);
+            topButton.classList.toggle('is-visible', window.scrollY >= window.innerHeight * 0.8);
         }
 
         if (!statement || !statementWords.length) return;
@@ -150,7 +146,7 @@ const initializeScrollChrome = (page) => {
         const visibleWords = Math.ceil(statementWords.length * Math.max(0, Math.min(1, ratio)));
 
         statementWords.forEach((word, index) => {
-            word.classList.toggle('on', index < visibleWords);
+            word.classList.toggle('is-active', index < visibleWords);
         });
     };
 
@@ -209,8 +205,8 @@ const initializeSectionReveal = (page) => {
     sections.forEach((section) => observer.observe(section));
 };
 
-const initializePopularRail = (page, copy) => {
-    const rail = select('#rail', page);
+const initializePopularRail = (page, homeCopy) => {
+    const rail = select('#popular-course-rail', page);
 
     if (!rail) return;
 
@@ -247,7 +243,7 @@ const initializePopularRail = (page, copy) => {
             const code = saveButton.dataset.save;
             const saved = toggleSaved(code);
             saveButton.setAttribute('aria-pressed', String(saved));
-            showToast(formatCopy(saved ? copy.saved_course : copy.unsaved_course, { course: code }));
+            showToast(formatCopy(saved ? homeCopy.saved_course : homeCopy.unsaved_course, { course: code }));
 
             animatePress(saveButton, 1.35);
         });
@@ -256,15 +252,15 @@ const initializePopularRail = (page, copy) => {
     });
 };
 
-const initializeHighlights = (page, copy) => {
-    const rail = select('#hl', page);
+const initializeHighlights = (page, homeCopy) => {
+    const rail = select('#home-highlight-rail', page);
 
     if (!rail) return;
 
-    const cards = selectAll('.hc', rail);
-    const pause = select('#hpause', page) || select('[data-home-highlight-toggle]', page);
-    const previous = select('#hpv', page) || select('[data-home-highlight-prev]', page);
-    const next = select('#hnx', page) || select('[data-home-highlight-next]', page);
+    const cards = selectAll('[data-home-highlight]', rail);
+    const pause = select('[data-home-highlight-toggle]', page);
+    const previous = select('[data-home-highlight-prev]', page);
+    const next = select('[data-home-highlight-next]', page);
 
     if (!cards.length) return;
 
@@ -287,7 +283,7 @@ const initializeHighlights = (page, copy) => {
     };
     const updateToggle = () => {
         if (!pause) return;
-        pause.setAttribute('aria-label', playing ? copy.pause : copy.play);
+        pause.setAttribute('aria-label', playing ? homeCopy.pause : homeCopy.play);
         pause.replaceChildren();
         const icon = document.createElement('i');
         icon.dataset.lucide = playing ? 'pause' : 'play';
@@ -344,18 +340,18 @@ const initializeHighlights = (page, copy) => {
 };
 
 const initializeReviews = (page) => {
-    const reviews = selectAll('.rv', page);
+    const reviews = selectAll('.review-card', page);
 
     if (!reviews.length) return;
     if (prefersReducedMotion() || !('IntersectionObserver' in window)) {
-        reviews.forEach((review) => review.classList.add('in'));
+        reviews.forEach((review) => review.classList.add('is-visible'));
         return;
     }
 
     const observer = new IntersectionObserver(
         (entries, instance) => entries.forEach((entry) => {
             if (!entry.isIntersecting) return;
-            entry.target.classList.add('in');
+            entry.target.classList.add('is-visible');
             instance.unobserve(entry.target);
         }),
         { threshold: 0.25 },
@@ -372,12 +368,12 @@ const initializeHome = () => {
     if (!page) return;
 
     renderIcons(iconSet);
-    const copy = parseJson(document.querySelector('[data-home-copy]'), {});
-    page.dataset.homeStatementCopy = copy.statement || '';
+    const homeCopy = parseJson(document.querySelector('[data-home-copy]'), {});
+    page.dataset.homeStatementCopy = homeCopy.statement || '';
     initializeScrollChrome(page);
     initializeSectionReveal(page);
-    initializePopularRail(page, copy);
-    initializeHighlights(page, copy);
+    initializePopularRail(page, homeCopy);
+    initializeHighlights(page, homeCopy);
     initializeReviews(page);
 };
 

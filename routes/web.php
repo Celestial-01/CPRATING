@@ -22,8 +22,8 @@ Route::middleware('profile.complete')->group(function (): void {
     Route::get('/courses', [CourseCatalogController::class, 'index'])->name('courses.index');
     Route::get('/plans', [StudyPlanController::class, 'index'])->name('plans.index');
     Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
-    Route::get('/courses/{code}', [CourseCatalogController::class, 'show'])->name('courses.show');
-    Route::post('/courses/{code}/rating', [CourseRatingController::class, 'store'])
+    Route::get('/courses/{course:course_code}', [CourseCatalogController::class, 'show'])->name('courses.show');
+    Route::post('/courses/{course:course_code}/rating', [CourseRatingController::class, 'store'])
         ->middleware('auth')
         ->name('courses.rating.store');
 });

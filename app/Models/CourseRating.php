@@ -19,4 +19,18 @@ class CourseRating extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class, 'course_code', 'course_code');
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'difficulty' => 'integer',
+            'workload' => 'integer',
+            'interest' => 'integer',
+        ];
+    }
 }

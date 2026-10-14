@@ -1,6 +1,7 @@
 <?php
 
 use App\Mail\RegistrationVerificationMail;
+use App\Models\Course;
 use App\Models\RegistrationToken;
 use App\Models\SocialAccount;
 use App\Models\User;
@@ -34,6 +35,7 @@ test('the home page is available', function () {
 });
 
 test('catalog and study plan pages are available', function () {
+    Course::factory()->create(['course_code' => 'CP422301']);
     $this->get(route('courses.index'))
         ->assertOk()
         ->assertViewIs('courses.index')
@@ -75,12 +77,14 @@ test('the home page exposes a loading skeleton state', function () {
 });
 
 test('a course detail page is available by course code', function () {
+    Course::factory()->create(['course_code' => 'CP422301', 'major' => 'CY']);
+    Course::factory()->create(['course_code' => 'CP422305', 'major' => 'CY']);
     $this->get(route('courses.show', 'CP422301'))
         ->assertOk()
         ->assertViewIs('courses.show')
         ->assertSee('CP422301')
         ->assertSee('data-related-courses', false)
-        ->assertSee('class="cc"', false)
+        ->assertSee('class="course-card"', false)
         ->assertSee('ความคิดเห็น');
 });
 

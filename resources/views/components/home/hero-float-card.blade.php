@@ -1,18 +1,15 @@
-@props([
-    'course',
-    'cssClass' => 'mc mc--left-top',
-])
+@props(['course'])
 
-<div
-    class="{{ $cssClass }}"
-    aria-hidden="true"
->
-    <img
-        src="{{ $course['image'] }}"
-        alt=""
-    >
+<div class="hero-float-card" aria-hidden="true">
+    @if ($course->imageUrl())
+        <img src="{{ $course->imageUrl() }}" alt="">
+    @else
+        <div class="grid size-full place-items-center bg-[#e9f0f5] text-[#8b9bac]">
+            <i data-lucide="book-open" class="size-12"></i>
+        </div>
+    @endif
     <span>
-        {{ $course['code'] }}
-        <em>★ {{ number_format($course['rating'], 1) }}</em>
+        {{ $course->course_code }}
+        <em>{{ $course->interestRating() === null ? 'ยังไม่มีคะแนน' : '★ '.number_format($course->interestRating(), 1) }}</em>
     </span>
 </div>

@@ -44,4 +44,9 @@ class Comment extends Model
     public function reports(): HasMany {
         return $this->hasMany(Report::class);
     }
+
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class, 'course_code', 'course_code');
+    }
 }
