@@ -26,6 +26,9 @@ Route::middleware('profile.complete')->group(function (): void {
     Route::post('/courses/{course:course_code}/rating', [CourseRatingController::class, 'store'])
         ->middleware('auth')
         ->name('courses.rating.store');
+    Route::delete('/courses/{course:course_code}/rating', [CourseRatingController::class, 'destroy'])
+        ->middleware('auth')
+        ->name('courses.rating.destroy');
 });
 
 Route::middleware(['auth', 'admin'])

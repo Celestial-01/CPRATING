@@ -13,6 +13,7 @@ import {
     MessageCircle,
     Send,
     Star,
+    X,
 } from 'lucide';
 import { onDomReady } from './dom-ready';
 import { renderIcons } from './icon-renderer';
@@ -34,6 +35,7 @@ const iconSet = {
     MessageCircle,
     Send,
     Star,
+    X,
 };
 
 const initializeCommentSort = () => {
@@ -84,6 +86,7 @@ const initializeRatingDialog = () => {
     const openButton = document.querySelector('[data-course-rating-open]');
     const closeButton = dialog?.querySelector('[data-course-rating-close]');
     const submitButton = dialog?.querySelector('[data-course-rating-submit]');
+    const gradeSelect = dialog?.querySelector('[name="grade"]');
     const groups = dialog ? [...dialog.querySelectorAll('[data-rating-group]')] : [];
 
     if (!dialog || !openButton || !submitButton || !groups.length) return;
@@ -97,6 +100,7 @@ const initializeRatingDialog = () => {
                 option.setAttribute('aria-checked', 'false');
             });
         });
+        if (gradeSelect) gradeSelect.value = '';
         submitButton.disabled = true;
     };
 
@@ -121,7 +125,9 @@ const initializeRatingDialog = () => {
     groups.forEach((group) => {
         const previousValue = Number(group.querySelector('[data-rating-input]').value);
 
-        if (previousValue >= 1 && previousValue <= 5) setRating(group, previousValue);
+        if (Number.isInteger(previousValue) && previousValue >= 1 && previousValue <= 5) {
+            setRating(group, previousValue);
+        }
 
         group.addEventListener('click', (event) => {
             const option = event.target.closest('[data-rating-option]');
@@ -142,6 +148,22 @@ const initializeRatingDialog = () => {
     dialog.addEventListener('close', reset);
 
     if (dialog.hasAttribute('data-rating-errors')) dialog.showModal();
+};
+
+const initializeRatingCancellation = () => {
+    const dialog = document.querySelector('[data-course-rating-cancel-dialog]');
+    const openButton = document.querySelector('[data-course-rating-cancel-open]');
+    const closeButton = dialog?.querySelector('[data-course-rating-cancel-close]');
+
+    if (!dialog || !openButton || !closeButton) return;
+
+    openButton.addEventListener('click', () => {
+        if (!dialog.open) dialog.showModal();
+    });
+    closeButton.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) dialog.close();
+    });
 };
 
 const initializeRelatedCourses = (copy, showToast) => {
@@ -189,6 +211,7 @@ const initializeCourse = () => {
 
         recordViewed(code);
         initializeRatingDialog();
+        initializeRatingCancellation();
         initializeRelatedCourses(copy, showToast);
 
         if (detail.dataset.ratingStatus) showToast(detail.dataset.ratingStatus);

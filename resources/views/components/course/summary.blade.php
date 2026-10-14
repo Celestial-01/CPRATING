@@ -96,9 +96,10 @@
                 @auth
                     <button
                         type="button"
-                        class="course-rating-trigger inline-flex h-12 items-center justify-center gap-2 rounded-[18px] bg-[#2b7fff] px-3 text-[15px] font-semibold text-white transition hover:bg-[#2573e8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
+                        class="course-rating-trigger inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-[18px] bg-[#2b7fff] px-3 text-[15px] font-semibold text-white transition hover:bg-[#2573e8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
                         @unless ($hasRated) data-course-rating-open @endunless
-                        @if ($hasRated) data-rated="true" disabled @endif
+                        @if ($hasRated) data-rated="true" data-course-rating-cancel-open @endif
+                        aria-haspopup="dialog"
                     >
                         <i data-lucide="star" class="size-4 shrink-0" aria-hidden="true"></i>
                         {{ $hasRated ? 'ให้คะแนนแล้ว' : 'ให้คะแนนวิชานี้' }}
@@ -141,3 +142,39 @@
         </div>
     </div>
 </section>
+
+@if ($hasRated)
+    <dialog
+        class="course-rating-dialog m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-[420px] overflow-y-auto rounded-[22px] border border-slate-200 bg-white p-6 text-slate-900 shadow-xl backdrop:bg-black/40 sm:p-8"
+        data-course-rating-cancel-dialog
+        aria-labelledby="course-rating-cancel-title"
+        aria-describedby="course-rating-cancel-description"
+    >
+        <h2 id="course-rating-cancel-title" class="text-lg font-bold text-slate-950">
+            ยกเลิกรีวิววิชานี้?
+        </h2>
+        <p id="course-rating-cancel-description" class="mt-3 text-sm leading-6 text-slate-500">
+            คะแนนและเกรดที่คุณให้จะถูกนำออกจากสถิติรายวิชา คุณสามารถให้คะแนนใหม่ได้หลังยกเลิก
+        </p>
+
+        <form method="POST" action="{{ route('courses.rating.destroy', $course->course_code) }}" class="mt-6 grid grid-cols-2 gap-3">
+            @csrf
+            @method('DELETE')
+
+            <button
+                type="button"
+                class="h-11 cursor-pointer rounded-[14px] border border-slate-200 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
+                data-course-rating-cancel-close
+                autofocus
+            >
+                เก็บรีวิวไว้
+            </button>
+            <button
+                type="submit"
+                class="h-11 cursor-pointer rounded-[14px] bg-rose-600 text-sm font-semibold text-white transition hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-100"
+            >
+                ยืนยันยกเลิก
+            </button>
+        </form>
+    </dialog>
+@endif

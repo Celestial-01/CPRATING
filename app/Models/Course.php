@@ -159,9 +159,15 @@ class Course extends Model
         });
     }
 
+    public function scopePopular(Builder $query): Builder
+    {
+        return $query->orderByDesc('views');
+    }
 
-
-
+    public function recordView(): void
+    {
+        static::withoutTimestamps(fn () => $this->increment('views'));
+    }
 
     public function teachers(): BelongsToMany
     {
@@ -186,13 +192,46 @@ class Course extends Model
 
 
     /** @return Collection<string, int> */
+    public function reportedGradeCounts(): Collection
+    {
+        $gradeCounts = $this->ratings()
+            ->whereIn('grade', array_keys(CourseRating::GRADE_POINTS))
+            ->select('grade')
+            ->selectRaw('COUNT(*) as grade_count')
+            ->groupBy('grade')
+            ->pluck('grade_count', 'grade');
 
+        return collect(CourseRating::GRADE_POINTS)
+            ->map(fn (float $gradePoint, string $grade): int => (int) $gradeCounts->get($grade, 0));
+    }
 
     /** @param Collection<string, int> $gradeCounts */
+    public function averageGradePoint(Collection $gradeCounts): ?float
+    {
+        $sampleSize = $gradeCounts->sum();
 
+        if ($sampleSize === 0) {
+            return null;
+        }
+
+        $totalGradePoints = $gradeCounts
+            ->map(fn (int $count, string $grade): float => CourseRating::GRADE_POINTS[$grade] * $count)
+            ->sum();
+
+        return round($totalGradePoints / $sampleSize, 2);
+    }
 
     /** @param Collection<string, int> $gradeCounts */
+    public function gradePercentage(string $grade, Collection $gradeCounts): ?float
+    {
+        $sampleSize = $gradeCounts->sum();
 
+        if ($sampleSize === 0) {
+            return null;
+        }
+
+        return round($gradeCounts->get($grade, 0) / $sampleSize * 100, 1);
+    }
 
     public function imageUrl(): ?string
     {
@@ -267,15 +306,5 @@ class Course extends Model
             'prerequisite_course_id',
             'course_id',
         );
-    }
-
-    public function scopePopular(Builder $query): Builder
-    {
-        return $query->orderByDesc('views');
-    }
-
-    public function recordView(): void
-    {
-        static::withoutTimestamps(fn () => $this->increment('views'));
     }
 }

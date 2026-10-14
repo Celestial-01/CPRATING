@@ -76,9 +76,9 @@ class CourseCatalogController extends Controller
         $hasRated = $request->user() !== null && $course->ratings()
             ->where('user_id', $viewerId)
             ->exists();
-        $gradeCounts = collect();
-        $gradeSampleSize = 0;
-        $averageGradePoint = null;
+        $gradeCounts = $course->reportedGradeCounts();
+        $gradeSampleSize = $gradeCounts->sum();
+        $averageGradePoint = $course->averageGradePoint($gradeCounts);
         $relatedCourses = Course::query()
             ->forPublicCatalog()
             ->where('major', $course->major)

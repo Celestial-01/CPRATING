@@ -85,7 +85,7 @@
         </section>
 
         
-        <x-admin.course-stats />
+        <x-admin.course-stats :course="$course" :grade-counts="$gradeCounts" />
 
         
         <div class="mt-6 grid gap-6 md:grid-cols-2">

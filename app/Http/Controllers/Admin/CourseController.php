@@ -63,10 +63,14 @@ class CourseController extends Controller
 
     public function edit(Course $course): View
     {
-        $course->load(['teachers', 'topics', 'prerequisiteCourses', 'dependentCourses']);
+        $course = Course::query()->withStatistics()
+            ->with(['teachers', 'topics', 'prerequisiteCourses', 'dependentCourses'])
+            ->findOrFail($course->getKey());
+        $gradeCounts = $course->reportedGradeCounts();
 
         return view('admin.courses.edit', [
             'course' => $course,
+            'gradeCounts' => $gradeCounts,
             'teachers' => Teacher::query()->orderBy('teacher_name')->get(),
             'topics' => Topic::query()->orderBy('name')->get(),
             'courses' => Course::query()
