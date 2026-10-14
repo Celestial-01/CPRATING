@@ -13,6 +13,7 @@ class Comment extends Model
         'user_id',
         'course_code',
         'content',
+        'status',
         'parent_id',
         'reply_to_user_id',
     ];
@@ -35,5 +36,9 @@ class Comment extends Model
     public function likes(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'comment_likes')->withTimestamps();
+    }
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'approved');
     }
 }
