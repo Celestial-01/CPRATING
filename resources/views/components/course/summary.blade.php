@@ -29,7 +29,7 @@
                     tone="rating"
                 />
                 <x-course.stat
-                    :value="'—'"
+                    :value="number_format($course->views)"
                     label="เข้าชม"
                     tone="views"
                 />

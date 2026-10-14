@@ -73,6 +73,7 @@ class Course extends Model
         return [
             'credits' => 'integer',
             'is_offered' => 'boolean',
+            'views' => 'integer',
         ];
     }
 
@@ -266,5 +267,15 @@ class Course extends Model
             'prerequisite_course_id',
             'course_id',
         );
+    }
+
+    public function scopePopular(Builder $query): Builder
+    {
+        return $query->orderByDesc('views');
+    }
+
+    public function recordView(): void
+    {
+        static::withoutTimestamps(fn () => $this->increment('views'));
     }
 }

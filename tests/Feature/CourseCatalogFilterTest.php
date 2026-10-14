@@ -92,3 +92,18 @@ test('malformed search input is rejected', function () {
     $this->get(route('courses.index', ['q' => str_repeat('x', 101)]))
         ->assertSessionHasErrors('q');
 });
+
+test('popular filter orders published courses by recorded views', function () {
+    $mostViewed = Course::factory()->create(['course_code' => 'CP888001', 'views' => 10]);
+    $lessViewed = Course::factory()->create(['course_code' => 'CP888002', 'views' => 2]);
+    $draft = Course::factory()->draft()->create(['course_code' => 'CP888003', 'views' => 50]);
+
+    $this->get(route('courses.index', ['category' => 'popular']))
+        ->assertOk()
+        ->assertViewHas('courses', fn ($courses): bool => $courses->total() === 3
+            && $courses->take(2)->pluck('course_code')->all() === [
+                $mostViewed->course_code,
+                $lessViewed->course_code,
+            ])
+        ->assertDontSee($draft->course_code);
+});

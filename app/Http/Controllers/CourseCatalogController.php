@@ -25,7 +25,7 @@ class CourseCatalogController extends Controller
                 in_array($selectedFilter, $majorCodes, true),
                 fn ($query) => $query->where('major', $selectedFilter),
             )
-            ->when($selectedFilter === 'popular', fn ($query) => $query->orderByDesc('ratings_count'))
+            ->when($selectedFilter === 'popular', fn ($query) => $query->popular())
             ->orderBy('course_code')
             ->paginate((int) config('courses.per_page', 8))
             ->withQueryString();
@@ -44,6 +44,10 @@ class CourseCatalogController extends Controller
     public function show(Request $request, Course $course): View
     {
         $course = Course::query()->forPublicCatalog()->findOrFail($course->getKey());
+
+        if (! $request->boolean('loading') && $request->isMethod('get')) {
+            $course->recordView();
+        }
 
         $sort = $request->query('sort') === 'popular' ? 'popular' : 'latest';
         $viewerId = $request->user()?->id;
