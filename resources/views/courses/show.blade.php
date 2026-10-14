@@ -532,7 +532,7 @@
                 วิชาที่เกี่ยวข้อง
             </h2>
 
-            <div class="cg course-related-grid mt-5" data-related-courses>
+            <div class="course-grid course-related-grid mt-5" data-related-courses>
                 @foreach ($relatedCourses as $relatedCourse)
                 <x-course.card :course="$relatedCourse" />
                 @endforeach

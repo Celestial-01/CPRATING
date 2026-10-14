@@ -1,3 +1,8 @@
+@props([
+    'pulse' => 'animate-pulse bg-slate-200 motion-reduce:animate-none',
+    'softPulse' => 'animate-pulse bg-slate-100 motion-reduce:animate-none',
+])
+
 <div
     {{ $attributes }}
     aria-busy="true"

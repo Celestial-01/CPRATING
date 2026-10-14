@@ -31,15 +31,15 @@ export const applyTilt = (element, rotateX = 6, rotateY = 8) => {
 
     element.addEventListener('pointermove', (event) => {
         const bounds = element.getBoundingClientRect();
-        const x = (event.clientX - bounds.left) / bounds.width - 0.5;
-        const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+        const horizontalOffset = (event.clientX - bounds.left) / bounds.width - 0.5;
+        const verticalOffset = (event.clientY - bounds.top) / bounds.height - 0.5;
 
-        element.style.setProperty('--rx', `${-y * rotateX}deg`);
-        element.style.setProperty('--ry', `${x * rotateY}deg`);
+        element.style.setProperty('--tilt-x', `${-verticalOffset * rotateX}deg`);
+        element.style.setProperty('--tilt-y', `${horizontalOffset * rotateY}deg`);
     });
     element.addEventListener('pointerleave', () => {
-        element.style.setProperty('--rx', '0deg');
-        element.style.setProperty('--ry', '0deg');
+        element.style.setProperty('--tilt-x', '0deg');
+        element.style.setProperty('--tilt-y', '0deg');
     });
 };
 
@@ -52,8 +52,8 @@ export const createToast = () => {
         if (!toast) return;
 
         toast.textContent = message;
-        toast.classList.add('on');
+        toast.classList.add('is-visible');
         window.clearTimeout(timer);
-        timer = window.setTimeout(() => toast.classList.remove('on'), 2200);
+        timer = window.setTimeout(() => toast.classList.remove('is-visible'), 2200);
     };
 };

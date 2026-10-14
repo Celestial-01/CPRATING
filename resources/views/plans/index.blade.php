@@ -5,25 +5,25 @@
 @section('content')
     <x-navbar active="plans" />
 
-    <main class="pg source-page" data-plans-page>
-        <div class="wrap">
+    <main class="content-page source-page" data-plans-page>
+        <div class="page-container">
             <section data-plan-selection aria-labelledby="plans-title">
-                <p class="eb">แผนการเรียน</p>
-                <h1 id="plans-title">เลือก<span class="k">หลักสูตร</span>ของคุณ</h1>
-                <p class="ld">เลือกสาขาที่คุณเรียนก่อน แล้วดูแผนการเรียนตลอดหลักสูตร</p>
+                <p class="section-eyebrow">แผนการเรียน</p>
+                <h1 id="plans-title">เลือก<span class="gradient-text">หลักสูตร</span>ของคุณ</h1>
+                <p class="page-lead">เลือกสาขาที่คุณเรียนก่อน แล้วดูแผนการเรียนตลอดหลักสูตร</p>
 
-                <div class="mg" data-major-grid>
+                <div class="study-plan-major-grid" data-major-grid>
                     @foreach ($studyPlans as $majorCode => $studyPlan)
                         <button
                             type="button"
-                            class="mc2"
+                            class="study-plan-major-card"
                             data-major-key="{{ $majorCode }}"
                         >
-                            <span class="im">
+                            <span class="study-plan-major-card__image">
                                 <img src="{{ asset($studyPlan['image']) }}" alt="">
                             </span>
                             <b>{{ $studyPlan['name'] }}</b>
-                            <span class="s">ดูแผนการเรียน</span>
+                            <span class="study-plan-major-card__action">ดูแผนการเรียน</span>
                         </button>
                     @endforeach
                 </div>

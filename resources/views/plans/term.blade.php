@@ -1,7 +1,7 @@
-<article class="pt">
+<article class="study-plan-term">
     <h3>ชั้นปีที่ {{ $year }} ภาคการศึกษาที่ {{ $term }}</h3>
 
-    <div class="tw2">
+    <div class="study-plan-table-scroll">
         <table>
             <thead>
                 <tr>
@@ -14,7 +14,7 @@
             <tbody>
                 @foreach ($termPlan['courses'] as $course)
                     <tr>
-                        <td class="cd">
+                        <td class="study-plan-course-code">
                             {{ $course['code'] }}
                         </td>
                         <td>
@@ -24,7 +24,7 @@
                                 <small>{{ $course['english_name'] }}</small>
                             @endif
                         </td>
-                        <td class="cr">
+                        <td class="study-plan-course-credits">
                             {{ $course['credits'] }}
                         </td>
                         <td>
@@ -33,16 +33,16 @@
                     </tr>
                 @endforeach
 
-                <tr class="sum f">
+                <tr class="study-plan-total-row study-plan-total-row--first">
                     <td colspan="2">รวมจำนวนหน่วยกิตลงทะเบียนเรียน</td>
-                    <td class="cr">
+                    <td class="study-plan-course-credits">
                         {{ $termPlan['registered_credits'] }}
                     </td>
                     <td>หน่วยกิต</td>
                 </tr>
-                <tr class="sum">
+                <tr class="study-plan-total-row">
                     <td colspan="2">รวมจำนวนหน่วยกิตสะสม</td>
-                    <td class="cr">
+                    <td class="study-plan-course-credits">
                         {{ $termPlan['accumulated_credits'] }}
                     </td>
                     <td>หน่วยกิต</td>

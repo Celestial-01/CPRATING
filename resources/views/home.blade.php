@@ -13,10 +13,10 @@
                 <div class="hero-effects" aria-hidden="true">
                     <i class="hero-orbit hero-orbit--small"></i>
                     <i class="hero-orbit hero-orbit--large hero-orbit--reverse"></i>
-                    <i data-lucide="archive" class="hero-decor-icon hero-decor-icon--archive ic" aria-hidden="true"></i>
-                    <i data-lucide="book-open" class="hero-decor-icon hero-decor-icon--book ic" aria-hidden="true"></i>
-                    <i data-lucide="monitor" class="hero-decor-icon hero-decor-icon--monitor ic" aria-hidden="true"></i>
-                    <i data-lucide="graduation-cap" class="hero-decor-icon hero-decor-icon--graduation ic" aria-hidden="true"></i>
+                    <i data-lucide="archive" class="hero-decor-icon hero-decor-icon--archive ui-icon" aria-hidden="true"></i>
+                    <i data-lucide="book-open" class="hero-decor-icon hero-decor-icon--book ui-icon" aria-hidden="true"></i>
+                    <i data-lucide="monitor" class="hero-decor-icon hero-decor-icon--monitor ui-icon" aria-hidden="true"></i>
+                    <i data-lucide="graduation-cap" class="hero-decor-icon hero-decor-icon--graduation ui-icon" aria-hidden="true"></i>
                 </div>
 
                 <div id="hero-floating-cards" aria-hidden="true">
@@ -27,28 +27,28 @@
                     @endforeach
                 </div>
 
-                <div class="wrap">
+                <div class="page-container">
                     <h1 id="home-title">
                         <span class="hero-title-line">ทุกวิชามีเรื่องราว</span><br>
-                        <span class="hero-title-line k">ก่อนคุณลงเรียน</span>
+                        <span class="hero-title-line gradient-text">ก่อนคุณลงเรียน</span>
                     </h1>
                     <p>รวมคะแนนและรีวิวรายวิชาจากผู้เรียนจริง เพื่อให้คุณเลือกวิชาได้ชัดเจนขึ้น</p>
                 </div>
             </header>
 
             <section>
-                <div class="wrap">
+                <div class="page-container">
                     <p id="home-statement" data-home-statement aria-label="{{ $homeCopy['statement'] ?? '' }}"></p>
                 </div>
             </section>
 
             <section id="courses" class="home-courses-section">
-                <div class="wrap">
+                <div class="page-container">
                     <div class="popular-courses-heading">
-                        <h2>วิชายอดนิยม<br><span class="k">ที่นักศึกษาสนใจ</span></h2>
-                        <a class="btn g" href="{{ route('courses.index') }}">
+                        <h2>วิชายอดนิยม<br><span class="gradient-text">ที่นักศึกษาสนใจ</span></h2>
+                        <a class="pill-button pill-button--dark" href="{{ route('courses.index') }}">
                             ค้นหาวิชาทั้งหมด
-                            <i data-lucide="arrow-up-right" class="ic size-4" aria-hidden="true"></i>
+                            <i data-lucide="arrow-up-right" class="ui-icon size-4" aria-hidden="true"></i>
                         </a>
                     </div>
                 </div>
@@ -61,26 +61,26 @@
                     @endforelse
                 </div>
 
-                <div class="wrap popular-course-controls">
+                <div class="page-container popular-course-controls">
                     <div class="popular-course-arrows">
                         <button type="button" data-home-rail-prev aria-label="รายวิชาก่อนหน้า">
-                            <i data-lucide="arrow-left" class="ic size-5" aria-hidden="true"></i>
+                            <i data-lucide="arrow-left" class="ui-icon size-5" aria-hidden="true"></i>
                         </button>
                         <button type="button" data-home-rail-next aria-label="รายวิชาถัดไป">
-                            <i data-lucide="arrow-right" class="ic size-5" aria-hidden="true"></i>
+                            <i data-lucide="arrow-right" class="ui-icon size-5" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
             </section>
 
             <section id="features" class="home-highlight-section">
-                <div class="wrap">
-                    <h2>ไฮไลต์<br><span class="k">ของ CPRATING</span></h2>
+                <div class="page-container">
+                    <h2>ไฮไลต์<br><span class="gradient-text">ของ CPRATING</span></h2>
                 </div>
                 <div class="highlight-rail" id="home-highlight-rail" data-home-highlight-rail role="region" aria-label="ไฮไลต์ของ CPRATING" tabindex="0">
                     <article class="highlight-card rating-highlight-card" data-home-highlight>
                         <p class="highlight-description">
-                            คะแนน <span class="k">rating คิดจากความน่าสนใจของรายวิชา</span>
+                            คะแนน <span class="gradient-text">rating คิดจากความน่าสนใจของรายวิชา</span>
                             ส่วนปริมาณงานและความยากแสดงเป็นระดับ น้อย–มาก ไม่ปนกับดาว
                         </p>
 
@@ -185,7 +185,7 @@
                                     </div>
                                     <a href="{{ route('plans.index') }}">
                                         ดูทุกสาขา
-                                        <i data-lucide="arrow-right" class="ic size-4" aria-hidden="true"></i>
+                                        <i data-lucide="arrow-right" class="ui-icon size-4" aria-hidden="true"></i>
                                     </a>
                                 </div>
 
@@ -205,28 +205,28 @@
                         </article>
                     @endif
                 </div>
-                <div class="wrap highlight-controls">
+                <div class="page-container highlight-controls">
                     <button class="highlight-control-button" type="button" data-home-highlight-toggle aria-label="หยุดเล่นอัตโนมัติ">
-                        <i data-lucide="pause" class="ic size-4" aria-hidden="true"></i>
+                        <i data-lucide="pause" class="ui-icon size-4" aria-hidden="true"></i>
                     </button>
                     <button class="highlight-control-button" type="button" data-home-highlight-prev aria-label="ไฮไลต์ก่อนหน้า">
-                        <i data-lucide="arrow-left" class="ic size-4" aria-hidden="true"></i>
+                        <i data-lucide="arrow-left" class="ui-icon size-4" aria-hidden="true"></i>
                     </button>
                     <button class="highlight-control-button" type="button" data-home-highlight-next aria-label="ไฮไลต์ถัดไป">
-                        <i data-lucide="arrow-right" class="ic size-4" aria-hidden="true"></i>
+                        <i data-lucide="arrow-right" class="ui-icon size-4" aria-hidden="true"></i>
                     </button>
                 </div>
             </section>
 
             <section id="steps">
-                <div class="wrap">
-                    <h2 class="steps-heading">ใช้งานง่าย<br><span class="k">ใน 3 ขั้นตอน</span></h2>
+                <div class="page-container">
+                    <h2 class="steps-heading">ใช้งานง่าย<br><span class="gradient-text">ใน 3 ขั้นตอน</span></h2>
                     <div class="steps-grid">
                         <figure>
                             <div class="step-preview-tile" aria-hidden="true">
                                 <div class="step-preview-ui">
                                     <div class="search-preview-field">
-                                        <i data-lucide="search" class="ic size-4" aria-hidden="true"></i>
+                                        <i data-lucide="search" class="ui-icon size-4" aria-hidden="true"></i>
                                         <span>CP422301</span>
                                         <i class="search-preview-caret"></i>
                                     </div>
@@ -280,45 +280,45 @@
             </section>
 
             <section id="reviews">
-                <div class="wrap">
+                <div class="page-container">
                     <div class="reviews-heading">
-                        <h2>เสียงจาก<br><span class="k">คนที่เคยเรียน</span></h2>
+                        <h2>เสียงจาก<br><span class="gradient-text">คนที่เคยเรียน</span></h2>
                         <p>ตัวอย่างการแสดงผลความคิดเห็นและคะแนนรายวิชา เพื่อให้เห็นว่าข้อมูลจากผู้เรียนจะช่วยตัดสินใจก่อนลงทะเบียนอย่างไร</p>
                     </div>
                     <div class="review-grid">
                         <x-home.review-showcase />
                     </div>
                     <div class="reviews-more">
-                        <a class="btn g" href="{{ route('courses.index') }}">
+                        <a class="pill-button pill-button--dark" href="{{ route('courses.index') }}">
                             ดูรีวิวทั้งหมด
-                            <i data-lucide="arrow-up-right" class="ic size-4" aria-hidden="true"></i>
+                            <i data-lucide="arrow-up-right" class="ui-icon size-4" aria-hidden="true"></i>
                         </a>
                     </div>
                 </div>
             </section>
 
             <section id="trust">
-                <div class="wrap trust-wrapper">
+                <div class="page-container trust-wrapper">
                     <div>
-                        <p class="eb">หลักการของเรา</p>
-                        <h2>รีวิวที่<span class="k">เชื่อถือได้</span><br>มาจากผู้เรียนจริง</h2>
-                        <p class="ld">CPRATING รวมคะแนนและรีวิวรายวิชา ให้คุณเปรียบเทียบเนื้อหา ภาระงาน และความยาก ก่อนตัดสินใจลงทะเบียน</p>
+                        <p class="section-eyebrow">หลักการของเรา</p>
+                        <h2>รีวิวที่<span class="gradient-text">เชื่อถือได้</span><br>มาจากผู้เรียนจริง</h2>
+                        <p class="page-lead">CPRATING รวมคะแนนและรีวิวรายวิชา ให้คุณเปรียบเทียบเนื้อหา ภาระงาน และความยาก ก่อนตัดสินใจลงทะเบียน</p>
                         <a class="trust-link" href="{{ route('courses.index') }}">
                             เริ่มสำรวจรายวิชา
-                            <i data-lucide="arrow-up-right" class="ic size-4" aria-hidden="true"></i>
+                            <i data-lucide="arrow-up-right" class="ui-icon size-4" aria-hidden="true"></i>
                         </a>
                     </div>
                     <ul class="trust-points">
                         <li>
-                            <i class="trust-point-icon"><i data-lucide="graduation-cap" class="ic size-6" aria-hidden="true"></i></i>
+                            <i class="trust-point-icon"><i data-lucide="graduation-cap" class="ui-icon size-6" aria-hidden="true"></i></i>
                             <div><b>ยืนยันด้วยอีเมลมหาวิทยาลัย</b><span>ทุกรีวิวมาจากบัญชีที่ยืนยันตัวตนแล้ว</span></div>
                         </li>
                         <li>
-                            <i class="trust-point-icon"><i data-lucide="star" class="ic size-6" aria-hidden="true"></i></i>
+                            <i class="trust-point-icon"><i data-lucide="star" class="ui-icon size-6" aria-hidden="true"></i></i>
                             <div><b>คะแนนแยกตามหัวข้อ</b><span>ไม่สรุปเป็นดาวรวมค่าเดียว</span></div>
                         </li>
                         <li>
-                            <i class="trust-point-icon"><i data-lucide="eye-off" class="ic size-6" aria-hidden="true"></i></i>
+                            <i class="trust-point-icon"><i data-lucide="eye-off" class="ui-icon size-6" aria-hidden="true"></i></i>
                             <div><b>ไม่เปิดเผยชื่อผู้รีวิว</b><span>เขียนได้ตรงไปตรงมา ไม่ต้องกังวล</span></div>
                         </li>
                     </ul>
@@ -326,8 +326,8 @@
             </section>
 
             <section id="faq" class="home-faq-section">
-                <div class="wrap centered-section">
-                    <h2>คำถามที่<span class="k">พบบ่อย</span></h2>
+                <div class="page-container centered-section">
+                    <h2>คำถามที่<span class="gradient-text">พบบ่อย</span></h2>
                     <div class="faq-list faq-align-left">
                         <details>
                             <summary>ใครเขียนความคิดเห็นได้บ้าง</summary>
@@ -359,7 +359,7 @@
     <script type="application/json" data-home-copy>@json($homeCopy)</script>
     <div id="scroll-progress" aria-hidden="true"><i></i></div>
     <div id="toast" role="status" aria-live="polite"></div>
-    <button id="back-to-top" type="button" aria-label="กลับขึ้นบน"><i data-lucide="arrow-up" class="ic size-5" aria-hidden="true"></i></button>
+    <button id="back-to-top" type="button" aria-label="กลับขึ้นบน"><i data-lucide="arrow-up" class="ui-icon size-5" aria-hidden="true"></i></button>
 
     <x-footer />
 @endsection

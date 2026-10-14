@@ -117,7 +117,7 @@ const initializeScrollChrome = (page) => {
         words.forEach((word, index) => {
             const isKeyword = word.startsWith('*');
             const span = document.createElement('span');
-            span.className = `statement-word${isKeyword ? ' k' : ''}`;
+            span.className = `statement-word${isKeyword ? ' gradient-text' : ''}`;
             span.textContent = word.replace('*', '');
             span.setAttribute('aria-hidden', 'true');
             fragment.append(span);
@@ -152,8 +152,8 @@ const initializeScrollChrome = (page) => {
 
     hero?.addEventListener('pointermove', (event) => {
         const bounds = hero.getBoundingClientRect();
-        hero.style.setProperty('--mx', `${event.clientX - bounds.left}px`);
-        hero.style.setProperty('--my', `${event.clientY - bounds.top}px`);
+        hero.style.setProperty('--pointer-x', `${event.clientX - bounds.left}px`);
+        hero.style.setProperty('--pointer-y', `${event.clientY - bounds.top}px`);
     });
 
     window.addEventListener('scroll', update, { passive: true });
@@ -287,7 +287,7 @@ const initializeHighlights = (page, homeCopy) => {
         pause.replaceChildren();
         const icon = document.createElement('i');
         icon.dataset.lucide = playing ? 'pause' : 'play';
-        icon.className = 'ic size-4';
+        icon.className = 'ui-icon size-4';
         icon.setAttribute('aria-hidden', 'true');
         pause.append(icon);
         renderIcons(iconSet);

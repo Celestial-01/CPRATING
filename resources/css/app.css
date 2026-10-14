@@ -1834,7 +1834,7 @@
     background: #f8fafc;
 }
 
-.pg[data-plans-page] > .wrap > section {
+.content-page[data-plans-page] > .page-container > section {
     padding: 0;
 }
 
@@ -2352,13 +2352,13 @@
 
 .home-page .home-landing-hero::after {
     background: radial-gradient(
-        circle 230px at var(--mx, 50%) var(--my, 50%),
+        circle 230px at var(--pointer-x, 50%) var(--pointer-y, 50%),
         rgb(10 122 230 / 35%) 1.7px,
         transparent 1.7px
     );
     background-size: 28px 28px;
     mask-image: radial-gradient(
-        circle 230px at var(--mx, 50%) var(--my, 50%),
+        circle 230px at var(--pointer-x, 50%) var(--pointer-y, 50%),
         #000,
         transparent 100%
     );
