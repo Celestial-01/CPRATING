@@ -4,7 +4,7 @@
         aria-label="เมนูผู้ดูแลระบบ"
     >
         <a
-            href="{{ route('admin.dashboard') }}"
+            href="{{ route('home') }}"
             class="site-navbar__brand shrink-0"
             aria-label="CPRATING หน้าหลัก"
             data-home-nav-link
