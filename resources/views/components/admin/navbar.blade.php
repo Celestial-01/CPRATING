@@ -30,11 +30,17 @@
     >
         <a
             href="{{ route('admin.dashboard') }}"
-            class="flex shrink-0 items-center gap-3 text-sm font-medium text-slate-900"
-            aria-label="CPRATING Admin"
+            class="site-navbar__brand shrink-0"
+            aria-label="CPRATING หน้าหลัก"
+            data-home-nav-link
         >
-            <span class="grid size-10 place-items-center rounded-full bg-[#d9d9d9] text-[10px] text-slate-700">LOGO</span>
-            
+            <img
+                src="{{ asset('images/cprating-logo.svg') }}"
+                alt=""
+                class="block h-auto w-[154px] sm:w-[172px]"
+                width="307"
+                height="80"
+            >
         </a>
 
         <div class="flex items-center gap-7 text-sm">
