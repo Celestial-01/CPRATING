@@ -13,7 +13,7 @@ class BannedWordSeeder extends Seeder
      */
     public function run(): void
     {
-        $block = ['เหี้ย', 'fuck', 'สัส', 'แม่ง'];
+        $block = ['เหี้ย', 'fuck', 'สัส', 'แม่ง', 'ควย'];
 
         $review = ['โคตร', 'ชิบหาย', 'เฮงซวย', 'สัด'];
 
