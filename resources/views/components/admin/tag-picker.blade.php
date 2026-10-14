@@ -8,6 +8,8 @@
     'labelKeys' => 'name',
     'subKeys' => '',
     'alwaysOpen' => false,
+    'selectedLabel' => 'name',
+    'selectedSubLabel' => null,
 ])
 
 <div
@@ -24,15 +26,15 @@
         @foreach ($selected as $item)
             <span
                 data-tag
-                data-id="{{ $item['id'] }}"
-                data-label="{{ $item['label'] }}"
-                data-sublabel="{{ $item['sublabel'] ?? '' }}"
+                data-id="{{ $item->getKey() }}"
+                data-label="{{ data_get($item, $selectedLabel) }}"
+                data-sublabel="{{ $selectedSubLabel ? data_get($item, $selectedSubLabel) : '' }}"
                 class="inline-flex items-center gap-2 rounded-full bg-[#e9f5ff] px-3 py-1 text-sm font-medium text-[#1684e5]"
             >
-                <input type="hidden" name="{{ $name }}[]" value="{{ $item['id'] }}">
+                <input type="hidden" name="{{ $name }}[]" value="{{ $item->getKey() }}">
                 <span class="flex flex-col">
-                    <span data-slot="label">{{ $item['label'] }}</span>
-                    <span data-slot="sublabel" class="text-xs font-normal text-[#5792bd] empty:hidden">{{ $item['sublabel'] ?? '' }}</span>
+                    <span data-slot="label">{{ data_get($item, $selectedLabel) }}</span>
+                    <span data-slot="sublabel" class="text-xs font-normal text-[#5792bd] empty:hidden">{{ $selectedSubLabel ? data_get($item, $selectedSubLabel) : '' }}</span>
                 </span>
                 <button type="button" data-remove aria-label="ลบ" class="text-xl leading-none text-[#1684e5] hover:text-red-500">×</button>
             </span>

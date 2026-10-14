@@ -189,7 +189,19 @@ class Course extends Model
         return $this->hasMany(StudyPlanCourse::class);
     }
 
+    public function updateDetails(array $attributes): void
+    {
+        $this->getConnection()->transaction(function () use ($attributes): void {
+            $courseCode = $attributes['course_code'] ?? $this->course_code;
 
+            if ($courseCode !== $this->course_code) {
+                $this->comments()->update(['course_code' => $courseCode]);
+                $this->ratings()->update(['course_code' => $courseCode]);
+            }
+
+            $this->update($attributes);
+        });
+    }
 
     /** @return Collection<string, int> */
     public function reportedGradeCounts(): Collection

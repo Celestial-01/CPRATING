@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Teacher;
-use App\Support\TeacherFormOptions;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -21,17 +20,16 @@ class TeacherController extends Controller
 
     public function create(): View
     {
-        return view('admin.teachers.create', [
-            'prefixes' => TeacherFormOptions::prefixes(),
-        ]);
+        $prefixes = Teacher::PREFIXES;
+
+        return view('admin.teachers.create', compact('prefixes'));
     }
 
     public function edit(Teacher $teacher): View
     {
-        return view('admin.teachers.edit', [
-            'teacher' => $teacher,
-            'prefixes' => TeacherFormOptions::prefixes(),
-        ]);
+        $prefixes = Teacher::PREFIXES;
+
+        return view('admin.teachers.edit', compact('teacher', 'prefixes'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -77,6 +75,7 @@ class TeacherController extends Controller
 
     public function search(Request $request): JsonResponse
     {
+        $request->validate(['keyword' => ['nullable', 'string', 'max:100']]);
         $keyword = trim((string) $request->input('keyword', ''));
 
         $teachers = Teacher::query()

@@ -66,6 +66,7 @@
                     placeholder="พิมพ์ชื่ออาจารย์เพื่อค้นหา"
                     hint="หากไม่เลือก ระบบจะแสดง “ไม่ระบุชื่ออาจารย์ผู้สอน”"
                     label-keys="prefix,teacher_name"
+                    selected-label="display_name"
                     :selected="$selectedTeachers"
                 />
             </x-admin.field>
@@ -94,6 +95,8 @@
                     placeholder="ค้นหารหัสวิชา หรือชื่อวิชาภาษาอังกฤษ..."
                     label-keys="course_code"
                     sub-keys="course_name_en"
+                    selected-label="course_code"
+                    selected-sub-label="course_name_en"
                     :selected="$selectedPrerequisites"
                     always-open
                 />

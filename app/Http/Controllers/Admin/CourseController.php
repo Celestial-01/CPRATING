@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Teacher;
 use App\Models\Topic;
-use App\Support\AdminCourseFormData;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -15,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class CourseController extends Controller
 {
@@ -29,16 +29,22 @@ class CourseController extends Controller
         $topics = Topic::query()->orderBy('name')->get();
         $courses = Course::query()->orderBy('course_code')->get();
 
-        return view('admin.courses.create', [
-            'teachers' => $teachers,
-            'topics' => $topics,
-            'courses' => $courses,
-            'majors' => Course::MAJORS,
-            'types' => Course::TYPES,
-            'selectedTeachers' => AdminCourseFormData::selectedTeachers($teachers, (array) old('teacher_ids', [])),
-            'selectedTopics' => AdminCourseFormData::selectedTopics($topics, (array) old('topic_ids', [])),
-            'selectedPrerequisites' => AdminCourseFormData::selectedPrerequisites($courses, (array) old('prerequisite_ids', [])),
-        ]);
+        $majors = Course::MAJORS;
+        $types = Course::TYPES;
+        $selectedTeachers = $teachers->whereIn('id', (array) old('teacher_ids', []));
+        $selectedTopics = $topics->whereIn('id', (array) old('topic_ids', []));
+        $selectedPrerequisites = $courses->whereIn('id', (array) old('prerequisite_ids', []));
+
+        return view('admin.courses.create', compact(
+            'teachers',
+            'topics',
+            'courses',
+            'majors',
+            'types',
+            'selectedTeachers',
+            'selectedTopics',
+            'selectedPrerequisites',
+        ));
     }
 
     public function store(Request $request): RedirectResponse
@@ -61,27 +67,36 @@ class CourseController extends Controller
             ->with('success', 'เพิ่มรายวิชาเรียบร้อยแล้ว');
     }
 
-    public function edit(Course $course): View
+    public function edit(Request $request, Course $course): View
     {
-        $course = Course::query()->withStatistics()
+        $course = Course::query()
+            ->withStatistics()
             ->with(['teachers', 'topics', 'prerequisiteCourses', 'dependentCourses'])
             ->findOrFail($course->getKey());
         $gradeCounts = $course->reportedGradeCounts();
+        $commentSort = $request->query('sort') === 'popular' ? 'popular' : 'latest';
+        $comments = $course->comments()
+            ->with('user')
+            ->withCount('likes')
+            ->when($commentSort === 'popular', fn ($query) => $query->orderByDesc('likes_count'))
+            ->latest()
+            ->get();
 
-        return view('admin.courses.edit', [
-            'course' => $course,
-            'gradeCounts' => $gradeCounts,
-            'teachers' => Teacher::query()->orderBy('teacher_name')->get(),
-            'topics' => Topic::query()->orderBy('name')->get(),
-            'courses' => Course::query()
-                ->whereKeyNot($course->getKey())
-                ->orderBy('course_code')
-                ->get(),
-            'relations' => AdminCourseFormData::relations($course),
-            'majorOptions' => Course::MAJORS,
-            'typeOptions' => AdminCourseFormData::typeOptions(),
-            'offeredOptions' => AdminCourseFormData::offeredOptions(),
-        ]);
+        $majorOptions = Course::MAJORS;
+        $typeOptions = array_combine(Course::TYPES, Course::TYPES);
+        $offeredOptions = [1 => 'เปิดสอน', 0 => 'ยังไม่เปิดสอน'];
+        $publicationOptions = Course::PUBLICATION_STATUS_LABELS;
+
+        return view('admin.courses.edit', compact(
+            'course',
+            'gradeCounts',
+            'comments',
+            'commentSort',
+            'majorOptions',
+            'typeOptions',
+            'offeredOptions',
+            'publicationOptions',
+        ));
     }
 
     public function update(Request $request, Course $course): RedirectResponse
@@ -90,7 +105,7 @@ class CourseController extends Controller
         $relations = $this->extractRelations($validated);
 
         DB::transaction(function () use ($request, $course, $validated, $relations): void {
-            $course->update($this->prepareImage($request, $validated, $course));
+            $course->updateDetails($this->prepareImage($request, $validated, $course));
             $this->syncRelations($course, $relations);
         });
 
@@ -100,17 +115,28 @@ class CourseController extends Controller
 
     public function destroy(Course $course): RedirectResponse
     {
-        if ($course->image) {
-            Storage::disk('public')->delete($course->image);
-        }
+        DB::transaction(function () use ($course): void {
+            if ($course->studyPlanCourses()->exists()) {
+                throw ValidationException::withMessages([
+                    'course' => 'รายวิชานี้อยู่ในแผนการเรียน กรุณานำออกจากแผนก่อนลบ',
+                ]);
+            }
 
-        $course->delete();
+            $course->comments()->delete();
+            $course->ratings()->delete();
+            $course->delete();
+        });
+
+        if ($imagePath = $course->imageStoragePath()) {
+            Storage::disk('public')->delete($imagePath);
+        }
 
         return to_route('admin.dashboard')->with('success', 'ลบรายวิชาเรียบร้อยแล้ว');
     }
 
     public function search(Request $request): JsonResponse
     {
+        $request->validate(['keyword' => ['nullable', 'string', 'max:100']]);
         $keyword = trim((string) $request->query('keyword', ''));
 
         return response()->json(
@@ -131,12 +157,12 @@ class CourseController extends Controller
     public function inlineUpdate(Request $request, Course $course): JsonResponse
     {
         $validated = $this->validateInline($request, $course);
-        $relations = $this->extractRelations($validated);
+        $relations = $this->extractRelations($validated, true);
         $courseData = collect($validated)->except(array_keys($relations))->all();
 
         DB::transaction(function () use ($course, $courseData, $relations): void {
             if ($courseData !== []) {
-                $course->update($courseData);
+                $course->updateDetails($courseData);
             }
             $this->syncRelations($course, $relations);
         });
@@ -181,7 +207,8 @@ class CourseController extends Controller
             'course_code' => [
                 'required',
                 'string',
-                'max:20',
+                'max:8',
+                'alpha_num:ascii',
                 Rule::unique('courses', 'course_code')->ignore($course),
             ],
             'description' => ['nullable', 'string'],
@@ -214,7 +241,8 @@ class CourseController extends Controller
                 'sometimes',
                 'required',
                 'string',
-                'max:20',
+                'max:8',
+                'alpha_num:ascii',
                 Rule::unique('courses', 'course_code')->ignore($course),
             ],
             'description' => ['sometimes', 'nullable', 'string'],
@@ -252,10 +280,29 @@ class CourseController extends Controller
         return $data;
     }
 
-    private function extractRelations(array &$data): array
+    /**
+     * Keep upload errors actionable instead of exposing PHP's generic message.
+     * The server transport limit is intentionally just above Laravel's 2 MB rule.
+     *
+     * @return array<string, string>
+     */
+    private function imageValidationMessages(): array
+    {
+        return [
+            'image.uploaded' => 'อัปโหลดรูปภาพไม่สำเร็จ กรุณาเลือกไฟล์ขนาดไม่เกิน 2 MB แล้วลองใหม่',
+            'image.image' => 'ไฟล์ที่เลือกต้องเป็นรูปภาพเท่านั้น',
+            'image.max' => 'รูปภาพต้องมีขนาดไม่เกิน 2 MB',
+        ];
+    }
+
+    private function extractRelations(array &$data, bool $onlyProvided = false): array
     {
         return collect(['teacher_ids', 'topic_ids', 'prerequisite_ids'])
-            ->mapWithKeys(function (string $key) use (&$data): array {
+            ->mapWithKeys(function (string $key) use (&$data, $onlyProvided): array {
+                if ($onlyProvided && ! array_key_exists($key, $data)) {
+                    return [];
+                }
+
                 $relation = match ($key) {
                     'teacher_ids' => 'teachers',
                     'topic_ids' => 'topics',
@@ -274,14 +321,5 @@ class CourseController extends Controller
         foreach ($relations as $relation => $ids) {
             $course->{$relation}()->sync($ids);
         }
-    }
-
-    private function imageValidationMessages(): array
-    {
-        return [
-            'image.uploaded' => 'อัปโหลดรูปภาพไม่สำเร็จ กรุณาเลือกไฟล์ขนาดไม่เกิน 2 MB แล้วลองใหม่',
-            'image.image' => 'ไฟล์ที่เลือกต้องเป็นรูปภาพเท่านั้น',
-            'image.max' => 'รูปภาพต้องมีขนาดไม่เกิน 2 MB',
-        ];
     }
 }
