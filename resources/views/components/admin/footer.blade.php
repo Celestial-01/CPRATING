@@ -1,18 +1,25 @@
 
 <footer class="mt-auto border-t border-slate-200 bg-white">
-    <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+    <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-1 sm:px-6 lg:flex-row lg:items-center lg:justify-center lg:gap-48 lg:px-8">
 
       
         <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-lg font-bold text-white shadow-sm">
-                C
-            </div>
-
             <div>
-                <p class="text-sm font-bold tracking-wide text-slate-800">
-                    CPRATING
-                </p>
-                <p class="text-xs text-slate-500">
+                <a
+                    href="{{ route('home') }}"
+                    class="site-navbar__brand shrink-0"
+                    aria-label="CPRATING หน้าหลัก"
+                    data-home-nav-link
+                >
+                    <img
+                        src="{{ asset('images/cprating-logo.svg') }}"
+                        alt=""
+                        class="block h-auto w-[154px] sm:w-[172px]"
+                        width="307"
+                        height="80"
+                    >
+                </a>
+                <p class="text-xs text-slate-500 px-4">
                     Course & Professor Rating
                 </p>
             </div>

@@ -6,9 +6,13 @@
         <title>@yield('title', 'Admin') - CPRATING</title>
         @vite(['resources/css/app.css', 'resources/js/admin-app.js'])
     </head>
-    <body class="min-h-screen bg-white font-sans text-slate-900 antialiased">
-        <x-admin.navbar />
 
+<body class="flex min-h-screen flex-col bg-white font-sans text-slate-900 antialiased">
+    <x-admin.navbar />
+
+    <div class="flex-1">
         @yield('content')
-    </body>
-</html>
+    </div>
+
+    <x-admin.footer />
+</body>

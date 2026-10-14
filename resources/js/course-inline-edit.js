@@ -1,7 +1,4 @@
 import { onDomReady } from './dom-ready';
-
-// JS ไม่ถือคลาส Tailwind: เปลี่ยนแค่ data-* state และ clone <template> จาก blade
-
 const csrf = () => document.querySelector('[data-csrf]')?.dataset.csrf ?? '';
 
 const toast = (message, isError = false) => {
