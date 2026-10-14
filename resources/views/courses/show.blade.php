@@ -353,6 +353,14 @@
                                     ลบ
                                 </button>
                             </form>
+                            @else
+                            <button
+                                type="button"
+                                class="cursor-pointer hover:text-red-500"
+                                data-report-open
+                                data-report-url="{{ route('comments.report', $comment->id) }}">
+                                รายงาน
+                            </button>
                             @endif
                         </div>
 
@@ -428,6 +436,14 @@
                                                 ลบ
                                             </button>
                                         </form>
+                                        @else
+                                        <button
+                                            type="button"
+                                            class="cursor-pointer hover:text-red-500"
+                                            data-report-open
+                                            data-report-url="{{ route('comments.report', $reply->id) }}">
+                                            รายงาน
+                                        </button>
                                         @endif
                                     </div>
 
@@ -533,6 +549,50 @@
         @endif
     </main>
 
+    @auth
+    <dialog
+        id="report-dialog"
+        class="w-[90%] max-w-md rounded-[22px] border border-slate-200 p-0 shadow-xl backdrop:bg-black/40">
+        <form id="report-form" method="POST" action="" class="p-6">
+            @csrf
+            <h3 class="text-base font-semibold text-slate-900">รายงานความคิดเห็น</h3>
+            <p class="mt-1 text-xs text-slate-500">
+                เลือกเหตุผลที่ต้องการรายงาน ทีมงานจะตรวจสอบโดยเร็ว
+            </p>
+
+            <div class="mt-4 space-y-2 text-sm text-slate-700">
+                @foreach (['spam' => 'สแปม', 'offensive' => 'ไม่สุภาพ / ก้าวร้าว', 'irrelevant' => 'ไม่เกี่ยวข้องกับรายวิชา', 'other' => 'อื่น ๆ'] as $value => $label)
+                <label class="flex cursor-pointer items-center gap-2">
+                    <input type="radio" name="reason" value="{{ $value }}" required class="accent-[#1684e5]">
+                    {{ $label }}
+                </label>
+                @endforeach
+            </div>
+
+            <textarea
+                name="details"
+                rows="3"
+                maxlength="500"
+                placeholder="รายละเอียดเพิ่มเติม (ไม่บังคับ)"
+                class="mt-4 w-full resize-none rounded-[14px] border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-50"></textarea>
+
+            <div class="mt-5 flex justify-end gap-2">
+                <button
+                    type="button"
+                    data-report-close
+                    class="cursor-pointer rounded-[12px] border border-slate-200 px-4 py-2 text-xs text-slate-600 hover:bg-slate-50">
+                    ยกเลิก
+                </button>
+                <button
+                    type="submit"
+                    class="cursor-pointer rounded-[12px] bg-red-500 px-4 py-2 text-xs font-medium text-white hover:brightness-105">
+                    ส่งรายงาน
+                </button>
+            </div>
+        </form>
+    </dialog>
+    @endauth
+
     <div id="toast" role="status" aria-live="polite"></div>
     <script type="application/json" data-course-detail-copy>
         @json($courseDetailCopy)
@@ -608,6 +668,26 @@
                 if (commentBox.value.trim() === '') return;
 
                 commentBox.form.requestSubmit();
+            });
+        }
+
+        var reportDialog = document.getElementById('report-dialog');
+        if (reportDialog) {
+            var reportForm = document.getElementById('report-form');
+
+            document.addEventListener('click', function(event) {
+                var openBtn = event.target.closest('[data-report-open]');
+                if (openBtn) {
+                    reportForm.reset();
+                    reportForm.action = openBtn.dataset.reportUrl;
+                    reportDialog.showModal();
+                    return;
+                }
+
+                // ปุ่มยกเลิก หรือคลิกพื้นหลังมืด
+                if (event.target.closest('[data-report-close]') || event.target === reportDialog) {
+                    reportDialog.close();
+                }
             });
         }
     </script>

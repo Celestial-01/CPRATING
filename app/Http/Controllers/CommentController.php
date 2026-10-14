@@ -8,6 +8,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use App\Rules\NoBannedWords;
 use App\Services\ContentModerator;
+use App\Models\Report;
+use Illuminate\Validation\Rule;
 
 class CommentController extends Controller
 {
@@ -70,5 +72,25 @@ class CommentController extends Controller
         'liked' => count($result['attached']) > 0,
         'count' => $comment->likes()->count(),
     ]);
+    }
+
+    public function report(Request $request, Comment $comment): RedirectResponse
+    {
+        //ไม่สามารถรีพอตคอมเมนต์ตัวเองได้
+        abort_if((int) $comment->user_id === (int) $request->user()->id, 403);
+        abort_unless($comment->status === 'approved', 404);
+
+        $validated = $request->validate([
+            'reason'  => ['required', Rule::in(['spam', 'offensive', 'irrelevant', 'other'])],
+            'details' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        // รีพอตซ้ำจะไม่ถูกนับเพิ่ม
+        Report::firstOrCreate(
+            ['comment_id' => $comment->id, 'user_id' => $request->user()->id],
+            ['reason' => $validated['reason'], 'details' => $validated['details'] ?? null]
+        );
+
+        return back()->with('success', 'ขอบคุณสำหรับการรายงาน เจ้าหน้าที่กำลังดำเนินการตรวจสอบ');
     }
 }
