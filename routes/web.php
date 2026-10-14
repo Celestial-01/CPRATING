@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CommentModerationController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -43,6 +44,10 @@ Route::middleware(['auth', 'admin'])
         Route::get('reports', [AdminReportController::class, 'index'])->name('reports.index');
         Route::patch('reports/{report}/dismiss', [AdminReportController::class, 'dismiss'])->name('reports.dismiss');
         Route::patch('reports/{report}/remove-comment', [AdminReportController::class, 'removeComment'])->name('reports.remove-comment');
+
+        Route::get('moderation', [CommentModerationController::class, 'index'])->name('moderation.index');
+        Route::patch('moderation/{comment}/approve', [CommentModerationController::class, 'approve'])->name('moderation.approve');
+        Route::delete('moderation/{comment}', [CommentModerationController::class, 'destroy'])->name('moderation.destroy');
     });
 
 Route::middleware('guest')->group(function () {
