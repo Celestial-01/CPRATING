@@ -6,24 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('reports', function (Blueprint $table) {
             $table->id();
 
-            $table -> foreignId('comment_id')
+            $table->foreignId('comment_id')
                 ->constrained('comments')
                 ->cascadeOnDelete();
 
-            $table -> foreignId('user_id')
+            $table->foreignId('user_id')
                 ->constrained('users')
                 ->cascadeOnDelete();
 
-            $table -> string('reason');
-            $table -> text('details') ->nullable();
+            $table->string('reason');
+            $table->text('details')->nullable();
 
             $table->string('status')->default('pending')->index();
 
@@ -31,18 +28,14 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
-            $table->timestamp('handlet_at')->nullable();
+            $table->timestamp('handled_at')->nullable();
 
             $table->timestamps();
 
-            //รีพอร์ตซ้ำไม่ได้
             $table->unique(['comment_id', 'user_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('reports');

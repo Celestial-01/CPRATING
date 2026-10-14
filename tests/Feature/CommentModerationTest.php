@@ -98,6 +98,54 @@ test('admin approval and removal update public comments and course statistics', 
         ->assertViewHas('course', fn (Course $shown): bool => $shown->comments_count === 0);
 });
 
+test('dismissed reports stay closed and removing a reported comment resolves all pending reports', function () {
+    $course = Course::factory()->create(['course_code' => 'CP900004']);
+    $comment = $course->comments()->create([
+        'user_id' => User::factory()->create()->id,
+        'content' => 'A reported course comment',
+    ]);
+    $reporter = User::factory()->create();
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($reporter)->post(route('comments.report', $comment), [
+        'reason' => 'spam', 'details' => 'Original report',
+    ])->assertSessionHasNoErrors();
+    $dismissed = $comment->reports()->firstOrFail();
+
+    $this->actingAs($admin)->get(route('admin.reports.index'))->assertOk()->assertSee($comment->content);
+    $this->patch(route('admin.reports.dismiss', $dismissed))->assertSessionHasNoErrors();
+    $handledAt = $dismissed->fresh()->handled_at;
+    expect($handledAt)->not->toBeNull();
+
+    $this->actingAs($reporter)->post(route('comments.report', $comment), [
+        'reason' => 'other', 'details' => 'Repeated report',
+    ])->assertSessionHasNoErrors();
+    $this->assertDatabaseCount('reports', 1);
+    expect($dismissed->fresh()->status)->toBe(Report::STATUS_DISMISSED)
+        ->and($dismissed->fresh()->reason)->toBe('spam')
+        ->and($dismissed->fresh()->details)->toBe('Original report')
+        ->and($dismissed->fresh()->handled_at->equalTo($handledAt))->toBeTrue();
+
+    $pendingReports = collect([User::factory()->create(), User::factory()->create()])
+        ->map(fn (User $user) => $comment->reports()->create(['user_id' => $user->id, 'reason' => 'offensive']));
+    $this->actingAs($admin)
+        ->patch(route('admin.reports.remove-comment', $pendingReports->first()))
+        ->assertSessionHasNoErrors();
+
+    foreach ($pendingReports as $report) {
+        expect($report->fresh()->status)->toBe(Report::STATUS_RESOLVED)
+            ->and($report->fresh()->handled_by)->toBe($admin->id)
+            ->and($report->fresh()->handled_at)->not->toBeNull();
+    }
+    expect($dismissed->fresh()->status)->toBe(Report::STATUS_DISMISSED)
+        ->and($comment->fresh()->status)->toBe('rejected');
+    $this->get(route('courses.show', $course->course_code))->assertOk()
+        ->assertDontSee($comment->content)
+        ->assertViewHas('course', fn (Course $shown): bool => $shown->comments_count === 0);
+    $this->get(route('home'))->assertOk()
+        ->assertViewHas('reviews', fn ($reviews): bool => $reviews->isEmpty());
+});
+
 test('moderation and report actions are restricted to admins', function () {
     $course = Course::factory()->create(['course_code' => 'CP900005']);
     $owner = User::factory()->create();
@@ -122,3 +170,18 @@ test('moderation and report actions are restricted to admins', function () {
         ->and($report->fresh()->status)->toBe(Report::STATUS_PENDING)
         ->and($report->fresh()->handled_at)->toBeNull();
 });
+
+test('invalid admin search and filter values return validation errors', function (string $route, array $parameters, string $field) {
+    $this->actingAs(User::factory()->admin()->create())
+        ->getJson(route($route, $parameters))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors($field);
+})->with([
+    'course search' => ['admin.courses.search', ['keyword' => ['invalid']], 'keyword'],
+    'teacher search' => ['admin.teachers.search', ['keyword' => ['invalid']], 'keyword'],
+    'topic search' => ['admin.topics.search', ['keyword' => ['invalid']], 'keyword'],
+    'dashboard search' => ['admin.dashboard', ['q' => ['invalid']], 'q'],
+    'dashboard types' => ['admin.dashboard', ['types' => 'invalid'], 'types'],
+    'report status' => ['admin.reports.index', ['status' => 'invalid'], 'status'],
+    'moderation status' => ['admin.moderation.index', ['status' => 'invalid'], 'status'],
+]);

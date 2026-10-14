@@ -195,3 +195,22 @@ test('courses referenced in study plans cannot be deleted along with their feedb
         ->and($comment->fresh())->not->toBeNull();
     Storage::disk('public')->assertExists('courses/keep.jpg');
 });
+
+test('the report timestamp upgrade preserves existing data and can run on corrected schemas', function () {
+    $course = Course::factory()->create(['course_code' => 'CP800009']);
+    $user = User::factory()->create();
+    $comment = $course->comments()->create(['user_id' => $user->id, 'content' => 'Reported comment']);
+    $report = $comment->reports()->create([
+        'user_id' => $user->id, 'reason' => 'spam', 'handled_at' => now()->startOfSecond(),
+    ]);
+    $handledAt = $report->handled_at;
+    Schema::table('reports', fn (Blueprint $table) => $table->renameColumn('handled_at', 'handlet_at'));
+
+    $migration = require database_path('migrations/2026_10_14_090000_fix_report_handled_at_column.php');
+    $migration->up();
+    $migration->up();
+
+    expect(Schema::hasColumn('reports', 'handled_at'))->toBeTrue()
+        ->and(Schema::hasColumn('reports', 'handlet_at'))->toBeFalse()
+        ->and($report->fresh()->handled_at->equalTo($handledAt))->toBeTrue();
+});
