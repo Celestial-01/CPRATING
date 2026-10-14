@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -134,5 +136,59 @@ class Course extends Model
     protected function setIsActiveAttribute(mixed $value): void
     {
         $this->attributes['is_offered'] = (bool) $value;
+    }
+
+    protected function image(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value): ?string => self::normalizeImagePath($value),
+        );
+    }
+
+    public static function normalizeImagePath(?string $value): ?string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        $parsed = parse_url($value);
+
+        if ($parsed !== false && isset($parsed['scheme'])) {
+            $path = ltrim((string) ($parsed['path'] ?? ''), '/');
+
+            return str_starts_with($path, 'storage/')
+                ? substr($path, strlen('storage/'))
+                : $value;
+        }
+
+        $path = ltrim($value, '/');
+
+        return str_starts_with($path, 'storage/')
+            ? substr($path, strlen('storage/'))
+            : $path;
+    }
+
+    public function imageUrl(): ?string
+    {
+        $image = self::normalizeImagePath($this->image);
+
+        if (! $image) {
+            return null;
+        }
+
+        return filter_var($image, FILTER_VALIDATE_URL)
+            ? $image
+            : Storage::disk('public')->url($image);
+    }
+
+    public function imageStoragePath(): ?string
+    {
+        $image = self::normalizeImagePath($this->image);
+
+        return $image && ! filter_var($image, FILTER_VALIDATE_URL)
+            ? $image
+            : null;
     }
 }

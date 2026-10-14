@@ -2,9 +2,9 @@
     href="{{ route('admin.courses.edit', $course) }}"
     class="group relative block min-w-0 aspect-[0.78] overflow-hidden rounded-[17px] bg-slate-900 shadow-sm focus:outline-none focus:ring-4 focus:ring-sky-200"
 >
-    @if ($course->image)
+    @if ($course->imageUrl())
         <img
-            src="{{ asset('storage/' . $course->image) }}"
+            src="{{ $course->imageUrl() }}"
             alt="ภาพประกอบวิชา {{ $course->course_name_th }}"
             class="{{ $imageClasses }}"
             loading="lazy"

@@ -153,17 +153,20 @@ class CourseController extends Controller
 
     public function updateImage(Request $request, Course $course): JsonResponse
     {
-        $request->validate(['image' => ['required', 'image', 'max:2048']]);
+        $request->validate(
+            ['image' => ['required', 'image', 'max:2048']],
+            $this->imageValidationMessages(),
+        );
 
         $path = $request->file('image')->store('courses', 'public');
 
-        if ($course->image) {
-            Storage::disk('public')->delete($course->image);
+        if ($imagePath = $course->imageStoragePath()) {
+            Storage::disk('public')->delete($imagePath);
         }
 
         $course->update(['image' => $path]);
 
-        return response()->json(['ok' => true, 'url' => asset('storage/'.$path)]);
+        return response()->json(['ok' => true, 'url' => $course->fresh()->imageUrl()]);
     }
 
     private function validateCourse(Request $request, ?Course $course = null): array
@@ -195,7 +198,7 @@ class CourseController extends Controller
                 'exists:courses,id',
                 Rule::notIn($course?->getKey()),
             ],
-        ]);
+        ], $this->imageValidationMessages());
     }
 
     private function validateInline(Request $request, Course $course): array
@@ -236,8 +239,8 @@ class CourseController extends Controller
             return collect($data)->except('image')->all();
         }
 
-        if ($course?->image) {
-            Storage::disk('public')->delete($course->image);
+        if ($imagePath = $course?->imageStoragePath()) {
+            Storage::disk('public')->delete($imagePath);
         }
 
         $data['image'] = $request->file('image')->store('courses', 'public');
@@ -267,5 +270,14 @@ class CourseController extends Controller
         foreach ($relations as $relation => $ids) {
             $course->{$relation}()->sync($ids);
         }
+    }
+
+    private function imageValidationMessages(): array
+    {
+        return [
+            'image.uploaded' => 'อัปโหลดรูปภาพไม่สำเร็จ กรุณาเลือกไฟล์ขนาดไม่เกิน 2 MB แล้วลองใหม่',
+            'image.image' => 'ไฟล์ที่เลือกต้องเป็นรูปภาพเท่านั้น',
+            'image.max' => 'รูปภาพต้องมีขนาดไม่เกิน 2 MB',
+        ];
     }
 }

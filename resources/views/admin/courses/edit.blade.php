@@ -17,14 +17,14 @@
                     <div
                         data-image-box
                         data-url="{{ route('admin.courses.image', $course) }}"
-                        data-has-image="{{ $course->image ? 'true' : 'false' }}"
+                        data-has-image="{{ $course->imageUrl() ? 'true' : 'false' }}"
                         data-uploading="false"
                         data-has-error="false"
                         class="group/cover"
                     >
                         <div class="relative aspect-[300/313] overflow-hidden rounded-[16px] bg-gradient-to-br from-slate-600 to-slate-800">
                             <img data-course-image
-                                 src="{{ $course->image ? asset('storage/' . $course->image) : '' }}"
+                                 src="{{ $course->image ? $course->imageUrl() : '' }}"
                                  alt="ภาพประกอบวิชา {{ $course->course_name_th }}"
                                  class="absolute inset-0 hidden size-full object-cover group-data-[has-image=true]/cover:block">
                             <label class="absolute bottom-3 right-3 cursor-pointer rounded-full bg-white/95 px-4 py-2 text-xs font-medium text-[#1684e5] shadow transition hover:bg-white">
