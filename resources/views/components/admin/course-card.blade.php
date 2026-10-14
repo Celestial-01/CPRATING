@@ -1,17 +1,12 @@
-@props(['course'])
 <a
-    href="{{ route('courses.edit', $course) }}"
+    href="{{ route('admin.courses.edit', $course) }}"
     class="group relative block min-w-0 aspect-[0.78] overflow-hidden rounded-[17px] bg-slate-900 shadow-sm focus:outline-none focus:ring-4 focus:ring-sky-200"
 >
     @if ($course->image)
         <img
             src="{{ asset('storage/' . $course->image) }}"
             alt="ภาพประกอบวิชา {{ $course->course_name_th }}"
-            @class([
-                'absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-105',
-                'brightness-[0.8]' => $course->is_active,
-                'brightness-[0.55]' => ! $course->is_active,
-            ])
+            class="{{ $imageClasses }}"
             loading="lazy"
         >
     @else
@@ -24,7 +19,7 @@
         {{ $course->course_code }}
     </span>
 
-    @unless ($course->is_active)
+    @unless ($course->is_offered)
         <span class="absolute left-3 top-3 rounded-full bg-[#a90000] px-3 py-1 text-[11px] font-medium text-white shadow-sm">
             ยังไม่เปิดสอน
         </span>
@@ -35,7 +30,6 @@
             {{ $course->course_name_th }}
         </h3>
 
-        
         <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/90">
             <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <i data-lucide="star" class="size-3 shrink-0 fill-yellow-400 text-yellow-400" aria-hidden="true"></i>
@@ -52,4 +46,3 @@
         </div>
     </div>
 </a>
-

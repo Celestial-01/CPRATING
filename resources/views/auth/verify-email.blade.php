@@ -2,9 +2,13 @@
 
 @section('title', 'ยืนยันอีเมล')
 @section('content')
-    <div class="mx-auto mb-[18px] grid size-[58px] place-items-center rounded-full bg-gradient-to-br from-[#b7e5ff] to-[#e8f7ff] text-[#1684df]">
+    @php($verificationLinkError = session('verification_link_error'))
+
+    <div
+        class="mx-auto mb-[18px] grid size-[58px] place-items-center rounded-full {{ $verificationLinkError ? 'bg-gradient-to-br from-red-100 to-rose-50 text-red-600' : 'bg-gradient-to-br from-[#b7e5ff] to-[#e8f7ff] text-[#1684df]' }}"
+    >
         <i
-            data-lucide="mail"
+            data-lucide="{{ $verificationLinkError ? 'circle-alert' : 'mail' }}"
             class="size-7"
             aria-hidden="true"
         ></i>
@@ -22,8 +26,23 @@
         </p>
     </header>
 
+    @if ($verificationLinkError)
+        <div
+            class="mt-5 flex items-start gap-2.5 rounded-[12px] border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-5 text-red-700"
+            role="alert"
+            aria-live="assertive"
+        >
+            <i
+                data-lucide="circle-alert"
+                class="mt-0.5 size-4 shrink-0"
+                aria-hidden="true"
+            ></i>
+            <span>{{ $verificationLinkError }}</span>
+        </div>
+    @endif
+
     <aside
-        class="mt-5 rounded-[15px] border border-[#bcbcbc] px-4 py-3 text-sm leading-6 text-[#929292]"
+        class="{{ $verificationLinkError ? 'mt-3' : 'mt-5' }} rounded-[15px] border border-[#bcbcbc] px-4 py-3 text-sm leading-6 text-[#929292]"
     >
         กรุณาตรวจสอบอีเมลของคุณและคลิกลิงก์เพื่อดำเนินการสมัครสมาชิกต่อ
         <br>
@@ -47,12 +66,12 @@
 
     @if (session('verification_resend_error'))
         <div
-            class="mt-4 flex items-center gap-2 rounded-[12px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm leading-5 text-amber-700"
+            class="mt-4 flex items-center gap-2 rounded-[12px] border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-5 text-red-700"
             role="alert"
             aria-live="polite"
         >
             <i
-                data-lucide="clock-3"
+                data-lucide="circle-alert"
                 class="size-4 shrink-0"
                 aria-hidden="true"
             ></i>
@@ -62,7 +81,7 @@
 
     <a
         href="{{ route('auth.register') }}"
-        class="mt-5 flex h-[45px] items-center justify-center rounded-[15px] border border-[#bcbcbc] text-sm text-slate-500 transition hover:bg-slate-50"
+        class="auth-secondary-link mt-5 flex h-[45px] items-center justify-center rounded-[15px] border border-[#bcbcbc] text-sm transition hover:bg-slate-50"
     >
         กลับสู่หน้าสมัครสมาชิก
     </a>
@@ -73,16 +92,11 @@
         class="mt-5 text-center"
     >
         @csrf
-        <input
-            type="hidden"
-            name="email"
-            value="{{ $email }}"
-        >
         <p class="text-sm leading-6 text-slate-400">
             ยังไม่พบอีเมลใช่ไหม?
             <button
                 type="submit"
-                class="cursor-pointer font-medium text-[#1684df] underline decoration-transparent underline-offset-4 transition hover:decoration-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 focus-visible:ring-offset-2"
+                class="auth-resend-link focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 focus-visible:ring-offset-2"
             >
                 ส่งลิงก์ยืนยันอีกครั้ง
             </button>

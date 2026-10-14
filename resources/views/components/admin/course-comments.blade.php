@@ -6,15 +6,15 @@
         </h2>
 
         <div data-comment-sort class="inline-flex rounded-full bg-slate-100 p-1 text-sm">
-            @foreach (['ล่าสุด' => true, 'ยอดนิยม' => false] as $label => $active)
+            @foreach ($sortOptions as $sortOption)
                 <button
                     type="button"
                     data-comment-sort-option
-                    aria-pressed="{{ $active ? 'true' : 'false' }}"
-                    data-active="{{ $active ? 'true' : 'false' }}"
+                    aria-pressed="{{ $sortOption['active'] ? 'true' : 'false' }}"
+                    data-active="{{ $sortOption['active'] ? 'true' : 'false' }}"
                     class="rounded-full px-4 py-1.5 text-slate-500 transition data-[active=true]:bg-white data-[active=true]:font-medium data-[active=true]:text-[#1684e5] data-[active=true]:shadow-sm"
                 >
-                    {{ $label }}
+                    {{ $sortOption['label'] }}
                 </button>
             @endforeach
         </div>

@@ -2,6 +2,12 @@
 
 @section('title', 'รีเซ็ตรหัสผ่าน')
 @section('content')
+    @if ($errors->any())
+        <div class="mb-5 flex items-start gap-2.5 rounded-[12px] border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-6 text-red-700" role="alert">
+            <i data-lucide="circle-alert" class="mt-1 size-4 shrink-0" aria-hidden="true"></i>
+            <span>{{ $errors->first() }}</span>
+        </div>
+    @endif
     <header>
         <h1 class="text-[22px] font-semibold leading-7 text-[#111111]">
             รีเซ็ตรหัสผ่าน
@@ -80,7 +86,7 @@
         จำรหัสผ่านได้แล้ว?
         <a
             href="{{ route('auth.login') }}"
-            class="text-[#075be6] no-underline transition hover:underline focus-visible:underline focus-visible:outline-none"
+            class="auth-action-link focus-visible:outline-none"
         >
             เข้าสู่ระบบ
         </a>

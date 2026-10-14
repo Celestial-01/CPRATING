@@ -4,23 +4,41 @@
 @section('showBrand', 'true')
 @section('content')
     <nav
-        class="mb-9 grid grid-cols-2 rounded-[15px] bg-[#e9f5ff] p-1 text-[17px] font-normal"
+        class="auth-tabs mb-9 grid grid-cols-2 rounded-[15px] bg-[#e9f5ff] p-1 text-[17px] font-normal"
+        data-active="register"
         aria-label="การยืนยันตัวตน"
     >
         <a
             href="{{ route('auth.login') }}"
-            class="rounded-[15px] px-4 py-2.5 text-center text-[#3d4a56] transition hover:text-[#1684e5]"
+            class="auth-tabs__link rounded-[15px] px-4 py-2.5 text-center"
+            data-auth-tab="login"
         >
             เข้าสู่ระบบ
         </a>
         <a
             href="{{ route('auth.register') }}"
-            class="rounded-[15px] bg-white px-4 py-2.5 text-center text-[#1684e5] shadow-[0_0_0_5px_rgba(255,255,255,.55)]"
+            class="auth-tabs__link rounded-[15px] px-4 py-2.5 text-center"
             aria-current="page"
+            data-auth-tab="register"
         >
             สมัครสมาชิก
         </a>
     </nav>
+
+    @if (session('verification_link_error'))
+        <div
+            class="mb-5 flex items-start gap-2.5 rounded-[12px] border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-5 text-red-700"
+            role="alert"
+            aria-live="assertive"
+        >
+            <i
+                data-lucide="circle-alert"
+                class="mt-0.5 size-4 shrink-0"
+                aria-hidden="true"
+            ></i>
+            <span>{{ session('verification_link_error') }}</span>
+        </div>
+    @endif
 
     <header
         class="mb-7 text-center"
@@ -55,12 +73,14 @@
                 id="email"
                 name="email"
                 type="email"
+                data-auth-email-input
                 autocomplete="email"
-                placeholder="กรอกอีเมล"
+                placeholder="ชื่อผู้ใช้@kkumail.com"
                 value="{{ old('email') }}"
                 required
                 class="h-[45px] w-full rounded-[11px] border border-[#bcbcbc] bg-white px-3 text-sm outline-none transition placeholder:text-[#a8a8a8] focus:border-sky-500 focus:ring-4 focus:ring-sky-100 @error('email') border-red-400 @enderror"
             >
+            <p class="mt-2 text-xs text-slate-500">ใช้อีเมลมหาวิทยาลัยที่ลงท้ายด้วย @kkumail.com</p>
         </div>
         <button
             type="submit"
@@ -91,9 +111,10 @@
         >
         ดำเนินการต่อด้วย Google
     </a>
+    <p class="mt-2 text-center text-xs text-slate-500">เลือกบัญชี Google ที่ใช้ @kkumail.com</p>
 
     <aside
-                class="mt-5 flex items-start gap-3 rounded-[15px] border border-[#bfddfa] bg-[#edf7ff] px-3 py-2.5 text-[11px] leading-5 text-[#527ba8] [&_a]:text-[#075be6]"
+                class="mt-5 flex items-start gap-3 rounded-[15px] border border-[#bfddfa] bg-[#edf7ff] px-3 py-2.5 text-[11px] leading-5 text-[#527ba8]"
     >
         <span
             class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[#c5e8ff] text-[#1684df]"
@@ -108,7 +129,7 @@
             <a
                 href="#privacy"
                 data-legal-modal-trigger="privacy"
-                class="underline"
+                class="auth-legal-link"
             >
                 นโยบายความเป็นส่วนตัว
             </a>
@@ -116,7 +137,7 @@
             <a
                 href="#terms"
                 data-legal-modal-trigger="terms"
-                class="underline"
+                class="auth-legal-link"
             >
                 ข้อกำหนดการใช้งาน
             </a>

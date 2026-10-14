@@ -11,6 +11,7 @@ class SocialAccount extends Model
         'user_id',
         'provider',
         'provider_user_id',
+        'avatar_url',
     ];
 
     public function user(): BelongsTo

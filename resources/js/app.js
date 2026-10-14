@@ -1,7 +1,10 @@
 import './auth';
-import './carousel';
-import './course';
+import './course-catalog';
+import './course-detail';
 import './home';
+import './history';
 import './navigation';
 import './admin';
 import './course-inline-edit';
+import './plans';
+import './profile';

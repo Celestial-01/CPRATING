@@ -1,11 +1,3 @@
-@props([
-    'metrics' => [
-        ['title' => 'ความยากของวิชา',   'label' => 'คะแนนเฉลี่ย'],
-        ['title' => 'ปริมาณงานและการบ้าน', 'label' => 'คะแนนเฉลี่ย'],
-    ],
-    'grades' => ['A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F'],
-])
-
 {{-- ค่าเฉลี่ย (รอข้อมูลจากฝั่ง user) --}}
 <section class="mt-6 grid gap-5 md:grid-cols-2" aria-label="ค่าเฉลี่ยรายวิชา">
     @foreach ($metrics as $metric)
