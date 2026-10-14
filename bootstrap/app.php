@@ -58,6 +58,23 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->with('verification_link_error', 'ลิงก์ยืนยันอีเมลหมดอายุหรือไม่ถูกต้อง กรุณาขอลิงก์ใหม่');
         });
 
+        $exceptions->renderable(function (HttpExceptionInterface $exception, Request $request) {
+            if ($exception->getStatusCode() !== 419
+                || ! $request->is('profile/complete')
+                || $request->expectsJson()) {
+                return null;
+            }
+
+            $stillAuthenticated = $request->user() !== null;
+
+            return response()->view('auth.error-recovery', [
+                'errorTitle' => 'หน้านี้หมดอายุแล้ว',
+                'errorMessage' => 'ข้อมูลในฟอร์มยังไม่ถูกบันทึก กรุณาเปิดหน้ากรอกข้อมูลนักศึกษาใหม่',
+                'recoveryRoute' => $stillAuthenticated ? 'profile.complete' : 'auth.login',
+                'recoveryLabel' => $stillAuthenticated ? 'กลับไปกรอกข้อมูล' : 'เข้าสู่ระบบอีกครั้ง',
+            ], 419);
+        });
+
         $exceptions->renderable(function (HttpExceptionInterface $exception, Request $request) use ($isAuthPath) {
             if ($exception->getStatusCode() !== 419 || ! $isAuthPath($request) || $request->expectsJson()) {
                 return null;

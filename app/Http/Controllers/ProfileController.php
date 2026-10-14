@@ -12,10 +12,10 @@ class ProfileController extends Controller
 {
     public function show(Request $request): View
     {
-        return view('profile.show', [
-            'user' => $request->user()->loadMissing('googleAccount'),
-            'majorOptions' => Course::MAJORS,
-        ]);
+        $user = $request->user()->loadMissing('googleAccount');
+        $majorOptions = Course::MAJORS;
+
+        return view('profile.show', compact('user', 'majorOptions'));
     }
 
     public function edit(Request $request): View|RedirectResponse
@@ -30,10 +30,10 @@ class ProfileController extends Controller
             return redirect()->route('home');
         }
 
-        return view('profile.complete', [
-            'user' => $user->loadMissing('googleAccount'),
-            'majorOptions' => Course::MAJORS,
-        ]);
+        $user = $user->loadMissing('googleAccount');
+        $majorOptions = Course::MAJORS;
+
+        return view('profile.complete', compact('user', 'majorOptions'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -61,7 +61,7 @@ class ProfileController extends Controller
             'major_code.in' => 'กรุณาเลือกสาขาที่ถูกต้อง',
         ]);
 
-        $user->forceFill($validated)->save();
+        $user->update($validated);
 
         return redirect()->route('profile.complete.success');
     }
@@ -78,8 +78,8 @@ class ProfileController extends Controller
             return redirect()->route('profile.complete');
         }
 
-        return view('profile.success', [
-            'user' => $user->loadMissing('googleAccount'),
-        ]);
+        $user = $user->loadMissing('googleAccount');
+
+        return view('profile.success', compact('user'));
     }
 }

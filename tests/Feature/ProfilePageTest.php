@@ -3,6 +3,7 @@
 use App\Models\SocialAccount;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 
 uses(RefreshDatabase::class);
 
@@ -70,4 +71,76 @@ test('an admin can view a profile without student information and retains the ad
         ->assertOk()
         ->assertSee(route('admin.dashboard'), false)
         ->assertDontSee('id="student-information-title"', false);
+});
+
+test('profile completion only stores validated student fields', function () {
+    $user = User::factory()->create([
+        'student_id' => null,
+        'major_code' => null,
+    ]);
+
+    $this->actingAs($user)->post(route('profile.complete.store'), [
+        'student_id' => '690000001-1',
+        'major_code' => 'CS',
+        'role' => 'admin',
+        'email' => 'other@kkumail.com',
+    ])->assertRedirectToRoute('profile.complete.success');
+
+    $user->refresh();
+    expect($user->student_id)->toBe('690000001-1')
+        ->and($user->major_code)->toBe('CS')
+        ->and($user->role)->toBe('user')
+        ->and($user->email)->not->toBe('other@kkumail.com');
+});
+
+test('profile completion requires both student ID and major', function () {
+    $user = User::factory()->create([
+        'student_id' => null,
+        'major_code' => null,
+    ]);
+
+    $this->actingAs($user)
+        ->from(route('profile.complete'))
+        ->post(route('profile.complete.store'), [])
+        ->assertRedirectToRoute('profile.complete')
+        ->assertSessionHasErrors(['student_id', 'major_code']);
+
+    expect($user->fresh()->hasCompletedProfile())->toBeFalse();
+
+    $this->get(route('home'))->assertRedirectToRoute('profile.complete');
+});
+
+test('an expired student form gives guests a login recovery link', function () {
+    Route::post('/profile/complete', fn () => abort(419, 'CSRF internal detail'));
+
+    $this->post(route('profile.complete.store'))
+        ->assertStatus(419)
+        ->assertViewIs('auth.error-recovery')
+        ->assertSee('href="'.route('auth.login').'"', false)
+        ->assertSee('เข้าสู่ระบบอีกครั้ง')
+        ->assertDontSee('CSRF internal detail');
+});
+
+test('an expired student form lets authenticated users reopen the form', function () {
+    $user = User::factory()->create([
+        'student_id' => null,
+        'major_code' => null,
+    ]);
+    Route::post('/profile/complete', fn () => abort(419, 'CSRF internal detail'));
+
+    $this->actingAs($user)
+        ->post(route('profile.complete.store'))
+        ->assertStatus(419)
+        ->assertViewIs('auth.error-recovery')
+        ->assertSee('href="'.route('profile.complete').'"', false)
+        ->assertSee('กลับไปกรอกข้อมูล')
+        ->assertDontSee('CSRF internal detail');
+});
+
+test('admins are redirected away from student profile completion before validation', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)->post(route('profile.complete.store'), [])
+        ->assertRedirectToRoute('admin.dashboard')
+        ->assertSessionHasNoErrors();
 });

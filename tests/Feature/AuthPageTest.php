@@ -540,6 +540,56 @@ test('a user completes registration after verifying the email', function () {
     $this->get(route('auth.verify-email'))->assertRedirectToRoute('auth.register');
 });
 
+test('registration does not create an account until a password and name are provided', function () {
+    $registration = RegistrationToken::create([
+        'email' => 'ada@kkumail.com',
+        'token_hash' => Hash::make('test-token'),
+        'expires_at' => now()->addMinutes(15),
+    ]);
+
+    $this->withSession(['registration_token_id' => $registration->id])
+        ->post(route('auth.set-password.store'), [])
+        ->assertSessionHasErrors('password');
+
+    $this->post(route('auth.set-password.store'), [
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ])->assertRedirectToRoute('auth.set-username');
+
+    $this->post(route('auth.set-username.store'), ['name' => ''])
+        ->assertSessionHasErrors('name');
+
+    $this->assertDatabaseCount('users', 0);
+});
+
+test('registration returns to email verification when its session is lost', function () {
+    $this->get(route('auth.set-password'))
+        ->assertRedirectToRoute('auth.register')
+        ->assertSessionHas('verification_link_error');
+
+    $this->get(route('auth.set-username'))
+        ->assertRedirectToRoute('auth.register')
+        ->assertSessionHas('verification_link_error');
+
+    $this->assertDatabaseCount('users', 0);
+});
+
+test('registration asks for a new password when only the password step is lost', function () {
+    $registration = RegistrationToken::create([
+        'email' => 'ada@kkumail.com',
+        'token_hash' => Hash::make('test-token'),
+        'expires_at' => now()->addMinutes(15),
+    ]);
+
+    $this->withSession(['registration_token_id' => $registration->id])
+        ->get(route('auth.set-username'))
+        ->assertRedirectToRoute('auth.set-password')
+        ->assertSessionHasErrors('password');
+
+    $this->get(route('auth.set-password'))->assertOk();
+    $this->assertDatabaseCount('users', 0);
+});
+
 test('an incomplete profile is redirected to the required student information form', function () {
     $user = User::factory()->create([
         'student_id' => null,
@@ -565,6 +615,23 @@ test('an incomplete profile is redirected to the required student information fo
         ->assertRedirectToRoute('profile.complete.success');
 
     expect($user->fresh()->profileTags())->toBe(['kku63', 'AI']);
+});
+
+test('signing in again resumes an incomplete student profile', function () {
+    $user = User::factory()->create([
+        'password' => 'password123',
+        'student_id' => null,
+        'major_code' => null,
+    ]);
+
+    $this->post(route('auth.login.store'), [
+        'email' => $user->email,
+        'password' => 'password123',
+    ])->assertRedirectToRoute('profile.complete');
+
+    $this->get(route('profile.complete'))
+        ->assertOk()
+        ->assertViewIs('profile.complete');
 });
 
 test('profile completion identifies the account source correctly', function () {
@@ -976,12 +1043,12 @@ test('a user can reset a password with a valid reset token', function () {
         ->assertRedirectToRoute('auth.forgot-password');
 });
 
-test('guests cannot access authenticated setup pages', function () {
+test('setup pages require an active registration session', function () {
     $this->get(route('auth.set-password'))
         ->assertRedirectToRoute('auth.register');
 
     $this->get(route('auth.set-username'))
-        ->assertRedirectToRoute('auth.set-password');
+        ->assertRedirectToRoute('auth.register');
 });
 
 test('the password recovery entry page is available', function () {

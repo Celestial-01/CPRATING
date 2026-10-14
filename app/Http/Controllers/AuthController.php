@@ -22,6 +22,8 @@ use Throwable;
 
 class AuthController extends Controller
 {
+    private const REGISTRATION_INTERRUPTED_MESSAGE = 'ขั้นตอนสมัครสมาชิกถูกขัดจังหวะ กรุณาเปิดลิงก์ยืนยันอีเมลอีกครั้ง หรือขอลิงก์ใหม่หากลิงก์เดิมหมดอายุ';
+
     public function __construct(private readonly RegistrationService $registrationService) {}
 
     public function showLogin(): View
@@ -253,7 +255,8 @@ class AuthController extends Controller
         $registration = $this->registrationService->activeToken($request);
 
         if (! $registration) {
-            return redirect()->route('auth.register');
+            return redirect()->route('auth.register')
+                ->with('verification_link_error', self::REGISTRATION_INTERRUPTED_MESSAGE);
         }
 
         $validated = $this->validateAuthInput($request, [
@@ -274,8 +277,14 @@ class AuthController extends Controller
     {
         $registration = $this->registrationService->activeToken($request);
 
-        if (! $registration || ! $request->session()->has('registration_password')) {
-            return redirect()->route('auth.set-password');
+        if (! $registration) {
+            return redirect()->route('auth.register')
+                ->with('verification_link_error', self::REGISTRATION_INTERRUPTED_MESSAGE);
+        }
+
+        if (! $request->session()->has('registration_password')) {
+            return redirect()->route('auth.set-password')
+                ->withErrors(['password' => 'กรุณาตั้งรหัสผ่านอีกครั้งก่อนกรอกชื่อผู้ใช้']);
         }
 
         $validated = $this->validateAuthInput($request, [
@@ -351,29 +360,36 @@ class AuthController extends Controller
             return redirect()->route('auth.register');
         }
 
-        return view('auth.verify-email', [
-            'email' => $registration->email,
-        ]);
+        $email = $registration->email;
+
+        return view('auth.verify-email', compact('email'));
     }
 
     public function showSetPassword(Request $request): View|RedirectResponse
     {
         return $this->registrationService->activeToken($request)
             ? view('auth.set-password')
-            : redirect()->route('auth.register');
+            : redirect()->route('auth.register')
+                ->with('verification_link_error', self::REGISTRATION_INTERRUPTED_MESSAGE);
     }
 
     public function showSetUsername(Request $request): View|RedirectResponse
     {
         $registration = $this->registrationService->activeToken($request);
 
-        if (! $registration || ! $request->session()->has('registration_password')) {
-            return redirect()->route('auth.set-password');
+        if (! $registration) {
+            return redirect()->route('auth.register')
+                ->with('verification_link_error', self::REGISTRATION_INTERRUPTED_MESSAGE);
+        }
+
+        if (! $request->session()->has('registration_password')) {
+            return redirect()->route('auth.set-password')
+                ->withErrors(['password' => 'กรุณาตั้งรหัสผ่านอีกครั้งก่อนกรอกชื่อผู้ใช้']);
         }
 
         $suggestedUsername = Str::lower(Str::random(8));
 
-        return view('auth.set-username', ['suggestedUsername' => $suggestedUsername]);
+        return view('auth.set-username', compact('suggestedUsername'));
     }
 
     public function showForgotPassword(): View
@@ -429,9 +445,7 @@ class AuthController extends Controller
             return redirect()->route('auth.forgot-password');
         }
 
-        return view('auth.password-reset-sent', [
-            'email' => $email,
-        ]);
+        return view('auth.password-reset-sent', compact('email'));
     }
 
     public function showResetPassword(string $token, Request $request): View|RedirectResponse
@@ -445,10 +459,7 @@ class AuthController extends Controller
                 ->with('reset_link_error', 'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุ กรุณาขอลิงก์ใหม่');
         }
 
-        return view('auth.reset-password', [
-            'token' => $token,
-            'email' => $email,
-        ]);
+        return view('auth.reset-password', compact('token', 'email'));
     }
 
     public function resetPassword(Request $request): RedirectResponse
