@@ -18,7 +18,7 @@
             >
         </a>
 
-        <div class="flex items-center gap-7 text-sm">
+        <div class="flex min-w-0 items-center gap-5 overflow-x-auto whitespace-nowrap text-sm lg:gap-7">
             @foreach ($menus as $menu)
                 <a
                     href="{{ route($menu['route']) }}"
@@ -30,7 +30,7 @@
             @endforeach
         </div>
 
-        <span class="ml-auto rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium text-[#1684e5]">
+        <span class="ml-auto shrink-0 whitespace-nowrap rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium text-[#1684e5]">
             ผู้ดูแลระบบ
         </span>
     </nav>

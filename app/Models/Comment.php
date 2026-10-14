@@ -41,4 +41,7 @@ class Comment extends Model
     {
         return $query->where('status', 'approved');
     }
+    public function reports(): HasMany {
+        return $this->hasMany(Report::class);
+    }
 }

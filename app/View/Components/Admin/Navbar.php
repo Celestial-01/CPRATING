@@ -16,6 +16,8 @@ final class Navbar extends Component
             ['label' => 'เพิ่มรายวิชา', 'route' => 'admin.courses.create'],
             ['label' => 'เพิ่มอาจารย์', 'route' => 'admin.teachers.index'],
             ['label' => 'เพิ่มหัวข้อ', 'route' => 'admin.topics.index'],
+            ['label' => 'รายงาน', 'route' => 'admin.reports.index'],
+            ['label' => 'รออนุมัติ', 'route' => 'admin.moderation.index'],
         ])->map(function (array $menu): array {
             $active = request()->routeIs($menu['route']);
 

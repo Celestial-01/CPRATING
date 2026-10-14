@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\CommentModerationController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\TeacherController as AdminTeacherController;
@@ -39,6 +41,13 @@ Route::middleware(['auth', 'admin'])
         Route::resource('teachers', AdminTeacherController::class)->except(['show']);
         Route::get('topics/search', [AdminTopicController::class, 'search'])->name('topics.search');
         Route::resource('topics', AdminTopicController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::get('reports', [AdminReportController::class, 'index'])->name('reports.index');
+        Route::patch('reports/{report}/dismiss', [AdminReportController::class, 'dismiss'])->name('reports.dismiss');
+        Route::patch('reports/{report}/remove-comment', [AdminReportController::class, 'removeComment'])->name('reports.remove-comment');
+
+        Route::get('moderation', [CommentModerationController::class, 'index'])->name('moderation.index');
+        Route::patch('moderation/{comment}/approve', [CommentModerationController::class, 'approve'])->name('moderation.approve');
+        Route::delete('moderation/{comment}', [CommentModerationController::class, 'destroy'])->name('moderation.destroy');
     });
 
 Route::middleware('guest')->group(function () {
@@ -114,7 +123,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/comments/{comment}/like', [CommentController::class, 'toggleLike'])
         ->name('comments.like');
-
+    
+    Route::post('/comments/{comment}/report', [CommentController::class, 'report'])
+        -> name('comments.report');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
         ->name('comments.destroy');
 });
