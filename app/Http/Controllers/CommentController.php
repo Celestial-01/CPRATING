@@ -6,6 +6,8 @@ use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use App\Rules\NoBannedWords;
+use App\Services\ContentModerator;
 
 class CommentController extends Controller
 {
@@ -16,7 +18,7 @@ class CommentController extends Controller
     {
         $validated = $request->validate([
             'course_code' => ['required', 'string', 'max:50'],
-            'content'     => ['required', 'string', 'max:2000'],
+            'content'     => ['required', 'string', 'max:2000', new NoBannedWords],
             'parent_id'   => ['nullable', 'integer', 'exists:comments,id'],
         ]);
 
@@ -31,15 +33,20 @@ class CommentController extends Controller
             $replyToUserId = $target->user_id;
         }
 
+        $needsReview = ContentModerator::needsReview($validated['content']);
+        
         Comment::create([
             'user_id'          => $request->user()->id,
             'course_code'      => $validated['course_code'],
             'content'          => $validated['content'],
+            'status'           => $needsReview ? 'pending' : 'approved',
             'parent_id'        => $parentId,
             'reply_to_user_id' => $replyToUserId,
         ]);
 
-        return back()->with('success', 'เพิ่มความคิดเห็นเรียบร้อยแล้ว');
+        return back()->with('success', $needsReview
+            ? 'ความคิดเห็นของคุณอยู่ระหว่างรอการตรวจสอบ'
+            : 'เพิ่มความคิดเห็นเรียบร้อยแล้ว');
     }
 
     /**

@@ -46,11 +46,13 @@ class CourseCatalogController extends Controller
 
         $sort = $request->query('sort') === 'popular' ? 'popular' : 'latest';
 
-        $comments = Comment::where('course_code', $code)
+        $comments = Comment::approved()
+            ->where('course_code' , $code)
             ->whereNull('parent_id')
             ->with([
                 'user',
                 'replies' => fn ($q) => $q
+                ->approved()
                     ->with(['user', 'replyToUser'])
                     ->withCount('likes')
                     ->withExists(['likes as liked_by_me' => fn ($l) => $l->where('users.id', auth()->id())]),
