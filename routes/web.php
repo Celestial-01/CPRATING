@@ -1,19 +1,19 @@
 <?php
 
 use App\Http\Controllers\Admin\CommentModerationController;
-use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\TeacherController as AdminTeacherController;
 use App\Http\Controllers\Admin\TopicController as AdminTopicController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseCatalogController;
 use App\Http\Controllers\CourseRatingController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudyPlanController;
-use App\Http\Controllers\CommentController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('profile.complete')->group(function (): void {
@@ -110,25 +110,16 @@ Route::middleware('guest')->group(function () {
     Route::post('/set-username', [AuthController::class, 'setUsername'])->name('auth.set-username.store');
 });
 
-// Comment routes
-Route::middleware('auth')->group(function () {
-    Route::post('/comments', [CommentController::class, 'store'])
-        ->name('comments.store');
-
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
-        ->name('comments.destroy');
-});
-
-//like comments
 Route::middleware('auth')->group(function () {
     Route::post('/comments', [CommentController::class, 'store'])
         ->name('comments.store');
 
     Route::post('/comments/{comment}/like', [CommentController::class, 'toggleLike'])
         ->name('comments.like');
-    
+
     Route::post('/comments/{comment}/report', [CommentController::class, 'report'])
-        -> name('comments.report');
+        ->name('comments.report');
+
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
         ->name('comments.destroy');
 });

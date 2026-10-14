@@ -82,3 +82,63 @@ test('the published study plan model only includes published courses', function 
 
     expect(StudyPlan::latestPublishedPerMajor())->toHaveCount(1);
 });
+
+test('comments require a published course and a parent on the same course', function () {
+    $user = User::factory()->create();
+    Course::factory()->create(['course_code' => 'CP999005']);
+    Course::factory()->create(['course_code' => 'CP999006']);
+    Course::factory()->draft()->create(['course_code' => 'CP999007']);
+    $otherCourseComment = Comment::query()->create([
+        'user_id' => $user->id,
+        'course_code' => 'CP999006',
+        'content' => 'ความคิดเห็นเดิม',
+    ]);
+
+    $this->actingAs($user)->post(route('comments.store'), [
+        'course_code' => 'CP999005',
+        'content' => 'ตอบกลับผิดวิชา',
+        'parent_id' => $otherCourseComment->id,
+    ])->assertSessionHasErrors('parent_id');
+
+    $this->post(route('comments.store'), [
+        'course_code' => 'CP999007',
+        'content' => 'วิชาที่ซ่อนอยู่',
+    ])->assertSessionHasErrors('course_code');
+
+    $this->post(route('comments.store'), [
+        'course_code' => ['CP999005'],
+        'content' => 'รหัสวิชาผิดรูปแบบ',
+    ])->assertSessionHasErrors('course_code');
+
+    $this->post(route('comments.store'), [
+        'course_code' => 'CP999005',
+        'content' => 'ความคิดเห็นจริง',
+    ])->assertSessionHasNoErrors();
+
+    $this->assertDatabaseCount('comments', 2);
+});
+
+test('comment validation rejects malformed references and ignores unvalidated ownership', function () {
+    $author = User::factory()->create();
+    $otherUser = User::factory()->create();
+    Course::factory()->create(['course_code' => 'CP999009']);
+
+    $this->actingAs($author)->post(route('comments.store'), [
+        'course_code' => ['CP999009'],
+        'content' => 'Invalid course',
+        'parent_id' => ['1'],
+    ])->assertSessionHasErrors(['course_code', 'parent_id']);
+
+    $this->post(route('comments.store'), [
+        'course_code' => 'CP999009',
+        'content' => 'Valid comment',
+        'user_id' => $otherUser->id,
+    ])->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas('comments', [
+        'course_code' => 'CP999009',
+        'content' => 'Valid comment',
+        'user_id' => $author->id,
+    ]);
+    $this->assertDatabaseCount('comments', 1);
+});

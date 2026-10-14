@@ -4,11 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Comment extends Model
 {
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_APPROVED = 'approved';
+
+    public const STATUS_HIDDEN = 'hidden';
+
     protected $fillable = [
         'user_id',
         'course_code',
@@ -21,6 +27,11 @@ class Comment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class, 'course_code', 'course_code');
     }
 
     public function replyToUser(): BelongsTo
@@ -37,16 +48,14 @@ class Comment extends Model
     {
         return $this->belongsToMany(User::class, 'comment_likes')->withTimestamps();
     }
+
     public function scopeApproved($query)
     {
-        return $query->where('status', 'approved');
-    }
-    public function reports(): HasMany {
-        return $this->hasMany(Report::class);
+        return $query->where('status', self::STATUS_APPROVED);
     }
 
-    public function course(): BelongsTo
+    public function reports(): HasMany
     {
-        return $this->belongsTo(Course::class, 'course_code', 'course_code');
+        return $this->hasMany(Report::class);
     }
 }

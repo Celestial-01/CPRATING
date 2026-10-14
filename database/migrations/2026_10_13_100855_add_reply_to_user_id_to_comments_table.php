@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('comments', function (Blueprint $table) {
-            if (!Schema::hasColumn('comments', 'reply_to_user_id')) {
+            if (! Schema::hasColumn('comments', 'reply_to_user_id')) {
                 $table->unsignedBigInteger('reply_to_user_id')->nullable();
             }
         });
