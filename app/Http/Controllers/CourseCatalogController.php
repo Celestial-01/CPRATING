@@ -2,94 +2,103 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Comment;
-use App\Models\CourseRating;
-use App\Support\CourseCatalog;
-use App\Support\CourseGradeDistribution;
-use App\Support\CourseOverviewStats;
-use App\Support\CourseRatingSummary;
+use App\Models\Course;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CourseCatalogController extends Controller
 {
     public function index(Request $request): View
     {
-        $courseCatalog = CourseCatalog::all();
-        $searchTerm = trim((string) $request->query('q', ''));
-        $majorCodes = config('courses.major_codes', []);
+        $validated = $request->validate(['q' => ['nullable', 'string', 'max:100']]);
+        $searchTerm = trim($validated['q'] ?? '');
+        $majorCodes = array_keys(Course::MAJORS);
         $requestedFilter = $request->query('category', 'all');
         $selectedFilter = is_string($requestedFilter)
             && in_array($requestedFilter, ['all', 'popular', ...$majorCodes], true)
             ? $requestedFilter
             : 'all';
+        $courses = Course::query()
+            ->forPublicCatalog()
+            ->matching($searchTerm)
+            ->when(
+                in_array($selectedFilter, $majorCodes, true),
+                fn ($query) => $query->where('major', $selectedFilter),
+            )
+            ->when($selectedFilter === 'popular', fn ($query) => $query->popular())
+            ->orderBy('course_code')
+            ->paginate((int) config('courses.per_page', 8))
+            ->withQueryString();
+        $query = $searchTerm;
+        $courseCopy = config('courses.copy', []);
 
-        return view('courses.index', [
-            'courses' => $courseCatalog,
-            'majorCodes' => $majorCodes,
-            'query' => $searchTerm,
-            'selectedFilter' => $selectedFilter,
-            'perPage' => config('courses.per_page', 8),
-            'courseCopy' => config('courses.copy', []),
-        ]);
+        return view('courses.index', compact(
+            'courses',
+            'majorCodes',
+            'query',
+            'selectedFilter',
+            'courseCopy',
+        ));
     }
 
-    public function show(Request $request, string $code): View
+    public function show(Request $request, Course $course): View
     {
-        $courseCatalog = CourseCatalog::all();
-        $course = CourseCatalog::find($code, $courseCatalog);
+        $course = Course::query()->forPublicCatalog()->findOrFail($course->getKey());
 
-        if ($course === null) {
-            throw new NotFoundHttpException;
+        if (! $request->boolean('loading') && $request->isMethod('get')) {
+            $course->recordView();
         }
 
         $sort = $request->query('sort') === 'popular' ? 'popular' : 'latest';
+        $viewerId = $request->user()?->id;
+        $likedByViewer = fn ($query) => $query->where('users.id', $viewerId);
 
-        $comments = Comment::approved()
-            ->where('course_code' , $code)
+        $comments = $course->comments()
+            ->approved()
             ->whereNull('parent_id')
             ->with([
                 'user',
-                'replies' => fn ($q) => $q
-                ->approved()
+                'replies' => fn ($query) => $query
+                    ->approved()
                     ->with(['user', 'replyToUser'])
                     ->withCount('likes')
-                    ->withExists(['likes as liked_by_me' => fn ($l) => $l->where('users.id', auth()->id())]),
+                    ->withExists(['likes as liked_by_me' => $likedByViewer]),
             ])
             ->withCount('likes')
-            ->withExists(['likes as liked_by_me' => fn ($l) => $l->where('users.id', auth()->id())])
+            ->withExists(['likes as liked_by_me' => $likedByViewer])
             ->when(
                 $sort === 'popular',
-                fn ($q) => $q->orderByDesc('likes_count')->latest(), // ยอดกดใจมากสุดก่อน เท่ากันให้ใหม่กว่าขึ้นก่อน
-                fn ($q) => $q->latest()
+                fn ($query) => $query->orderByDesc('likes_count')->latest(),
+                fn ($query) => $query->latest(),
             )
             ->get();
 
-        $ratingSummary = CourseRatingSummary::forCourse($course['code']);
-        $course['rating'] = $ratingSummary['rating'];
-        $course['difficulty'] = $ratingSummary['difficulty'];
-        $course['workload'] = $ratingSummary['workload'];
-        $course['rating_count'] = $ratingSummary['count'];
-
-        $hasRated = $request->user() !== null && CourseRating::query()
-            ->where('course_code', $course['code'])
-            ->where('user_id', $request->user()->id)
+        $hasRated = $request->user() !== null && $course->ratings()
+            ->where('user_id', $viewerId)
             ->exists();
+        $gradeCounts = $course->reportedGradeCounts();
+        $gradeSampleSize = $gradeCounts->sum();
+        $averageGradePoint = $course->averageGradePoint($gradeCounts);
+        $relatedCourses = Course::query()
+            ->forPublicCatalog()
+            ->where('major', $course->major)
+            ->where('course_code', '!=', $course->course_code)
+            ->orderBy('course_code')
+            ->limit(4)
+            ->get();
+        $courseDetailCopy = config('courses.detail.copy', []);
+        $showSkeleton = $request->boolean('loading');
 
-        return view('courses.show', [
-            'course' => $course,
-            'hasRated' => $hasRated,
-            'relatedCourses' => $courseCatalog
-                ->where('code', '!=', $course['code'])
-                ->take(4)
-                ->values()
-                ->all(),
-            'courseOverviewStats' => CourseOverviewStats::forCourse($course),
-            'gradeDistribution' => CourseGradeDistribution::forCourse($course),
-            'comments' => $comments,
-            'courseDetailCopy' => config('courses.detail.copy', []),
-            'showSkeleton' => $request->boolean('loading'),
-        ]);
+        return view('courses.show', compact(
+            'course',
+            'hasRated',
+            'gradeCounts',
+            'gradeSampleSize',
+            'averageGradePoint',
+            'relatedCourses',
+            'comments',
+            'courseDetailCopy',
+            'showSkeleton',
+        ));
     }
 }

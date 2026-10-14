@@ -984,10 +984,6 @@
     font-weight: 600;
 }
 
-.home-highlight-section {
-    padding: clamp(82px, 10vw, 132px) 0 74px;
-    background: #0f172a;
-}
 .home-highlight-card {
     position: relative;
     display: flex;
@@ -1838,7 +1834,7 @@
     background: #f8fafc;
 }
 
-.pg[data-plans-page] > .wrap > section {
+.content-page[data-plans-page] > .page-container > section {
     padding: 0;
 }
 
@@ -2302,7 +2298,7 @@
 }
 
 @media (max-width: 860px) {
-    .home-page .mc--left-bottom {
+    .home-page #hero-floating-cards > .hero-float-card:nth-child(2) {
         display: block;
         left: 8%;
         top: 78%;
@@ -2356,13 +2352,13 @@
 
 .home-page .home-landing-hero::after {
     background: radial-gradient(
-        circle 230px at var(--mx, 50%) var(--my, 50%),
+        circle 230px at var(--pointer-x, 50%) var(--pointer-y, 50%),
         rgb(10 122 230 / 35%) 1.7px,
         transparent 1.7px
     );
     background-size: 28px 28px;
     mask-image: radial-gradient(
-        circle 230px at var(--mx, 50%) var(--my, 50%),
+        circle 230px at var(--pointer-x, 50%) var(--pointer-y, 50%),
         #000,
         transparent 100%
     );
@@ -3062,7 +3058,7 @@
     display: none;
 }
 
-.history-grid .cc {
+.history-grid .course-card {
     flex: 0 0 300px;
 }
 
@@ -3230,21 +3226,21 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.course-related-grid .cc {
+.course-related-grid .course-card {
     width: 100%;
     height: auto;
     aspect-ratio: 2 / 3;
 }
 
 @media (min-width: 1024px) {
-    .course-related-grid .info {
+    .course-related-grid .course-card__info {
         display: flex;
         box-sizing: border-box;
         min-height: 112px;
         flex-direction: column;
     }
 
-    .course-related-grid .info small {
+    .course-related-grid .course-card__info small {
         display: block;
         overflow: hidden;
         font-size: 11px;
@@ -3252,12 +3248,12 @@
         white-space: nowrap;
     }
 
-    .course-related-grid .info h3 {
+    .course-related-grid .course-card__info h3 {
         font-size: 16px;
         line-height: 1.4;
     }
 
-    .course-related-grid .meta {
+    .course-related-grid .course-card__meta {
         margin-top: auto;
     }
 }
@@ -3289,7 +3285,7 @@
         display: none;
     }
 
-    .course-related-grid .cc {
+    .course-related-grid .course-card {
         flex: 0 0 min(300px, calc(100vw - 64px));
     }
 }
@@ -3327,7 +3323,7 @@
         scroll-padding-inline: 0;
     }
 
-    .history-grid .cc {
+    .history-grid .course-card {
         flex-basis: min(300px, calc(100vw - 48px));
     }
 

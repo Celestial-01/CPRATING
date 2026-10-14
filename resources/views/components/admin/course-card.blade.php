@@ -2,9 +2,9 @@
     href="{{ route('admin.courses.edit', $course) }}"
     class="group relative block min-w-0 aspect-[0.78] overflow-hidden rounded-[17px] bg-slate-900 shadow-sm focus:outline-none focus:ring-4 focus:ring-sky-200"
 >
-    @if ($course->image)
+    @if ($course->imageUrl())
         <img
-            src="{{ asset('storage/' . $course->image) }}"
+            src="{{ $course->imageUrl() }}"
             alt="ภาพประกอบวิชา {{ $course->course_name_th }}"
             class="{{ $imageClasses }}"
             loading="lazy"
@@ -33,15 +33,15 @@
         <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/90">
             <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <i data-lucide="star" class="size-3 shrink-0 fill-yellow-400 text-yellow-400" aria-hidden="true"></i>
-                {{ $course->rating ?? '-' }}
+                {{ $course->interestRating() === null ? '-' : number_format($course->interestRating(), 1) }}
             </span>
             <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <i data-lucide="eye" class="size-3 shrink-0" aria-hidden="true"></i>
-                {{ $course->views ?? '-' }} วิว
+                {{ number_format($course->views) }} วิว
             </span>
             <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <i data-lucide="book-open" class="size-3 shrink-0" aria-hidden="true"></i>
-                {{ $course->reviews_count ?? '-' }} รีวิว
+                {{ number_format($course->ratings_count) }} รีวิว
             </span>
         </div>
     </div>

@@ -55,6 +55,7 @@ class TopicController extends Controller
 
     public function search(Request $request): JsonResponse
     {
+        $request->validate(['keyword' => ['nullable', 'string', 'max:100']]);
         $keyword = trim((string) $request->input('keyword', ''));
 
         return response()->json(

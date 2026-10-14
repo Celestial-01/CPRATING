@@ -12,6 +12,13 @@ class DashboardController extends Controller
 {
     public function index(Request $request): View
     {
+        $request->validate([
+            'major' => ['nullable', 'string', 'max:50'],
+            'types' => ['nullable', 'array'],
+            'types.*' => ['string', 'max:255'],
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
+
         $majors = $this->majorOptions();
         $types = $this->courseTypes();
         $currentMajor = (string) $request->query('major', '');
@@ -27,6 +34,7 @@ class DashboardController extends Controller
         $keyword = trim((string) $request->query('q', ''));
 
         $courses = Course::query()
+            ->withStatistics()
             ->where('major', $currentMajor)
             ->when(
                 $currentTypes !== [],

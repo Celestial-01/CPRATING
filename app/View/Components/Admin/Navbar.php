@@ -2,6 +2,7 @@
 
 namespace App\View\Components\Admin;
 
+use App\Models\User;
 use Illuminate\View\Component;
 use Illuminate\View\View;
 
@@ -9,8 +10,13 @@ final class Navbar extends Component
 {
     public array $menus;
 
+    public ?User $user;
+
     public function __construct()
     {
+        $this->user = auth()->user();
+        $this->user?->loadMissing('googleAccount');
+
         $this->menus = collect([
             ['label' => 'หน้าหลัก', 'route' => 'admin.dashboard'],
             ['label' => 'เพิ่มรายวิชา', 'route' => 'admin.courses.create'],

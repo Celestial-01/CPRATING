@@ -2,37 +2,60 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
 use App\Models\CourseRating;
-use App\Support\CourseCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Validation\Rule;
 
 class CourseRatingController extends Controller
 {
-    public function store(Request $request, string $code): RedirectResponse
+    public function store(Request $request, Course $course): RedirectResponse
     {
-        $course = CourseCatalog::find($code);
+        abort_unless($course->publication_status === Course::PUBLICATION_PUBLISHED, 404);
 
-        if ($course === null) {
-            throw new NotFoundHttpException;
-        }
-
-        $rating = $request->validate([
+        $validated = $request->validateWithBag('courseRating', [
             'difficulty' => ['required', 'integer', 'between:1,5'],
             'workload' => ['required', 'integer', 'between:1,5'],
             'interest' => ['required', 'integer', 'between:1,5'],
+            'grade' => ['nullable', 'string', Rule::in(array_keys(CourseRating::GRADE_POINTS))],
+        ], [
+            'required' => 'กรุณาให้คะแนน:attributeก่อนบันทึก',
+            'integer' => 'คะแนน:attributeต้องเป็นจำนวนเต็ม',
+            'between' => 'คะแนน:attributeต้องอยู่ระหว่าง 1 ถึง 5',
+            'grade.string' => 'กรุณาเลือกเกรดจากรายการที่กำหนด',
+            'grade.in' => 'กรุณาเลือกเกรดจากรายการที่กำหนด',
+        ], [
+            'difficulty' => 'ระดับความยาก',
+            'workload' => 'ปริมาณงาน',
+            'interest' => 'ความน่าสนใจของรายวิชา',
         ]);
 
-        $savedRating = CourseRating::query()->createOrFirst(
-            ['user_id' => $request->user()->id, 'course_code' => $course['code']],
-            $rating,
+        $savedRating = $course->ratings()->createOrFirst(
+            ['user_id' => $request->user()->id],
+            $validated,
         );
 
         return redirect()
-            ->route('courses.show', $course['code'])
+            ->route('courses.show', $course->course_code)
             ->with('rating_status', $savedRating->wasRecentlyCreated
                 ? 'บันทึกคะแนนแล้ว'
                 : 'คุณให้คะแนนวิชานี้ไปแล้ว');
+    }
+
+    public function destroy(Request $request, Course $course): RedirectResponse
+    {
+        $deletedRatings = $course->ratings()
+            ->where('user_id', $request->user()->id)
+            ->delete();
+
+        $redirect = $course->publication_status === Course::PUBLICATION_PUBLISHED
+            ? redirect()->route('courses.show', $course->course_code)
+            : redirect()->route('courses.index');
+
+        return $redirect
+            ->with('rating_status', $deletedRatings > 0
+                ? 'ยกเลิกรีวิวแล้ว'
+                : 'คุณยังไม่ได้ให้คะแนนวิชานี้');
     }
 }

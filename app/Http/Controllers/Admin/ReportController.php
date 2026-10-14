@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Report;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Report;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ReportController extends Controller
 {
     public function index(Request $request): View
     {
+        $request->validate(['status' => ['sometimes', Rule::in([...Report::STATUSES, 'all'])]]);
         $status = $request->query('status', 'pending');
 
         $reports = Report::with(['comment.user', 'reporter', 'handler'])
@@ -27,11 +29,11 @@ class ReportController extends Controller
         return view('admin.reports.index', compact('reports', 'status'));
     }
 
-    //ถ้าคอมเมนต์ที่รีพอร์ตมา ไม่ได้ผิด จะเปลี่ยน status เป็น dismissed คือคอมเมนต์นั้นยังอยู่ตามเดิม
+    // ถ้าคอมเมนต์ที่รีพอร์ตมา ไม่ได้ผิด จะเปลี่ยน status เป็น dismissed คือคอมเมนต์นั้นยังอยู่ตามเดิม
     public function dismiss(Request $request, Report $report): RedirectResponse
     {
         $report->update([
-            'status'     => 'dismissed',
+            'status' => 'dismissed',
             'handled_by' => $request->user()->id,
             'handled_at' => now(),
         ]);
@@ -48,7 +50,7 @@ class ReportController extends Controller
             Report::where('comment_id', $report->comment_id)
                 ->where('status', 'pending')
                 ->update([
-                    'status'     => 'resolved',
+                    'status' => 'resolved',
                     'handled_by' => $request->user()->id,
                     'handled_at' => now(),
                 ]);

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $course['code'].' '.$course['title'])
+@section('title', $course->course_code.' '.$course->course_name_th)
 
 @section('content')
 <div class="min-h-screen bg-[#f6f6f6]">
@@ -20,7 +20,7 @@
                 class="size-3.5"
                 aria-hidden="true"></i>
             <span class="font-medium text-slate-900">
-                รายละเอียดวิชา {{ $course['code'] }}
+                รายละเอียดวิชา {{ $course->course_code }}
             </span>
         </nav>
 
@@ -41,48 +41,42 @@
         <section
             class="mt-6 grid gap-5 md:grid-cols-2"
             aria-label="ข้อมูลการเรียน">
-            @foreach ($courseOverviewStats as $courseOverviewStat)
-            <x-course.overview-stat :stat="$courseOverviewStat" />
-            @endforeach
+            <x-course.overview-stat :course="$course" metric="difficulty" />
+            <x-course.overview-stat :course="$course" metric="workload" />
         </section>
 
         <section
             class="mt-6 rounded-[22px] border border-slate-200 bg-white p-6 shadow-[0_2px_5px_rgba(15,23,42,0.03)] sm:p-8"
-            aria-labelledby="grade-title">
+            aria-labelledby="grade-title"
+        >
             <div class="grid gap-8 sm:grid-cols-[230px_1fr] sm:items-end sm:gap-10">
                 <div>
-                    <h2
-                        id="grade-title"
-                        class="flex items-center gap-2 text-base font-semibold text-slate-900">
-                        <span class="size-2 rounded-full bg-emerald-400"></span>
-                        โอกาสได้เกรด A
+                    <h2 id="grade-title" class="text-base font-semibold text-slate-900">
+                        เกรดเฉลี่ยของวิชานี้
                     </h2>
-
-                    <div class="mt-2 flex items-baseline gap-2">
-                        <strong class="text-5xl font-bold tracking-tight text-emerald-500">
-                            {{ $course['grade_a_chance'] }}%
+                    <div class="mt-3 flex items-baseline gap-2">
+                        <strong class="text-5xl font-bold leading-none tracking-tight {{ $averageGradePoint === null ? 'text-slate-300' : 'text-emerald-500' }}">
+                            {{ $averageGradePoint === null ? '—' : number_format($averageGradePoint, 2) }}
                         </strong>
-                        <span class="text-xs text-slate-500">
-                            ของผู้เรียนทั้งหมด
-                        </span>
+                        @if ($averageGradePoint !== null)
+                            <span class="text-sm text-slate-400">/ 4.00</span>
+                        @endif
                     </div>
-
-                    <p class="mt-3 max-w-[220px] text-sm leading-6 text-slate-500">
-                        สัดส่วนผู้เรียนที่ได้เกรด A โดยประมาณ
+                    <p class="mt-4 text-sm leading-6 text-slate-500">
+                        คำนวณจากเกรดที่ผู้เรียนรายงาน
                     </p>
-
-                    <p class="mt-4 border-t border-slate-100 pt-3 text-[11px] leading-4 text-slate-400">
-                        สุ่มกลุ่มตัวอย่างจากผู้เรียน {{ number_format($course['grade_sample_size']) }} คน · ได้ค่าประมาณ
+                    <p class="mt-5 text-xs leading-5 text-slate-400">
+                        {{ $gradeSampleSize > 0 ? 'จากผู้รายงานเกรด '.number_format($gradeSampleSize).' คน · ไม่นับผู้ที่ไม่ระบุเกรด' : 'ยังไม่มีข้อมูลจากผู้ใช้' }}
                     </p>
                 </div>
 
-                <div class="flex h-32 items-end justify-between gap-2 sm:gap-4">
-                    @foreach ($gradeDistribution as $gradeBar)
-                    <x-course.grade-bar
-                        :grade="$gradeBar['grade']"
-                        :percentage="$gradeBar['percentage']"
-                        :bar-height="$gradeBar['barHeight']"
-                        :highlighted="$gradeBar['highlighted']" />
+                <div class="flex items-end justify-between gap-1.5 sm:gap-4" role="group" aria-label="สัดส่วนเกรดที่ผู้ใช้รายงาน">
+                    @foreach ($gradeCounts as $grade => $gradeCount)
+                        <x-course.grade-bar
+                            :grade="$grade"
+                            :count="$gradeCount"
+                            :percentage="$course->gradePercentage($grade, $gradeCounts)"
+                        />
                     @endforeach
                 </div>
             </div>
@@ -102,26 +96,23 @@
             </h2>
 
             <p class="mt-6 text-sm leading-7 text-slate-600">
-                {{ $course['description'] }}
-                ศึกษาแนวคิดพื้นฐานด้านความมั่นคงปลอดภัยไซเบอร์ ภัยคุกคามและรูปแบบการโจมตี
-                หลักการเข้ารหัสข้อมูล การป้องกันระบบเครือข่ายและระบบปฏิบัติการ
-                การยืนยันตัวตนและการควบคุมการเข้าถึง
-                ตลอดจนนโยบายและมาตรฐานความมั่นคงปลอดภัยที่จำเป็นสำหรับสายงานไอที
+                {{ $course->description ?: 'ยังไม่มีคำอธิบายรายวิชา' }}
             </p>
 
+            @if ($course->topics->isNotEmpty())
             <div class="my-7 border-t border-slate-200"></div>
-
             <h3 class="text-sm font-bold text-slate-900">
                 หัวข้อหลักที่ได้เรียน
             </h3>
             <div class="mt-4 flex flex-wrap gap-2">
-                @foreach ($course['topics'] as $topic)
+                @foreach ($course->topics as $topic)
                 <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600 transition-colors duration-200 hover:border-blue-500 hover:bg-white hover:text-blue-500">
                     <span class="size-1.5 rounded-full bg-[#477ff3]"></span>
-                    {{ $topic }}
+                    {{ $topic->name }}
                 </span>
                 @endforeach
             </div>
+            @endif
         </section>
 
         <section
@@ -151,14 +142,14 @@
                     </h3>
 
                     <div class="mt-4 space-y-3">
-                        @forelse ($course['prerequisites'] as $item)
+                        @forelse ($course->prerequisiteCourses as $prerequisite)
                         <div class="flex cursor-pointer items-center justify-between rounded-[16px] border border-slate-200 bg-slate-50 px-3 py-3">
                             <div>
                                 <strong class="block text-sm text-slate-900">
-                                    {{ $item['code'] }}
+                                    {{ $prerequisite->course_code }}
                                 </strong>
                                 <span class="text-xs text-slate-500">
-                                    {{ $item['title'] }}
+                                    {{ $prerequisite->course_name_th }}
                                 </span>
                             </div>
                             <span class="rounded-full bg-black px-3 py-1 text-[10px] font-semibold text-white">
@@ -189,14 +180,14 @@
                     </h3>
 
                     <div class="mt-4 space-y-3">
-                        @forelse ($course['next_courses'] as $item)
+                        @forelse ($course->dependentCourses as $dependentCourse)
                         <div class="group flex cursor-pointer items-center justify-between rounded-[16px] border border-slate-200 px-3 py-3 transition-[border-color,box-shadow,transform] duration-500 ease-out hover:-translate-y-0.5 hover:border-blue-500 hover:bg-white hover:shadow-sm">
                             <div>
                                 <strong class="block text-sm text-slate-900 transition-colors duration-200 group-hover:text-blue-500">
-                                    {{ $item['code'] }}
+                                    {{ $dependentCourse->course_code }}
                                 </strong>
                                 <span class="text-xs text-slate-500 transition-colors duration-200 group-hover:text-slate-600">
-                                    {{ $item['title'] }}
+                                    {{ $dependentCourse->course_name_th }}
                                 </span>
                             </div>
                             <i
@@ -274,7 +265,7 @@
                     <input
                         type="hidden"
                         name="course_code"
-                        value="{{ $course['code'] }}">
+                        value="{{ $course->course_code }}">
 
                     <textarea
                         id="course-comment"
@@ -356,7 +347,7 @@
                             @else
                             <button
                                 type="button"
-                                class="cursor-pointer hover:text-red-500"
+                                class="cursor-pointer font-medium hover:text-red-500"
                                 data-report-open
                                 data-report-url="{{ route('comments.report', $comment->id) }}">
                                 รายงาน
@@ -370,7 +361,7 @@
                             method="POST"
                             class="mt-2 hidden">
                             @csrf
-                            <input type="hidden" name="course_code" value="{{ $course['code'] }}">
+                            <input type="hidden" name="course_code" value="{{ $course->course_code }}">
                             <input type="hidden" name="parent_id" value="{{ $comment->id }}">
 
                             <div class="flex items-center gap-2">
@@ -439,7 +430,7 @@
                                         @else
                                         <button
                                             type="button"
-                                            class="cursor-pointer hover:text-red-500"
+                                            class="cursor-pointer font-medium hover:text-red-500"
                                             data-report-open
                                             data-report-url="{{ route('comments.report', $reply->id) }}">
                                             รายงาน
@@ -453,7 +444,7 @@
                                         method="POST"
                                         class="mt-2 hidden">
                                         @csrf
-                                        <input type="hidden" name="course_code" value="{{ $course['code'] }}">
+                                        <input type="hidden" name="course_code" value="{{ $course->course_code }}">
                                         <input type="hidden" name="parent_id" value="{{ $reply->id }}">
 
                                         <div class="flex items-center gap-2">
@@ -530,6 +521,7 @@
         </section>
 
 
+        @if ($relatedCourses->isNotEmpty())
         <section
             class="mt-9"
             aria-labelledby="related-title">
@@ -540,14 +532,17 @@
                 วิชาที่เกี่ยวข้อง
             </h2>
 
-            <div class="cg course-related-grid mt-5" data-related-courses>
+            <div class="course-grid course-related-grid mt-5" data-related-courses>
                 @foreach ($relatedCourses as $relatedCourse)
                 <x-course.card :course="$relatedCourse" />
                 @endforeach
             </div>
         </section>
         @endif
+        @endif
     </main>
+
+    <div id="toast" role="status" aria-live="polite"></div>
 
     @auth
     <dialog
@@ -555,17 +550,18 @@
         class="w-[90%] max-w-md rounded-[22px] border border-slate-200 p-0 shadow-xl backdrop:bg-black/40">
         <form id="report-form" method="POST" action="" class="p-6">
             @csrf
+
             <h3 class="text-base font-semibold text-slate-900">รายงานความคิดเห็น</h3>
             <p class="mt-1 text-xs text-slate-500">
                 เลือกเหตุผลที่ต้องการรายงาน ทีมงานจะตรวจสอบโดยเร็ว
             </p>
 
             <div class="mt-4 space-y-2 text-sm text-slate-700">
-                @foreach (['spam' => 'สแปม', 'offensive' => 'ไม่สุภาพ / ก้าวร้าว', 'irrelevant' => 'ไม่เกี่ยวข้องกับรายวิชา', 'other' => 'อื่น ๆ'] as $value => $label)
-                <label class="flex cursor-pointer items-center gap-2">
-                    <input type="radio" name="reason" value="{{ $value }}" required class="accent-[#1684e5]">
-                    {{ $label }}
-                </label>
+                @foreach (\App\Models\Report::REASONS as $value => $label)
+                    <label class="flex cursor-pointer items-center gap-2">
+                        <input type="radio" name="reason" value="{{ $value }}" required class="accent-[#1684e5]">
+                        {{ $label }}
+                    </label>
                 @endforeach
             </div>
 
@@ -592,8 +588,6 @@
         </form>
     </dialog>
     @endauth
-
-    <div id="toast" role="status" aria-live="polite"></div>
     <script type="application/json" data-course-detail-copy>
         @json($courseDetailCopy)
     </script>
@@ -657,20 +651,6 @@
                 });
         });
 
-        //กด Enter = ส่งคอมเมนต์
-        var commentBox = document.getElementById('course-comment');
-        if (commentBox) {
-            commentBox.addEventListener('keydown', function(event) {
-                if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
-
-                event.preventDefault();
-
-                if (commentBox.value.trim() === '') return;
-
-                commentBox.form.requestSubmit();
-            });
-        }
-
         var reportDialog = document.getElementById('report-dialog');
         if (reportDialog) {
             var reportForm = document.getElementById('report-form');
@@ -684,10 +664,30 @@
                     return;
                 }
 
-                // ปุ่มยกเลิก หรือคลิกพื้นหลังมืด
-                if (event.target.closest('[data-report-close]') || event.target === reportDialog) {
+                if (event.target.closest('[data-report-close]')) {
                     reportDialog.close();
                 }
+            });
+
+            // กด Esc หรือคลิกพื้นหลังเพื่อปิด
+            reportDialog.addEventListener('click', function(event) {
+                if (event.target === reportDialog) {
+                    reportDialog.close();
+                }
+            });
+        }
+
+        //กด Enter = ส่งคอมเมนต์
+        var commentBox = document.getElementById('course-comment');
+        if (commentBox) {
+            commentBox.addEventListener('keydown', function(event) {
+                if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
+
+                event.preventDefault();
+
+                if (commentBox.value.trim() === '') return;
+
+                commentBox.form.requestSubmit();
             });
         }
     </script>

@@ -1,28 +1,14 @@
-<article class="rv">
-    <div class="who">
-        <i>{{ $review['initial'] }}</i>
+<article class="review-card">
+    <div class="review-author">
+        <i aria-hidden="true">ผ</i>
         <div>
-            <b>{{ $review['year'] }}</b>
-            <span>{{ $review['course'] }}</span>
+            <b>ผู้เรียน</b>
+            <a href="{{ route('courses.show', $review->course_code) }}">
+                {{ $review->course_code }} {{ $review->course?->course_name_th }}
+            </a>
         </div>
     </div>
 
-    <div class="stars" aria-label="ความน่าสนใจ {{ $review['rating'] }} จาก 5">
-        <span aria-hidden="true">★★★★★</span> <em aria-hidden="true">{{ $review['rating'] }}</em>
-    </div>
-
-    <p>{{ $review['text'] }}</p>
-
-    <div class="grid grid-cols-2 gap-2">
-        <x-home.review-level label="ภาระงาน" :score="$review['workload']['score']" :level="$review['workload']['level']" />
-        <x-home.review-level label="ความยาก" :score="$review['difficulty']['score']" :level="$review['difficulty']['level']" />
-    </div>
-
-    <div class="ft">
-        <div class="tg">
-            @foreach ($review['tags'] as $tag)
-                <span>{{ $tag }}</span>
-            @endforeach
-        </div>
-    </div>
+    <p>{{ $review->content }}</p>
+    <div class="review-card__footer">{{ $review->created_at->diffForHumans() }}</div>
 </article>

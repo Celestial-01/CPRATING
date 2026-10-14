@@ -4,6 +4,11 @@
 
 @section('content')
     <main class="mx-auto w-full max-w-[1120px] px-6 pb-10" data-csrf="{{ csrf_token() }}">
+        @if ($errors->has('course'))
+            <p role="alert" class="mt-6 rounded-[15px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {{ $errors->first('course') }}
+            </p>
+        @endif
         <a href="{{ route('admin.dashboard', ['major' => $course->major]) }}"
            class="mt-8 inline-block text-sm text-slate-500 transition hover:text-[#1684e5]">
             ← กลับไปหน้ารายวิชา
@@ -17,14 +22,14 @@
                     <div
                         data-image-box
                         data-url="{{ route('admin.courses.image', $course) }}"
-                        data-has-image="{{ $course->image ? 'true' : 'false' }}"
+                        data-has-image="{{ $course->imageUrl() ? 'true' : 'false' }}"
                         data-uploading="false"
                         data-has-error="false"
                         class="group/cover"
                     >
                         <div class="relative aspect-[300/313] overflow-hidden rounded-[16px] bg-gradient-to-br from-slate-600 to-slate-800">
                             <img data-course-image
-                                 src="{{ $course->image ? asset('storage/' . $course->image) : '' }}"
+                                 src="{{ $course->imageUrl() ?? '' }}"
                                  alt="ภาพประกอบวิชา {{ $course->course_name_th }}"
                                  class="absolute inset-0 hidden size-full object-cover group-data-[has-image=true]/cover:block">
                             <label class="absolute bottom-3 right-3 cursor-pointer rounded-full bg-white/95 px-4 py-2 text-xs font-medium text-[#1684e5] shadow transition hover:bg-white">
@@ -73,6 +78,8 @@
                             :options="$typeOptions" />
                         <x-admin.inline-field :course="$course" field="is_offered" type="select" label="สถานะ"
                             :options="$offeredOptions" />
+                        <x-admin.inline-field :course="$course" field="publication_status" type="select" label="สถานะการเผยแพร่"
+                            :options="$publicationOptions" />
                     </div>
 
                     <div class="rounded-[16px] border-2 border-[#edf1f6] bg-[#f8fafc] px-4 py-3">
@@ -85,86 +92,51 @@
         </section>
 
         
-        <x-admin.course-stats />
+        <x-admin.course-stats :course="$course" :grade-counts="$gradeCounts" />
 
         
         <div class="mt-6 grid gap-6 md:grid-cols-2">
-            @foreach ($relations as $r)
-                <section
-                    data-inline-relation
-                    data-field="{{ $r['field'] }}"
-                    data-url="{{ route('admin.courses.inline-update', $course) }}"
-                    data-editing="false"
-                    data-has-error="false"
-                    data-saving="false"
-                    data-empty="{{ count($r['items']) ? 'false' : 'true' }}"
-                    class="{{ $r['classes'] }}"
-                >
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-slate-900">{{ $r['title'] }}</h2>
-                        <button
-                            type="button"
-                            data-edit
-                            class="rounded-full bg-sky-50 px-4 py-1.5 text-sm font-medium text-[#1684e5] transition hover:bg-[#d4ebff] group-data-[editing=true]/relation:hidden"
-                        >
-                            แก้ไข
-                        </button>
-                    </div>
+            <x-admin.course-relation-field
+                :course="$course"
+                field="teacher_ids"
+                title="อาจารย์ผู้สอน"
+                empty-message="ไม่ระบุชื่ออาจารย์ผู้สอน"
+                :selected="$course->teachers"
+                :search-url="route('admin.teachers.search')"
+                add-label="+ เพิ่มอาจารย์"
+                placeholder="พิมพ์ชื่ออาจารย์เพื่อค้นหา"
+                label-keys="prefix,teacher_name"
+                selected-label="display_name"
+            />
 
-                    <div data-view class="mt-4 group-data-[editing=true]/relation:hidden">
-                        <div data-chips class="flex flex-wrap gap-2">
-                            @foreach ($r['items'] as $item)
-                                <span data-chip class="inline-flex items-center gap-1.5 rounded-full bg-[#e9f5ff] px-3 py-1 text-sm font-medium text-[#1684e5]">
-                                    <span data-slot="label">{{ $item['label'] }}</span>
-                                    <span data-slot="sublabel" class="font-normal empty:hidden">{{ $item['sublabel'] ?? '' }}</span>
-                                </span>
-                            @endforeach
+            <x-admin.course-relation-field
+                :course="$course"
+                field="topic_ids"
+                title="หัวข้อที่เกี่ยวข้อง"
+                empty-message="ยังไม่มีหัวข้อในรายวิชานี้"
+                :selected="$course->topics"
+                :search-url="route('admin.topics.search')"
+                add-label="+ เพิ่มหัวข้อ"
+                placeholder="พิมพ์ชื่อหัวข้อเพื่อค้นหา"
+                label-keys="name"
+                selected-label="name"
+            />
 
-                            <p class="hidden text-sm text-slate-400 group-data-[empty=true]/relation:block">{{ $r['empty'] }}</p>
-                        </div>
-                    </div>
-
-                    <div data-editor class="mt-4 hidden group-data-[editing=true]/relation:block">
-                        <x-admin.tag-picker
-                            :name="$r['field']"
-                            :url="$r['url']"
-                            :add-label="$r['addLabel'] ?? '+ เพิ่ม'"
-                            :placeholder="$r['placeholder']"
-                            :label-keys="$r['labelKeys']"
-                            :sub-keys="$r['subKeys'] ?? ''"
-                            :always-open="$r['alwaysOpen'] ?? false"
-                            :selected="$r['items']"
-                        />
-
-                        <p data-error class="mt-2 hidden text-sm text-red-600 group-data-[has-error=true]/relation:block"></p>
-
-                        <div class="mt-4 flex gap-2">
-                            <button
-                                type="button"
-                                data-save
-                                class="h-9 rounded-full bg-[#1684e5] px-5 text-sm font-medium text-white transition hover:bg-[#0e73cc] disabled:opacity-60"
-                            >
-                                <span class="group-data-[saving=true]/relation:hidden">บันทึก</span>
-                                <span class="hidden group-data-[saving=true]/relation:inline">กำลังบันทึก...</span>
-                            </button>
-                            <button
-                                type="button"
-                                data-cancel
-                                class="h-9 rounded-full border border-slate-200 px-5 text-sm text-slate-600 transition hover:bg-slate-50"
-                            >
-                                ยกเลิก
-                            </button>
-                        </div>
-                    </div>
-
-                    <template data-chip-template>
-                        <span data-chip class="inline-flex items-center gap-1.5 rounded-full bg-[#e9f5ff] px-3 py-1 text-sm font-medium text-[#1684e5]">
-                            <span data-slot="label"></span>
-                            <span data-slot="sublabel" class="font-normal empty:hidden"></span>
-                        </span>
-                    </template>
-                </section>
-            @endforeach
+            <x-admin.course-relation-field
+                :course="$course"
+                field="prerequisite_ids"
+                title="วิชาบังคับก่อน (Previous Course)"
+                empty-message="ไม่มีวิชาบังคับก่อน"
+                :selected="$course->prerequisiteCourses"
+                :search-url="route('admin.courses.search')"
+                placeholder="ค้นหารหัสวิชา หรือชื่อวิชาภาษาอังกฤษ..."
+                label-keys="course_code"
+                sub-keys="course_name_en"
+                selected-label="course_code"
+                selected-sub-label="course_name_en"
+                always-open
+                wide
+            />
         </div>
 
        
@@ -264,6 +236,6 @@
         </section>
 
 
-        <x-admin.course-comments />
+        <x-admin.course-comments :course="$course" :comments="$comments" :sort="$commentSort" />
     </main>
 @endsection

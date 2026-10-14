@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\CourseCatalog;
+use App\Models\Course;
 use Illuminate\Contracts\View\View;
 
 class HistoryController extends Controller
 {
     public function index(): View
     {
-        $courseCatalog = CourseCatalog::all();
+        $courses = Course::query()
+            ->forPublicCatalog()
+            ->orderBy('course_code')
+            ->get();
+        $historyCopy = config('history.copy', []);
 
-        return view('history.index', [
-            'courses' => $courseCatalog,
-            'historyCopy' => config('history.copy', []),
-        ]);
+        return view('history.index', compact('courses', 'historyCopy'));
     }
 }
