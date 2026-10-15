@@ -27,11 +27,11 @@ const initializeCoursesPage = () => {
         if (button) button.setAttribute('aria-pressed', String(savedCodes.has(button.dataset.courseSave)));
     });
 
-    let searchTimer;
+    search.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
 
-    search.addEventListener('input', () => {
-        window.clearTimeout(searchTimer);
-        searchTimer = window.setTimeout(() => form.requestSubmit(), 350);
+        event.preventDefault();
+        form.requestSubmit();
     });
     filter.addEventListener('change', () => form.requestSubmit());
 
