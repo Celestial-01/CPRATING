@@ -14,6 +14,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(BannedWordSeeder::class);
+        $this->call([
+            CourseCatalogSeeder::class,
+            BannedWordSeeder::class,
+        ]);
     }
 }
