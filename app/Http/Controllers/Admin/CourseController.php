@@ -31,9 +31,21 @@ class CourseController extends Controller
 
         $majors = Course::MAJORS;
         $types = Course::TYPES;
-        $selectedTeachers = $teachers->whereIn('id', (array) old('teacher_ids', []));
-        $selectedTopics = $topics->whereIn('id', (array) old('topic_ids', []));
-        $selectedPrerequisites = $courses->whereIn('id', (array) old('prerequisite_ids', []));
+
+        $selectedTeachers = $teachers->whereIn(
+            'id',
+            (array) old('teacher_ids', [])
+        );
+
+        $selectedTopics = $topics->whereIn(
+            'id',
+            (array) old('topic_ids', [])
+        );
+
+        $selectedPrerequisites = $courses->whereIn(
+            'id',
+            (array) old('prerequisite_ids', [])
+        );
 
         return view('admin.courses.create', compact(
             'teachers',
@@ -50,14 +62,32 @@ class CourseController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validateCourse($request);
+
+        $topicNames = $validated['topic_names'] ?? [];
+        unset($validated['topic_names']);
+
         $relations = $this->extractRelations($validated);
 
-        $course = DB::transaction(function () use ($request, $validated, $relations): Course {
+        $course = DB::transaction(function () use (
+            $request,
+            $validated,
+            $relations,
+            $topicNames
+        ): Course {
             $courseData = $this->prepareImage($request, $validated);
+
             $course = Course::create($courseData + [
                 'is_offered' => true,
                 'publication_status' => Course::PUBLICATION_DRAFT,
             ]);
+
+            $newTopicIds = $this->resolveTopicIds($topicNames);
+
+            $relations['topics'] = array_values(array_unique(array_merge(
+                $relations['topics'] ?? [],
+                $newTopicIds,
+            )));
+
             $this->syncRelations($course, $relations);
 
             return $course;
@@ -71,14 +101,27 @@ class CourseController extends Controller
     {
         $course = Course::query()
             ->withStatistics()
-            ->with(['teachers', 'topics', 'prerequisiteCourses', 'dependentCourses'])
+            ->with([
+                'teachers',
+                'topics',
+                'prerequisiteCourses',
+                'dependentCourses',
+            ])
             ->findOrFail($course->getKey());
+
         $gradeCounts = $course->reportedGradeCounts();
-        $commentSort = $request->query('sort') === 'popular' ? 'popular' : 'latest';
+
+        $commentSort = $request->query('sort') === 'popular'
+            ? 'popular'
+            : 'latest';
+
         $comments = $course->comments()
             ->with('user')
             ->withCount('likes')
-            ->when($commentSort === 'popular', fn ($query) => $query->orderByDesc('likes_count'))
+            ->when(
+                $commentSort === 'popular',
+                fn ($query) => $query->orderByDesc('likes_count')
+            )
             ->latest()
             ->get();
 
@@ -99,13 +142,37 @@ class CourseController extends Controller
         ));
     }
 
-    public function update(Request $request, Course $course): RedirectResponse
-    {
+    public function update(
+        Request $request,
+        Course $course
+    ): RedirectResponse {
         $validated = $this->validateCourse($request, $course);
+
+        $topicNames = $validated['topic_names'] ?? [];
+        unset($validated['topic_names']);
+
         $relations = $this->extractRelations($validated);
 
-        DB::transaction(function () use ($request, $course, $validated, $relations): void {
-            $course->updateDetails($this->prepareImage($request, $validated, $course));
+        DB::transaction(function () use (
+            $request,
+            $course,
+            $validated,
+            $relations,
+            $topicNames
+        ): void {
+            $course->updateDetails(
+                $this->prepareImage($request, $validated, $course)
+            );
+
+            $newTopicIds = $this->resolveTopicIds($topicNames);
+
+            if ($newTopicIds !== []) {
+                $relations['topics'] = array_values(array_unique(array_merge(
+                    $relations['topics'] ?? [],
+                    $newTopicIds,
+                )));
+            }
+
             $this->syncRelations($course, $relations);
         });
 
@@ -115,28 +182,24 @@ class CourseController extends Controller
 
     public function destroy(Course $course): RedirectResponse
     {
-        DB::transaction(function () use ($course): void {
-            if ($course->studyPlanCourses()->exists()) {
-                throw ValidationException::withMessages([
-                    'course' => 'รายวิชานี้อยู่ในแผนการเรียน กรุณานำออกจากแผนก่อนลบ',
-                ]);
-            }
-
-            $course->comments()->delete();
-            $course->ratings()->delete();
-            $course->delete();
-        });
-
-        if ($imagePath = $course->imageStoragePath()) {
-            Storage::disk('public')->delete($imagePath);
+        if ($course->studyPlanCourses()->exists()) {
+            throw ValidationException::withMessages([
+                'course' => 'รายวิชานี้อยู่ในแผนการเรียน กรุณานำออกจากแผนก่อนลบ',
+            ]);
         }
 
-        return to_route('admin.dashboard')->with('success', 'ลบรายวิชาเรียบร้อยแล้ว');
+        $course->delete();
+
+        return to_route('admin.dashboard')
+            ->with('success', 'ย้ายรายวิชาไปยังรายการที่ถูกลบแล้ว');
     }
 
     public function search(Request $request): JsonResponse
     {
-        $request->validate(['keyword' => ['nullable', 'string', 'max:100']]);
+        $request->validate([
+            'keyword' => ['nullable', 'string', 'max:100'],
+        ]);
+
         $keyword = trim((string) $request->query('keyword', ''));
 
         return response()->json(
@@ -150,39 +213,60 @@ class CourseController extends Controller
                 })
                 ->orderBy('course_code')
                 ->limit(10)
-                ->get(['id', 'course_code', 'course_name_th', 'course_name_en']),
+                ->get([
+                    'id',
+                    'course_code',
+                    'course_name_th',
+                    'course_name_en',
+                ]),
         );
     }
 
-    public function inlineUpdate(Request $request, Course $course): JsonResponse
-    {
-        $validated = $this->validateInline($request, $course);
-        $relations = $this->extractRelations($validated, true);
-        $courseData = collect($validated)->except(array_keys($relations))->all();
+public function inlineUpdate(Request $request, Course $course): JsonResponse
+{
+    $validated = $this->validateInline($request, $course);
 
-        DB::transaction(function () use ($course, $courseData, $relations): void {
-            if ($courseData !== []) {
-                $course->updateDetails($courseData);
-            }
-            $this->syncRelations($course, $relations);
-        });
+    $topicNames = $validated['topic_names'] ?? [];
+    unset($validated['topic_names']);
 
-        $displays = collect($courseData)->mapWithKeys(
-            fn (mixed $value, string $key): array => [
-                $key => match ($key) {
-                    'major' => Course::MAJORS[$value] ?? $value,
-                    'is_offered' => $value ? 'เปิดสอน' : 'ยังไม่เปิดสอน',
-                    'publication_status' => Course::PUBLICATION_STATUS_LABELS[$value] ?? $value,
-                    default => $value,
-                },
-            ],
-        );
+    $relations = $this->extractRelations($validated, true);
+    $courseData = collect($validated)
+        ->except(array_keys($relations))
+        ->all();
 
-        return response()->json(['ok' => true, 'displays' => $displays]);
-    }
+    DB::transaction(function () use (
+        $course,
+        $courseData,
+        $relations,
+        $topicNames
+    ): void {
+        if ($courseData !== []) {
+            $course->updateDetails($courseData);
+        }
 
-    public function updateImage(Request $request, Course $course): JsonResponse
-    {
+        $newTopicIds = $this->resolveTopicIds($topicNames);
+
+        if ($newTopicIds !== []) {
+            $existingTopicIds = $relations['topics']
+                ?? $course->topics()->pluck('topics.id')->all();
+
+            $relations['topics'] = array_values(array_unique(array_merge(
+                $existingTopicIds,
+                $newTopicIds,
+            )));
+        }
+
+        $this->syncRelations($course, $relations);
+    });
+
+    return response()->json(['ok' => true]);
+}
+
+
+    public function updateImage(
+        Request $request,
+        Course $course
+    ): JsonResponse {
         $request->validate(
             ['image' => ['required', 'image', 'max:2048']],
             $this->imageValidationMessages(),
@@ -196,14 +280,20 @@ class CourseController extends Controller
 
         $course->update(['image' => $path]);
 
-        return response()->json(['ok' => true, 'url' => $course->fresh()->imageUrl()]);
+        return response()->json([
+            'ok' => true,
+            'url' => $course->fresh()->imageUrl(),
+        ]);
     }
 
-    private function validateCourse(Request $request, ?Course $course = null): array
-    {
+    private function validateCourse(
+        Request $request,
+        ?Course $course = null
+    ): array {
         return $request->validate([
             'course_name_en' => ['required', 'string', 'max:255'],
             'course_name_th' => ['required', 'string', 'max:255'],
+
             'course_code' => [
                 'required',
                 'string',
@@ -211,17 +301,41 @@ class CourseController extends Controller
                 'alpha_num:ascii',
                 Rule::unique('courses', 'course_code')->ignore($course),
             ],
+
             'description' => ['nullable', 'string'],
             'major' => ['required', Rule::in(array_keys(Course::MAJORS))],
             'course_type' => ['required', Rule::in(Course::TYPES)],
             'credits' => ['required', 'integer', 'min:0'],
             'image' => ['nullable', 'image', 'max:2048'],
+
             'is_offered' => ['sometimes', 'boolean'],
-            'publication_status' => ['sometimes', Rule::in(Course::PUBLICATION_STATUSES)],
+            'publication_status' => [
+                'sometimes',
+                Rule::in(Course::PUBLICATION_STATUSES),
+            ],
+
             'teacher_ids' => ['nullable', 'array'],
-            'teacher_ids.*' => ['integer', 'distinct', 'exists:teachers,id'],
+            'teacher_ids.*' => [
+                'integer',
+                'distinct',
+                'exists:teachers,id',
+            ],
+
             'topic_ids' => ['nullable', 'array'],
-            'topic_ids.*' => ['integer', 'distinct', 'exists:topics,id'],
+            'topic_ids.*' => [
+                'integer',
+                'distinct',
+                Rule::exists('topics', 'id')->whereNull('deleted_at'),
+            ],
+
+            'topic_names' => ['nullable', 'array'],
+            'topic_names.*' => [
+                'required',
+                'string',
+                'max:255',
+                'distinct:ignore_case',
+            ],
+
             'prerequisite_ids' => ['nullable', 'array'],
             'prerequisite_ids.*' => [
                 'integer',
@@ -232,11 +346,34 @@ class CourseController extends Controller
         ], $this->imageValidationMessages());
     }
 
-    private function validateInline(Request $request, Course $course): array
-    {
+    private function validateInline(
+        Request $request,
+        Course $course
+    ): array {
         return $request->validate([
-            'course_name_en' => ['sometimes', 'required', 'string', 'max:255'],
-            'course_name_th' => ['sometimes', 'required', 'string', 'max:255'],
+                    'topic_ids' => ['sometimes', 'array'],
+                    'topic_ids.*' => [
+                        'integer',
+                        'distinct',
+                        Rule::exists('topics', 'id')->whereNull('deleted_at'),
+                    ],
+
+                    'topic_names' => ['sometimes', 'nullable', 'array'],
+                    'topic_names.*' => [
+                        'required',
+                        'string',
+                        'max:255',
+                        'distinct:ignore_case',
+                    ],
+
+
+            'course_name_th' => [
+                'sometimes',
+                'required',
+                'string',
+                'max:255',
+            ],
+
             'course_code' => [
                 'sometimes',
                 'required',
@@ -245,16 +382,32 @@ class CourseController extends Controller
                 'alpha_num:ascii',
                 Rule::unique('courses', 'course_code')->ignore($course),
             ],
+
             'description' => ['sometimes', 'nullable', 'string'],
             'major' => ['sometimes', Rule::in(array_keys(Course::MAJORS))],
             'course_type' => ['sometimes', Rule::in(Course::TYPES)],
             'credits' => ['sometimes', 'required', 'integer', 'min:0'],
             'is_offered' => ['sometimes', 'boolean'],
-            'publication_status' => ['sometimes', Rule::in(Course::PUBLICATION_STATUSES)],
+
+            'publication_status' => [
+                'sometimes',
+                Rule::in(Course::PUBLICATION_STATUSES),
+            ],
+
             'teacher_ids' => ['sometimes', 'array'],
-            'teacher_ids.*' => ['integer', 'distinct', 'exists:teachers,id'],
+            'teacher_ids.*' => [
+                'integer',
+                'distinct',
+                'exists:teachers,id',
+            ],
+
             'topic_ids' => ['sometimes', 'array'],
-            'topic_ids.*' => ['integer', 'distinct', 'exists:topics,id'],
+            'topic_ids.*' => [
+                'integer',
+                'distinct',
+                Rule::exists('topics', 'id')->whereNull('deleted_at'),
+            ],
+
             'prerequisite_ids' => ['sometimes', 'array'],
             'prerequisite_ids.*' => [
                 'integer',
@@ -265,8 +418,11 @@ class CourseController extends Controller
         ]);
     }
 
-    private function prepareImage(Request $request, array $data, ?Course $course = null): array
-    {
+    private function prepareImage(
+        Request $request,
+        array $data,
+        ?Course $course = null
+    ): array {
         if (! $request->hasFile('image')) {
             return collect($data)->except('image')->all();
         }
@@ -282,7 +438,6 @@ class CourseController extends Controller
 
     /**
      * Keep upload errors actionable instead of exposing PHP's generic message.
-     * The server transport limit is intentionally just above Laravel's 2 MB rule.
      *
      * @return array<string, string>
      */
@@ -295,31 +450,129 @@ class CourseController extends Controller
         ];
     }
 
-    private function extractRelations(array &$data, bool $onlyProvided = false): array
-    {
-        return collect(['teacher_ids', 'topic_ids', 'prerequisite_ids'])
-            ->mapWithKeys(function (string $key) use (&$data, $onlyProvided): array {
-                if ($onlyProvided && ! array_key_exists($key, $data)) {
-                    return [];
-                }
+    private function extractRelations(
+        array &$data,
+        bool $onlyProvided = false
+    ): array {
+        return collect([
+            'teacher_ids',
+            'topic_ids',
+            'prerequisite_ids',
+        ])->mapWithKeys(function (
+            string $key
+        ) use (&$data, $onlyProvided): array {
+            if ($onlyProvided && ! array_key_exists($key, $data)) {
+                return [];
+            }
 
-                $relation = match ($key) {
-                    'teacher_ids' => 'teachers',
-                    'topic_ids' => 'topics',
-                    'prerequisite_ids' => 'prerequisiteCourses',
-                };
-                $ids = $data[$key] ?? [];
-                unset($data[$key]);
+            $relation = match ($key) {
+                'teacher_ids' => 'teachers',
+                'topic_ids' => 'topics',
+                'prerequisite_ids' => 'prerequisiteCourses',
+            };
 
-                return [$relation => $ids];
-            })
-            ->all();
+            $ids = $data[$key] ?? [];
+            unset($data[$key]);
+
+            return [$relation => $ids];
+        })->all();
     }
 
-    private function syncRelations(Course $course, array $relations): void
-    {
+    private function syncRelations(
+        Course $course,
+        array $relations
+    ): void {
         foreach ($relations as $relation => $ids) {
             $course->{$relation}()->sync($ids);
         }
     }
+
+    private function resolveTopicIds(array $names): array
+    {
+        $ids = [];
+        $seen = [];
+
+        foreach ($names as $name) {
+            $name = trim((string) $name);
+
+            if ($name === '') {
+                continue;
+            }
+
+            $normalized = mb_strtolower($name);
+
+            if (isset($seen[$normalized])) {
+                continue;
+            }
+
+            $seen[$normalized] = true;
+
+            $topic = Topic::query()
+                ->whereRaw('LOWER(name) = ?', [$normalized])
+                ->first();
+
+            if (! $topic) {
+                $topic = Topic::create([
+                    'name' => $name,
+                ]);
+            }
+
+            $ids[] = $topic->getKey();
+        }
+
+        return array_values(array_unique($ids));
+    }
+        
+    public function trashed(): View
+    {
+        $courses = Course::onlyTrashed()
+            ->orderBy('course_code')
+            ->get();
+
+        return view('admin.courses.trashed', compact('courses'));
+    }
+
+    public function restore(int $id): RedirectResponse
+    {
+        $course = Course::onlyTrashed()->findOrFail($id);
+
+        $course->restore();
+
+        return to_route('admin.courses.trashed')
+            ->with('success', 'กู้คืนรายวิชาเรียบร้อยแล้ว');
+    }
+    public function forceDelete(int $id): RedirectResponse
+{
+    $course = Course::onlyTrashed()->findOrFail($id);
+
+    if ($course->studyPlanCourses()->exists()) {
+        return to_route('admin.courses.trashed')
+            ->withErrors([
+                'course' => 'ไม่สามารถลบถาวรได้ เนื่องจากรายวิชายังมีข้อมูลในแผนการเรียน',
+            ]);
+    }
+
+    $imagePath = $course->imageStoragePath();
+
+    DB::transaction(function () use ($course): void {
+        $course->comments()->delete();
+        $course->ratings()->delete();
+
+        $course->teachers()->detach();
+        $course->topics()->detach();
+        $course->prerequisiteCourses()->detach();
+        $course->dependentCourses()->detach();
+
+        $course->forceDelete();
+    });
+
+    if ($imagePath) {
+        Storage::disk('public')->delete($imagePath);
+    }
+
+    return to_route('admin.courses.trashed')
+        ->with('success', 'ลบรายวิชาถาวรเรียบร้อยแล้ว');
+    }
 }
+
+

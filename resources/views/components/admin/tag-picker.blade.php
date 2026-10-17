@@ -10,6 +10,9 @@
     'alwaysOpen' => false,
     'selectedLabel' => 'name',
     'selectedSubLabel' => null,
+    'allowCreate' => false,
+    'allowTopicEdit' => false,
+    
 ])
 
 <div
@@ -21,7 +24,13 @@
     data-panel-state="{{ $alwaysOpen ? 'open' : 'closed' }}"
     data-empty="{{ count($selected) ? 'false' : 'true' }}"
     class="group/picker"
->
+    data-allow-create="{{ $allowCreate ? 'true' : 'false' }}"
+    
+    data-allow-topic-edit="{{ $allowTopicEdit ? 'true' : 'false' }}"
+    @if ($allowTopicEdit)
+        data-topic-update-url="{{ route('admin.topics.update', ['topic' => '__TOPIC_ID__']) }}"
+    @endif
+    >
     <div data-tags class="mb-3 flex flex-wrap gap-2">
         @foreach ($selected as $item)
             <span

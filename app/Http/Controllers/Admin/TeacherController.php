@@ -89,4 +89,30 @@ class TeacherController extends Controller
 
         return response()->json($teachers);
     }
+    public function trashed(): View
+    {
+        $teachers = Teacher::onlyTrashed()
+            ->orderBy('teacher_name')
+            ->get();
+
+        return view('admin.teachers.trashed', compact('teachers'));
+    }
+
+    public function restore(int $id): RedirectResponse
+    {
+        $teacher = Teacher::onlyTrashed()->findOrFail($id);
+        $teacher->restore();
+
+        return to_route('admin.teachers.trashed')
+            ->with('success', 'กู้คืนข้อมูลอาจารย์เรียบร้อยแล้ว');
+    }
+
+    public function forceDelete(int $id): RedirectResponse
+    {
+        $teacher = Teacher::onlyTrashed()->findOrFail($id);
+        $teacher->forceDelete();
+
+        return to_route('admin.teachers.trashed')
+            ->with('success', 'ลบข้อมูลอาจารย์ถาวรเรียบร้อยแล้ว');
+    }
 }

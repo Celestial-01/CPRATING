@@ -7,7 +7,16 @@
         title="รายชื่อหัวข้อ"
         description="จัดการข้อมูลประเด็นหัวข้อต่าง ๆ ในรายวิชาเรียน"
     >
-        {{-- เพิ่มหัวข้อ --}}
+       
+    <div class="mb-5">
+        <a
+            href="{{ route('admin.topics.trashed') }}"
+            class="inline-flex h-[45px] items-center gap-2 rounded-[15px] border border-slate-200 bg-white px-5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-4 focus:ring-red-100"
+        >
+            รายการที่ถูกลบ
+        </a>
+    </div>
+
         <form action="{{ route('admin.topics.store') }}" method="POST"
               class="mb-6 flex items-end gap-3">
             @csrf
