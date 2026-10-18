@@ -7,15 +7,21 @@
         title="รายชื่ออาจารย์"
         description="จัดการข้อมูลอาจารย์ในระบบ CPRATING"
     >
-        <div class="mb-5 flex justify-start">
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
             <a
                 href="{{ route('admin.teachers.create') }}"
                 class="inline-flex h-[45px] items-center rounded-[15px] bg-gradient-to-r from-[#1684df] to-[#56afff] px-6 text-sm text-white shadow-sm transition hover:brightness-105 focus:outline-none focus:ring-4 focus:ring-sky-200"
             >
                 + เพิ่มอาจารย์
             </a>
-        </div>
-
+       
+            <a
+                href="{{ route('admin.teachers.trashed') }}"
+                class="inline-flex h-[45px] items-center gap-2 rounded-[15px] border border-slate-200 bg-white px-5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-4 focus:ring-red-100"
+            >
+                รายการที่ถูกลบ
+            </a>
+ </div>
         <section class="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
             @if ($teachers->isEmpty())
                 <p class="px-6 py-16 text-center text-sm text-slate-400">

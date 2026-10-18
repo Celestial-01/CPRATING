@@ -80,6 +80,7 @@
                     hint="หากไม่เลือก จะไม่มีหัวข้อแสดงในรายวิชานี้"
                     label-keys="name"
                     :selected="$selectedTopics"
+                    :allow-create="true"
                 />
             </x-admin.field>
 

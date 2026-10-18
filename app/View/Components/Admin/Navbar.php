@@ -21,7 +21,7 @@ final class Navbar extends Component
             ['label' => 'หน้าหลัก', 'route' => 'admin.dashboard'],
             ['label' => 'เพิ่มรายวิชา', 'route' => 'admin.courses.create'],
             ['label' => 'เพิ่มอาจารย์', 'route' => 'admin.teachers.index'],
-            ['label' => 'เพิ่มหัวข้อ', 'route' => 'admin.topics.index'],
+            ['label' => 'หัวข้อทั้งหมด', 'route' => 'admin.topics.index'],
             ['label' => 'รายงาน', 'route' => 'admin.reports.index'],
             ['label' => 'รออนุมัติ', 'route' => 'admin.moderation.index'],
         ])->map(function (array $menu): array {

@@ -101,4 +101,28 @@ class CourseCatalogController extends Controller
             'showSkeleton',
         ));
     }
-}
+    public function trashed(): View
+    {
+        $courses = Course::onlyTrashed()
+            ->orderBy('course_code')
+            ->get();
+
+        return view('admin.courses.trashed', compact('courses'));
+    }
+
+    public function restore(int $id): RedirectResponse
+    {
+        $course = Course::onlyTrashed()->findOrFail($id);
+
+        if ($course->studyPlanCourses()->exists()) {
+            throw ValidationException::withMessages([
+                'course' => 'ไม่สามารถกู้คืนรายวิชาได้ เนื่องจากมีรายการในแผนการเรียน',
+            ]);
+        }
+
+        $course->restore();
+
+        return to_route('admin.courses.trashed')
+            ->with('success', 'กู้คืนรายวิชาเรียบร้อยแล้ว');
+    }
+    }

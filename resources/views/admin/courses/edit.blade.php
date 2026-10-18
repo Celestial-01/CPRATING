@@ -120,6 +120,7 @@
                 placeholder="พิมพ์ชื่อหัวข้อเพื่อค้นหา"
                 label-keys="name"
                 selected-label="name"
+                allow-create
             />
 
             <x-admin.course-relation-field
