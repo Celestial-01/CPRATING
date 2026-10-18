@@ -1,4 +1,4 @@
-<header class="relative z-50 mx-auto w-full max-w-[1120px] bg-white px-3 pb-3 pt-8 sm:px-6">
+<header class="sticky top-0 z-50 mx-auto w-full max-w-[1120px] bg-white px-3 pb-3 pt-8 sm:px-6">
     <nav
         class="flex min-h-[66px] items-center gap-3 rounded-[20px] bg-white px-3 py-3 shadow-[0_8px_18px_rgba(15,23,42,0.14)] sm:gap-6 sm:px-5"
         aria-label="เมนูผู้ดูแลระบบ"

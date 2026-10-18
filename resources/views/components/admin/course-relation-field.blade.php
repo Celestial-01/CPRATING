@@ -13,6 +13,7 @@
     'selectedSubLabel' => null,
     'alwaysOpen' => false,
     'wide' => false,
+    'allowCreate' => false,
 ])
 
 <section
@@ -61,6 +62,10 @@
             :selected="$selected"
             :selected-label="$selectedLabel"
             :selected-sub-label="$selectedSubLabel"
+            :allow-create="true"
+            :allow-topic-edit="true"
+            :allow-create="$allowCreate"
+            :allow-topic-edit="$field === 'topic_ids'"
         />
 
         <p data-error class="mt-2 hidden text-sm text-red-600 group-data-[has-error=true]/relation:block"></p>

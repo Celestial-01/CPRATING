@@ -31,17 +31,28 @@ Route::middleware('profile.complete')->group(function (): void {
         ->name('courses.rating.destroy');
 });
 
+
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')
     ->as('admin.')
     ->group(function (): void {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
         Route::get('courses/search', [AdminCourseController::class, 'search'])->name('courses.search');
+        Route::get('courses/trashed', [AdminCourseController::class, 'trashed'])->name('courses.trashed');
+        Route::patch('courses/{id}/restore', [AdminCourseController::class, 'restore'])->name('courses.restore');
+
         Route::patch('courses/{course}/inline', [AdminCourseController::class, 'inlineUpdate'])->name('courses.inline-update');
         Route::post('courses/{course}/image', [AdminCourseController::class, 'updateImage'])->name('courses.image');
         Route::resource('courses', AdminCourseController::class)->except(['show']);
+        Route::delete('courses/{id}/force', [AdminCourseController::class, 'forceDelete'])->name('courses.force-delete');
+        
         Route::get('teachers/search', [AdminTeacherController::class, 'search'])->name('teachers.search');
+        Route::get('teachers/trashed', [AdminTeacherController::class, 'trashed'])->name('teachers.trashed');
+        Route::patch('teachers/{id}/restore', [AdminTeacherController::class, 'restore'])->name('teachers.restore');
+        Route::delete('teachers/{id}/force', [AdminTeacherController::class, 'forceDelete'])->name('teachers.force-delete');
         Route::resource('teachers', AdminTeacherController::class)->except(['show']);
+
         Route::get('topics/search', [AdminTopicController::class, 'search'])->name('topics.search');
         Route::resource('topics', AdminTopicController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('reports', [AdminReportController::class, 'index'])->name('reports.index');
@@ -51,7 +62,11 @@ Route::middleware(['auth', 'admin'])
         Route::get('moderation', [CommentModerationController::class, 'index'])->name('moderation.index');
         Route::patch('moderation/{comment}/approve', [CommentModerationController::class, 'approve'])->name('moderation.approve');
         Route::delete('moderation/{comment}', [CommentModerationController::class, 'destroy'])->name('moderation.destroy');
-    });
+    
+        Route::get('topics/trashed', [AdminTopicController::class, 'trashed'])->name('topics.trashed');
+        Route::patch('topics/{id}/restore', [AdminTopicController::class, 'restore'])->name('topics.restore');
+        Route::delete('topics/{id}/force', [AdminTopicController::class, 'forceDelete'])->name('topics.force-delete');
+        });
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('auth.login');

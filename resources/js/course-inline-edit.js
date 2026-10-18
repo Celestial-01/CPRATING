@@ -134,6 +134,7 @@ const initField = (root) => {
     });
 };
 
+
 const initRelation = (root) => {
     const editor = root.querySelector('[data-editor]');
     const chips = root.querySelector('[data-chips]');
@@ -147,6 +148,8 @@ const initRelation = (root) => {
 
     const currentTags = () => [...tagsBox.querySelectorAll('[data-tag]')];
 
+    const isTopicField = root.dataset.field === 'topic_ids';
+
     const renderChips = () => {
         chips.querySelectorAll('[data-chip]').forEach((chip) => chip.remove());
 
@@ -154,8 +157,10 @@ const initRelation = (root) => {
 
         tags.forEach((tag) => {
             const chip = chipTemplate.content.firstElementChild.cloneNode(true);
-            chip.querySelector('[data-slot="label"]').textContent = tag.dataset.label ?? '';
-            chip.querySelector('[data-slot="sublabel"]').textContent = tag.dataset.sublabel ?? '';
+            chip.querySelector('[data-slot="label"]').textContent =
+                tag.dataset.label ?? '';
+            chip.querySelector('[data-slot="sublabel"]').textContent =
+                tag.dataset.sublabel ?? '';
             chips.appendChild(chip);
         });
 
@@ -179,18 +184,42 @@ const initRelation = (root) => {
     root.querySelector('[data-cancel]').addEventListener('click', cancel);
 
     saveButton.addEventListener('click', async () => {
-        const ids = currentTags().map((tag) =>
-            Number(tag.querySelector('input[type="hidden"]').value),
-        );
+        const payload = {};
+
+        const tags = currentTags();
+
+        if (isTopicField) {
+            payload.topic_ids = [];
+            payload.topic_names = [];
+
+            tags.forEach((tag) => {
+                const pendingName = tag.dataset.pendingName;
+
+                if (pendingName !== undefined) {
+                    payload.topic_names.push(pendingName);
+                    return;
+                }
+
+                const input = tag.querySelector('input[type="hidden"]');
+                const id = Number(input.value);
+
+                if (Number.isInteger(id) && id > 0) {
+                    payload.topic_ids.push(id);
+                }
+            });
+        } else {
+            payload[root.dataset.field] = tags.map((tag) =>
+                Number(tag.querySelector('input[type="hidden"]').value),
+            );
+        }
 
         setSaving(root, saveButton, true);
         clearError(root);
 
         try {
-            await patch(root.dataset.url, { [root.dataset.field]: ids });
-            renderChips();
-            root.dataset.editing = 'false';
+            await patch(root.dataset.url, payload);
             toast('บันทึกแล้ว');
+            window.location.reload();
         } catch (e) {
             showError(root, error, e.message);
         } finally {
@@ -198,6 +227,7 @@ const initRelation = (root) => {
         }
     });
 };
+
 
 const initImage = (box) => {
     const input = box.querySelector('[data-image-input]');

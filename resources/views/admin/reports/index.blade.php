@@ -66,7 +66,7 @@
                     <div class="rounded-xl bg-gray-50 p-4">
                         <p class="mb-1 text-xs text-gray-500">
                             ความคิดเห็นของ {{ $comment->user->name ?? 'ไม่ทราบ' }}
-                            @if ($comment->status !== 'approved')
+                            @if ($comment->trashed() || $comment->status !== 'approved')
                                 <span class="ml-1 text-red-500">(ไม่แสดงบนหน้าเว็บ)</span>
                             @endif
                         </p>
