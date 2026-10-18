@@ -43,9 +43,9 @@ class ReportController extends Controller
 
     // ถ้าผิดจริงจะถูกซ่อนเข้า removeComment
     public function removeComment(Request $request, Report $report): RedirectResponse
-    {
-        DB::transaction(function () use ($request, $report) {
-            $report->comment->update(['status' => 'rejected']);
+        {
+            DB::transaction(function () use ($request, $report) {
+                $report->comment()->withTrashed()->first()?->delete();
 
             Report::where('comment_id', $report->comment_id)
                 ->where('status', 'pending')
@@ -54,8 +54,7 @@ class ReportController extends Controller
                     'handled_by' => $request->user()->id,
                     'handled_at' => now(),
                 ]);
-        });
-
-        return back()->with('success', 'ซ่อนความคิดเห็นและปิดรายงานที่เกี่ยวข้องแล้ว');
-    }
+            });
+            return back()->with('success', 'ซ่อนความคิดเห็นและปิดรายงานที่เกี่ยวข้องแล้ว');
+        }
 }

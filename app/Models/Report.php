@@ -46,7 +46,7 @@ class Report extends Model
 
     public function comment(): BelongsTo
     {
-        return $this->belongsTo(Comment::class);
+        return $this->belongsTo(Comment::class)->withTrashed();
     }
 
     public function reporter(): BelongsTo
