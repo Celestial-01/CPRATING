@@ -53,7 +53,9 @@ test('catalog and study plan pages are available', function () {
 });
 
 test('history page is available with viewed and saved sections', function () {
-    $this->get(route('history.index'))
+    $this->get(route('history.index'))->assertRedirect(route('auth.login'));
+
+    $this->actingAs(User::factory()->create())->get(route('history.index'))
         ->assertOk()
         ->assertViewIs('history.index')
         ->assertSee('วิชาที่คุณเพิ่งเปิดดู')

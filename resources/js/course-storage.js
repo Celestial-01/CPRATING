@@ -1,109 +1,57 @@
-const STORAGE_KEY = 'cprating.course-history.v1';
-const MAX_VIEWED_COURSES = 30;
+const savedCodes = new Set(JSON.parse(
+    document.querySelector('[data-saved-course-codes]')?.textContent || '[]',
+));
+const pendingCodes = new Set();
 
-const normalizeCode = (code) => String(code || '').trim().toUpperCase();
+export const getSavedCodes = () => [...savedCodes];
 
-const emptyState = () => ({ viewed: [], saved: [] });
+export const isSaved = (code) => savedCodes.has(code);
 
-const getStorage = () => {
-    try {
-        return window.localStorage;
-    } catch {
+export const toggleSaved = async (button) => {
+    const code = button.dataset.courseSave;
+    const loginUrl = document.querySelector('[name="course-login-url"]')?.content;
+
+    if (!document.querySelector('[data-saved-course-codes]')) {
+        window.location.assign(loginUrl);
         return null;
     }
-};
 
-const normalizeState = (value) => {
-    if (!value || typeof value !== 'object') return emptyState();
+    if (!code || pendingCodes.has(code)) return null;
 
-    const viewed = Array.isArray(value.viewed)
-        ? value.viewed
-            .map((item) => {
-                if (typeof item === 'string') return { code: normalizeCode(item), viewedAt: 0 };
-
-                return {
-                    code: normalizeCode(item?.code),
-                    viewedAt: Number(item?.viewedAt) || 0,
-                };
-            })
-            .filter((item) => item.code)
-            .filter((item, index, items) => items.findIndex((entry) => entry.code === item.code) === index)
-            .slice(0, MAX_VIEWED_COURSES)
-        : [];
-    const saved = Array.isArray(value.saved)
-        ? value.saved
-            .map(normalizeCode)
-            .filter(Boolean)
-            .filter((code, index, codes) => codes.indexOf(code) === index)
-        : [];
-
-    return { viewed, saved };
-};
-
-const readState = () => {
-    const storage = getStorage();
-
-    if (!storage) return emptyState();
+    const wasSaved = savedCodes.has(code);
+    pendingCodes.add(code);
+    button.disabled = true;
 
     try {
-        return normalizeState(JSON.parse(storage.getItem(STORAGE_KEY) || 'null'));
-    } catch {
-        return emptyState();
+        const response = await fetch(wasSaved ? button.dataset.unsaveUrl : button.dataset.saveUrl, {
+            method: wasSaved ? 'DELETE' : 'POST',
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('[name="csrf-token"]')?.content,
+            },
+            credentials: 'same-origin',
+        });
+
+        if (response.status === 401 || response.status === 419) {
+            window.location.assign(loginUrl);
+            return null;
+        }
+
+        if (!response.ok) throw new Error('Could not save course');
+
+        const { saved } = await response.json();
+        if (saved) savedCodes.add(code);
+        else savedCodes.delete(code);
+
+        document.querySelectorAll('[data-course-save]').forEach((saveButton) => {
+            if (saveButton.dataset.courseSave === code) {
+                saveButton.setAttribute('aria-pressed', String(saved));
+            }
+        });
+
+        return saved;
+    } finally {
+        pendingCodes.delete(code);
+        button.disabled = false;
     }
-};
-
-const writeState = (state) => {
-    const storage = getStorage();
-
-    if (!storage) return;
-
-    try {
-        storage.setItem(STORAGE_KEY, JSON.stringify(state));
-        window.dispatchEvent(new CustomEvent('course-history-change', { detail: state }));
-    } catch {
-        // Storage can be unavailable in private browsing or when its quota is full.
-    }
-};
-
-export const getViewedCodes = () => readState().viewed.map(({ code }) => code);
-
-export const getSavedCodes = () => readState().saved;
-
-export const isSaved = (code) => getSavedCodes().includes(normalizeCode(code));
-
-export const recordViewed = (code) => {
-    const normalizedCode = normalizeCode(code);
-
-    if (!normalizedCode) return;
-
-    const state = readState();
-    state.viewed = [
-        { code: normalizedCode, viewedAt: Date.now() },
-        ...state.viewed.filter((item) => item.code !== normalizedCode),
-    ].slice(0, MAX_VIEWED_COURSES);
-    writeState(state);
-};
-
-export const toggleSaved = (code) => {
-    const normalizedCode = normalizeCode(code);
-
-    if (!normalizedCode) return false;
-
-    const state = readState();
-    const saved = state.saved.includes(normalizedCode);
-
-    state.saved = saved
-        ? state.saved.filter((item) => item !== normalizedCode)
-        : [normalizedCode, ...state.saved];
-    writeState(state);
-
-    return !saved;
-};
-
-export const initializeCourseLinkTracking = () => {
-    document.addEventListener('click', (event) => {
-        const link = event.target.closest('[data-course-link]');
-
-        if (link) recordViewed(link.dataset.courseLink);
-    });
 };

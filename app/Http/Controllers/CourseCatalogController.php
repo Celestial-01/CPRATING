@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CourseCatalogController extends Controller
 {
@@ -47,6 +48,14 @@ class CourseCatalogController extends Controller
 
         if (! $request->boolean('loading') && $request->isMethod('get')) {
             $course->recordView();
+
+            if ($request->user()) {
+                DB::table('user_course_views')->upsert([
+                    'user_id' => $request->user()->getKey(),
+                    'course_id' => $course->getKey(),
+                    'viewed_at' => now(),
+                ], ['user_id', 'course_id'], ['viewed_at']);
+            }
         }
 
         $sort = $request->query('sort') === 'popular' ? 'popular' : 'latest';
@@ -101,6 +110,7 @@ class CourseCatalogController extends Controller
             'showSkeleton',
         ));
     }
+
     public function trashed(): View
     {
         $courses = Course::onlyTrashed()
@@ -125,4 +135,4 @@ class CourseCatalogController extends Controller
         return to_route('admin.courses.trashed')
             ->with('success', 'กู้คืนรายวิชาเรียบร้อยแล้ว');
     }
-    }
+}

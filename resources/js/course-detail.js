@@ -17,7 +17,7 @@ import {
 } from 'lucide';
 import { onDomReady } from './dom-ready';
 import { renderIcons } from './icon-renderer';
-import { getSavedCodes, isSaved, recordViewed, toggleSaved } from './course-storage';
+import { getSavedCodes, isSaved, toggleSaved } from './course-storage';
 import { animatePress, applyTilt, createToast, formatCopy, parseJson } from './utils';
 
 const iconSet = {
@@ -183,13 +183,20 @@ const initializeRelatedCourses = (copy, showToast) => {
         applyTilt(card);
     });
 
-    relatedCourses.addEventListener('click', (event) => {
+    relatedCourses.addEventListener('click', async (event) => {
         const saveButton = event.target.closest('[data-course-save]');
 
         if (!saveButton || !relatedCourses.contains(saveButton)) return;
 
         const code = saveButton.dataset.courseSave;
-        const saved = toggleSaved(code);
+        let saved;
+        try {
+            saved = await toggleSaved(saveButton);
+        } catch {
+            showToast('บันทึกวิชาไม่สำเร็จ กรุณาลองอีกครั้ง');
+            return;
+        }
+        if (saved === null) return;
 
         saveButton.setAttribute('aria-pressed', String(saved));
         showToast(formatCopy(saved ? copy.saved : copy.unsaved, { course: code }));
@@ -209,7 +216,6 @@ const initializeCourse = () => {
         const copy = parseJson(document.querySelector('[data-course-detail-copy]'), {});
         const showToast = createToast();
 
-        recordViewed(code);
         initializeRatingDialog();
         initializeRatingCancellation();
         initializeRelatedCourses(copy, showToast);
@@ -226,8 +232,15 @@ const initializeCourse = () => {
             };
 
             syncSaveButton(isSaved(code));
-            saveButton.addEventListener('click', () => {
-                const saved = toggleSaved(code);
+            saveButton.addEventListener('click', async () => {
+                let saved;
+                try {
+                    saved = await toggleSaved(saveButton);
+                } catch {
+                    showToast('บันทึกวิชาไม่สำเร็จ กรุณาลองอีกครั้ง');
+                    return;
+                }
+                if (saved === null) return;
                 syncSaveButton(saved);
                 showToast(formatCopy(saved ? copy.saved : copy.unsaved, { course: code }));
             });

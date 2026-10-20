@@ -50,10 +50,10 @@ test('admin publishing and user ratings feed the same statistics on every course
         ->assertViewHas('averageGradePoint', 2.0)
         ->assertSee('90%')->assertSee('60%');
 
-    foreach (['courses.index', 'history.index'] as $route) {
-        $this->get(route($route))->assertOk()
-            ->assertViewHas('courses', fn ($courses): bool => $hasStatistics($courses->firstWhere('id', $course->id)));
-    }
+    $this->get(route('courses.index'))->assertOk()
+        ->assertViewHas('courses', fn ($courses): bool => $hasStatistics($courses->firstWhere('id', $course->id)));
+    $this->get(route('history.index'))->assertOk()
+        ->assertViewHas('viewedCourses', fn ($courses): bool => $hasStatistics($courses->firstWhere('id', $course->id)));
 
     $this->get(route('home'))->assertOk()
         ->assertViewHas('popularCourses', fn ($courses): bool => $hasStatistics($courses->firstWhere('id', $course->id)))

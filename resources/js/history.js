@@ -8,12 +8,7 @@ import {
 } from 'lucide';
 import { onDomReady } from './dom-ready';
 import { renderIcons } from './icon-renderer';
-import {
-    getSavedCodes,
-    getViewedCodes,
-    initializeCourseLinkTracking,
-    toggleSaved,
-} from './course-storage';
+import { getSavedCodes, toggleSaved } from './course-storage';
 import { createToast, formatCopy, parseJson } from './utils';
 
 const iconSet = { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Bookmark, Clock };
@@ -63,8 +58,6 @@ const updateSaveButton = (button, saved, copy) => {
 const initializeHistory = () => {
     const page = document.querySelector('[data-history-page]');
 
-    initializeCourseLinkTracking();
-
     if (!page) return;
 
     renderIcons(iconSet);
@@ -87,27 +80,14 @@ const initializeHistory = () => {
 
     if (!viewedGrid || !savedGrid || !viewedEmpty || !savedEmpty) return;
 
-    const cardsByCode = (grid) => new Map(
-        [...grid.querySelectorAll('[data-course-code]')]
-            .map((card) => [card.dataset.courseCode, card]),
-    );
+    const updateGrid = (grid, showAll) => {
+        const cards = [...grid.querySelectorAll('[data-course-card]')];
 
-    const updateGrid = (grid, codes, showAll) => {
-        const cards = cardsByCode(grid);
-        const availableCodes = codes.filter((code) => cards.has(code));
-
-        cards.forEach((card) => {
-            card.hidden = true;
+        cards.forEach((card, index) => {
+            card.hidden = !showAll && index >= PREVIEW_LIMIT;
         });
 
-        (showAll ? availableCodes : availableCodes.slice(0, PREVIEW_LIMIT)).forEach((code) => {
-            const card = cards.get(code);
-
-            card.hidden = false;
-            grid.append(card);
-        });
-
-        return availableCodes.length;
+        return cards.length;
     };
 
     const updateCount = (element, summary, count, noun) => {
@@ -121,11 +101,9 @@ const initializeHistory = () => {
 
     const render = () => {
         const activeSection = getActiveSection();
-        const viewedCodes = getViewedCodes();
-        const savedCodes = getSavedCodes();
-        const savedCodeSet = new Set(savedCodes);
-        const visibleViewed = updateGrid(viewedGrid, viewedCodes, activeSection === 'viewed');
-        const visibleSaved = updateGrid(savedGrid, savedCodes, activeSection === 'saved');
+        const savedCodeSet = new Set(getSavedCodes());
+        const visibleViewed = updateGrid(viewedGrid, activeSection === 'viewed');
+        const visibleSaved = updateGrid(savedGrid, activeSection === 'saved');
 
         viewedEmpty.hidden = visibleViewed > 0;
         savedEmpty.hidden = visibleSaved > 0;
@@ -169,13 +147,28 @@ const initializeHistory = () => {
         page.querySelector(section ? `#history-${section}-title` : '#history-title')?.focus({ preventScroll: true });
     };
 
-    page.addEventListener('click', (event) => {
+    page.addEventListener('click', async (event) => {
         const saveButton = event.target.closest('[data-course-save]');
 
         if (saveButton) {
             event.preventDefault();
             event.stopPropagation();
-            const saved = toggleSaved(saveButton.dataset.courseSave);
+            let saved;
+            try {
+                saved = await toggleSaved(saveButton);
+            } catch {
+                showToast('บันทึกวิชาไม่สำเร็จ กรุณาลองอีกครั้ง');
+                return;
+            }
+            if (saved === null) return;
+            const matchingCard = [...savedGrid.querySelectorAll('[data-course-code]')]
+                .find((card) => card.dataset.courseCode === saveButton.dataset.courseSave);
+            if (saved && !matchingCard) {
+                const sourceCard = saveButton.closest('[data-course-code]');
+                if (sourceCard) savedGrid.prepend(sourceCard.cloneNode(true));
+            } else if (!saved) {
+                matchingCard?.remove();
+            }
             showToast(formatCopy(
                 saved ? copy.saved : copy.unsaved,
                 { course: saveButton.dataset.courseSave },
@@ -231,11 +224,7 @@ const initializeHistory = () => {
         );
     }, true);
 
-    window.addEventListener('course-history-change', render);
     window.addEventListener('popstate', render);
-    window.addEventListener('storage', (event) => {
-        if (event.key === 'cprating.course-history.v1') render();
-    });
     render();
 };
 

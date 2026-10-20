@@ -116,6 +116,8 @@
                 <button
                     type="button"
                     data-course-save="{{ $course->course_code }}"
+                    data-save-url="{{ route('courses.save', $course->course_code) }}"
+                    data-unsave-url="{{ route('courses.unsave', $course->course_code) }}"
                     aria-pressed="false"
                     aria-label="บันทึกวิชา {{ $course->course_code }}"
                     class="course-detail-save inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-[18px] border border-[#cccccc] px-2 text-sm text-[#636363] transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 @min-[640px]:flex-col @min-[640px]:gap-1 @min-[700px]:flex-row @min-[700px]:gap-2"
