@@ -35,7 +35,7 @@ const initializeCoursesPage = () => {
     });
     filter.addEventListener('change', () => form.requestSubmit());
 
-    grid.addEventListener('click', (event) => {
+    grid.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-course-save]');
 
         if (!button) return;
@@ -43,7 +43,14 @@ const initializeCoursesPage = () => {
         event.preventDefault();
         event.stopPropagation();
 
-        const saved = toggleSaved(button.dataset.courseSave);
+        let saved;
+        try {
+            saved = await toggleSaved(button);
+        } catch {
+            showToast('บันทึกวิชาไม่สำเร็จ กรุณาลองอีกครั้ง');
+            return;
+        }
+        if (saved === null) return;
 
         button.setAttribute('aria-pressed', String(saved));
         showToast(formatCopy(saved ? copy.saved : copy.unsaved, { course: button.dataset.courseSave }));

@@ -32,6 +32,8 @@
             class="course-card__save-button"
             data-save="{{ $course->course_code }}"
             data-course-save="{{ $course->course_code }}"
+            data-save-url="{{ route('courses.save', $course->course_code) }}"
+            data-unsave-url="{{ route('courses.unsave', $course->course_code) }}"
             aria-pressed="false"
             aria-label="บันทึกวิชา {{ $course->course_code }}"
         >

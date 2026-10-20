@@ -13,6 +13,7 @@ use App\Http\Controllers\CourseRatingController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SavedCourseController;
 use App\Http\Controllers\StudyPlanController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,7 +22,7 @@ Route::middleware('profile.complete')->group(function (): void {
     Route::get('/home', [HomeController::class, 'index'])->name('home.index');
     Route::get('/courses', [CourseCatalogController::class, 'index'])->name('courses.index');
     Route::get('/plans', [StudyPlanController::class, 'index'])->name('plans.index');
-    Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
+    Route::get('/history', [HistoryController::class, 'index'])->middleware('auth')->name('history.index');
     Route::get('/courses/{course:course_code}', [CourseCatalogController::class, 'show'])->name('courses.show');
     Route::post('/courses/{course:course_code}/rating', [CourseRatingController::class, 'store'])
         ->middleware('auth')
@@ -29,8 +30,11 @@ Route::middleware('profile.complete')->group(function (): void {
     Route::delete('/courses/{course:course_code}/rating', [CourseRatingController::class, 'destroy'])
         ->middleware('auth')
         ->name('courses.rating.destroy');
+    Route::post('/courses/{course:course_code}/save', [SavedCourseController::class, 'store'])
+        ->middleware('auth')->name('courses.save');
+    Route::delete('/courses/{course:course_code}/save', [SavedCourseController::class, 'destroy'])
+        ->middleware('auth')->name('courses.unsave');
 });
-
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')
@@ -46,7 +50,7 @@ Route::middleware(['auth', 'admin'])
         Route::post('courses/{course}/image', [AdminCourseController::class, 'updateImage'])->name('courses.image');
         Route::resource('courses', AdminCourseController::class)->except(['show']);
         Route::delete('courses/{id}/force', [AdminCourseController::class, 'forceDelete'])->name('courses.force-delete');
-        
+
         Route::get('teachers/search', [AdminTeacherController::class, 'search'])->name('teachers.search');
         Route::get('teachers/trashed', [AdminTeacherController::class, 'trashed'])->name('teachers.trashed');
         Route::patch('teachers/{id}/restore', [AdminTeacherController::class, 'restore'])->name('teachers.restore');
@@ -62,11 +66,11 @@ Route::middleware(['auth', 'admin'])
         Route::get('moderation', [CommentModerationController::class, 'index'])->name('moderation.index');
         Route::patch('moderation/{comment}/approve', [CommentModerationController::class, 'approve'])->name('moderation.approve');
         Route::delete('moderation/{comment}', [CommentModerationController::class, 'destroy'])->name('moderation.destroy');
-    
+
         Route::get('topics/trashed', [AdminTopicController::class, 'trashed'])->name('topics.trashed');
         Route::patch('topics/{id}/restore', [AdminTopicController::class, 'restore'])->name('topics.restore');
         Route::delete('topics/{id}/force', [AdminTopicController::class, 'forceDelete'])->name('topics.force-delete');
-        });
+    });
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('auth.login');

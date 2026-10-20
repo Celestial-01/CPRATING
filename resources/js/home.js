@@ -236,12 +236,19 @@ const initializePopularRail = (page, homeCopy) => {
             saveButton.setAttribute('aria-pressed', String(savedCodes.has(saveButton.dataset.save)));
         }
 
-        saveButton?.addEventListener('click', (event) => {
+        saveButton?.addEventListener('click', async (event) => {
             event.preventDefault();
             event.stopPropagation();
 
             const code = saveButton.dataset.save;
-            const saved = toggleSaved(code);
+            let saved;
+            try {
+                saved = await toggleSaved(saveButton);
+            } catch {
+                showToast('บันทึกวิชาไม่สำเร็จ กรุณาลองอีกครั้ง');
+                return;
+            }
+            if (saved === null) return;
             saveButton.setAttribute('aria-pressed', String(saved));
             showToast(formatCopy(saved ? homeCopy.saved_course : homeCopy.unsaved_course, { course: code }));
 

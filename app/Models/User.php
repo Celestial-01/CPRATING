@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -132,5 +133,17 @@ class User extends Authenticatable
     public function ratings(): HasMany
     {
         return $this->hasMany(CourseRating::class);
+    }
+
+    public function viewedCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'user_course_views')
+            ->withPivot('viewed_at');
+    }
+
+    public function savedCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'user_saved_courses')
+            ->withPivot('created_at');
     }
 }

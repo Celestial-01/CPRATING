@@ -36,7 +36,7 @@
                 </div>
 
                 <div class="history-grid" data-history-viewed-grid>
-                    @foreach ($courses as $course)
+                    @foreach ($viewedCourses as $course)
                         <x-course.card :course="$course" :history="true" />
                     @endforeach
                 </div>
@@ -92,7 +92,7 @@
                 </div>
 
                 <div class="history-grid" data-history-saved-grid>
-                    @foreach ($courses as $course)
+                    @foreach ($savedCourses as $course)
                         <x-course.card :course="$course" :history="true" />
                     @endforeach
                 </div>
